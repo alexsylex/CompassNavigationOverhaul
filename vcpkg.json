@@ -1,0 +1,16 @@
+{
+    "name": "helpfulcompassnavigation",
+    "version-string": "1.0.0",
+    "description": "",
+    "homepage": "https://github.com/alexsylex/HelpfulCompassNavigation",
+    "license": "MIT",
+    "dependencies": [
+        "boost-atomic",
+        "boost-stl-interfaces",
+        "fmt",
+        "rsm-binary-io",
+        "span-lite",
+        "spdlog",
+        "xbyak"
+    ]
+}
