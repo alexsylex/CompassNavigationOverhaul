@@ -106,6 +106,7 @@ find_package(spdlog REQUIRED CONFIG)
 
 set(headers
 	include/RE/G/GFxValue.h
+	include/RE/H/HUDMarkerManager.h
 
 	include/AutoTrampoline.h
 	include/Hooks.h
@@ -114,7 +115,7 @@ set(headers
 	include/pch.h
 	include/plugin.h
 	include/Setting.h
- )
+)
 
 set(sources
 	source/RE/G/GFxValue.cpp

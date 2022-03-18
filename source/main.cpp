@@ -76,7 +76,19 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 
 	HCN::InstallHooks();
 
+	logger::set_level(logger::level::info, logger::level::info);
+
 	logger::info("{} succesfully loaded", plugin.name);
+
+	if (enableLog)
+	{
+		auto loggerLevel = static_cast<logger::level>(iniSettingCollection->GetSetting<std::uint32_t>("uLogLevel:Debug"));
+		logger::set_level(loggerLevel, loggerLevel);
+	}
+	else 
+	{
+		logger::set_level(logger::level::err, logger::level::err);
+	}
 
 	return true;
 }
