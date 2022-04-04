@@ -47,3 +47,5 @@ namespace GFx
 		bool RegisterGlobalFunctions(RE::GFxMovieView* a_view, RE::GFxValue* a_root);
 	}
 }
+
+namespace logger = SKSE::log;

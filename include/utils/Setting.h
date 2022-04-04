@@ -4,7 +4,7 @@
 
 #include <windows.h>
 
-namespace alexsylex
+namespace utils
 {
 	// Deriving from RE::Setting does not compile as the virtual functions are not defined (Unresolved external symbols).
 	// The best way I could find is to replicate that class layout into mine.
@@ -25,56 +25,40 @@ namespace alexsylex
 		{
 			std::size_t nameLen = std::strlen(a_name) + sizeof('\0');
 
-			if (nameLen < MAX_PATH) 
-			{
+			if (nameLen < MAX_PATH) {
 				name = new char[nameLen];
 				strcpy_s(name, nameLen, a_name);
 
-				if constexpr (std::is_same_v<T, const char*>) 
-				{
-					if (GetType() == Type::kString) 
-					{
+				if constexpr (std::is_same_v<T, const char*>) {
+					if (GetType() == Type::kString) {
 						std::size_t dataLen = std::strlen(a_data) + sizeof('\0');
-						if (dataLen < MAX_PATH) 
-						{
+						if (dataLen < MAX_PATH) {
 							data.s = new char[dataLen];
 							strcpy_s(data.s, dataLen, a_data);
 
 							return;
 						}
 					}
-				} 
-				else if constexpr (std::is_same_v<T, bool>) 
-				{
-					if (GetType() == Type::kBool) 
-					{
+				} else if constexpr (std::is_same_v<T, bool>) {
+					if (GetType() == Type::kBool) {
 						data.b = a_data;
 
 						return;
 					}
-				} 
-				else if constexpr (std::is_same_v<T, int>) 
-				{
-					if (GetType() == Type::kSignedInteger) 
-					{
+				} else if constexpr (std::is_same_v<T, int>) {
+					if (GetType() == Type::kSignedInteger) {
 						data.i = a_data;
 
 						return;
 					}
-				}
-				else if constexpr (std::is_same_v<T, unsigned int>) 
-				{
-					if (GetType() == Type::kUnsignedInteger) 
-					{
+				} else if constexpr (std::is_same_v<T, unsigned int>) {
+					if (GetType() == Type::kUnsignedInteger) {
 						data.u = a_data;
 
 						return;
 					}
-				}
-				else if constexpr (std::is_same_v<T, float>) 
-				{
-					if (GetType() == Type::kFloat) 
-					{
+				} else if constexpr (std::is_same_v<T, float>) {
+					if (GetType() == Type::kFloat) {
 						data.f = a_data;
 
 						return;
@@ -88,10 +72,8 @@ namespace alexsylex
 
 		virtual ~Setting()	// 00
 		{
-			if (name) 
-			{
-				if (GetType() == Type::kString)
-				{
+			if (name) {
+				if (GetType() == Type::kString) {
 					delete[] data.s;
 				}
 

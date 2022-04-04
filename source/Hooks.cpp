@@ -1,9 +1,34 @@
 #include "Hooks.h"
 
-#include "Logger.h"
+#include "utils/Logger.h"
+
+#include "QuestHandler.h"
 
 namespace HCN
 {
+	void PatchMovie(RE::GFxMovieView* a_viewOut)
+	{
+		logger::info("Hooked BSScaleform::LoadMovie()! at {}", a_viewOut->GetMovieDef()->GetFileURL());
+		logger::flush();
+
+		RE::GFxValue root;
+		a_viewOut->GetVariable(&root, "_root");
+
+		struct GFxMemberVisitor : RE::GFxValue::ObjectVisitor
+		{
+			void Visit(const char* a_name, const RE::GFxValue&)
+			{
+				logger::info("Found member: {}", a_name);
+			}
+		};
+
+		GFxMemberVisitor memberVisitor;
+
+		root.VisitMembers(&memberVisitor);
+
+		logger::flush();
+	}
+
 	bool ProcessQuestHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::ScaleformHUDMarkerData* a_markerData,
 		RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId, RE::TESQuest*& a_quest)
 	{
@@ -11,11 +36,7 @@ namespace HCN
 
 		if (markerRef->GetFormType() == RE::FormType::Reference)
 		{
-			logger::info("\"{}\" quest hooked", a_quest->GetName());
-
-			//auto questTeleporter = markerRef.get();
-
-			//logger::info("\"{}\" quest teleporter hooked", questTeleporter->GetName());
+			QuestHandler::GetSingleton()->Process(a_quest, markerRef);
 		}
 		else
 		{
@@ -35,10 +56,10 @@ namespace HCN
 		{
 			if (RE::BSExtraData* extraData = markerRef->extraList.GetByType(RE::ExtraDataType::kMapMarker))
 			{
-				auto mapMarker = skyrim_cast<RE::ExtraMapMarker*>(extraData);
+				//auto mapMarker = skyrim_cast<RE::ExtraMapMarker*>(extraData);
 
-				logger::info("\"{}\" location hooked", mapMarker->mapData->locationName.GetFullName());
-				logger::flush();
+				//logger::info("\"{}\" location hooked", mapMarker->mapData->locationName.GetFullName());
+				//logger::flush();
 			}
 		}
 
@@ -54,8 +75,8 @@ namespace HCN
 		{
 			if (auto character = markerRef->As<RE::Character>()) 
 			{
-				logger::info("\"{}\" enemy hooked", character->GetName());
-				logger::flush();
+				//logger::info("\"{}\" enemy hooked", character->GetName());
+				//logger::flush();
 			}
 		}
 
@@ -67,8 +88,8 @@ namespace HCN
 	{
 		RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
 
-		logger::info("Player-set marker hooked, {}/?", (int)markerRef->GetFormType());
-		logger::flush();
+		//logger::info("Player-set marker hooked, {}/?", (int)markerRef->GetFormType());
+		//logger::flush();
 
 		return HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerId);
 	}

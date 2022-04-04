@@ -107,24 +107,24 @@ find_package(spdlog REQUIRED CONFIG)
 set(headers
 	include/RE/G/GFxValue.h
 	include/RE/H/HUDMarkerManager.h
-
-	include/AutoTrampoline.h
+	include/utils/INISettingCollection.h
+	include/utils/Logger.h
+	include/utils/Setting.h
+	include/utils/Trampoline.h
 	include/Hooks.h
-	include/INISettingCollection.h
-	include/Logger.h
 	include/pch.h
-	include/plugin.h
-	include/Setting.h
-)
+	include/Plugin.h
+	include/QuestHandler.h
+ )
 
 set(sources
 	source/RE/G/GFxValue.cpp
-
-	source/main.cpp
+	source/utils/INISettingCollection.cpp
 	source/Hooks.cpp
-	source/INISettingCollection.cpp
+	source/main.cpp
 	source/pch.cpp
-)
+	source/QuestHandler.cpp
+ )
 
 source_group(
 	TREE

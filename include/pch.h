@@ -35,14 +35,12 @@ constexpr auto type_name() -> std::string_view
 	constexpr size_t spacepos = funcsig.find(' ', openbracketpos);
 	constexpr size_t scopepos = funcsig.rfind(':');
 
-	constexpr size_t startpos = (scopepos != funcsig.npos)? scopepos + 1 :
-		(spacepos != funcsig.npos)? spacepos + 1 :
-		openbracketpos;
+	constexpr size_t startpos = (scopepos != funcsig.npos) ? scopepos + 1 :
+								(spacepos != funcsig.npos) ? spacepos + 1 :
+															   openbracketpos;
 
 	constexpr size_t endpos = funcsig.find('>');
 	constexpr size_t len = endpos - startpos;
 
 	return funcsig.substr(startpos, len);
 }
-
-namespace logger = SKSE::log;

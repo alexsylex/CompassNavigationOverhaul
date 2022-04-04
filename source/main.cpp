@@ -1,7 +1,8 @@
-#include "Hooks.h"
-#include "INISettingCollection.h"
-#include "Logger.h"
 #include "Plugin.h"
+#include "Hooks.h"
+
+#include "utils/INISettingCollection.h"
+#include "utils/Logger.h"
 
 static constexpr Plugin plugin{ "Helpful Compass Navigation" };
 
@@ -46,6 +47,8 @@ extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() constexpr -> SKSE:
 
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_skse)
 {
+	using namespace utils;
+
 	if (!logger::init(plugin.name))
 	{
 		return false;
@@ -55,40 +58,27 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 
 	SKSE::Init(a_skse);
 
-	alexsylex::INISettingCollection* iniSettingCollection = alexsylex::INISettingCollection::GetSingleton();
+	INISettingCollection* iniSettingCollection = INISettingCollection::GetSingleton();
+	iniSettingCollection->AddSettings(
+		MakeSetting("bEnableLog:Debug", false),
+		MakeSetting("uLogLevel:Debug", static_cast<std::uint32_t>(logger::level::err)));
 
 	std::string iniFileName = std::string(plugin.fileName) + ".ini";
-	if (!iniSettingCollection->ReadFromFile(iniFileName))
-	{
+	if (!iniSettingCollection->ReadFromFile(iniFileName)) {
 		logger::warn("Could not load {}", iniFileName);
 	}
 
 	bool enableLog = iniSettingCollection->GetSetting<bool>("bEnableLog:Debug");
-	if (enableLog)
-	{
-		auto loggerLevel = static_cast<logger::level>(iniSettingCollection->GetSetting<std::uint32_t>("uLogLevel:Debug"));
-		logger::set_level(loggerLevel, loggerLevel);
-	}
-	else
-	{
-		logger::set_level(logger::level::err, logger::level::err);
-	}
+	auto loggerLevel = !enableLog ? logger::level::err :
+									  static_cast<logger::level>(iniSettingCollection->GetSetting<std::uint32_t>("uLogLevel:Debug"));
+	logger::set_level(loggerLevel, loggerLevel);
 
 	HCN::InstallHooks();
 
 	logger::set_level(logger::level::info, logger::level::info);
-
 	logger::info("{} succesfully loaded", plugin.name);
 
-	if (enableLog)
-	{
-		auto loggerLevel = static_cast<logger::level>(iniSettingCollection->GetSetting<std::uint32_t>("uLogLevel:Debug"));
-		logger::set_level(loggerLevel, loggerLevel);
-	}
-	else 
-	{
-		logger::set_level(logger::level::err, logger::level::err);
-	}
+	logger::set_level(loggerLevel, loggerLevel);
 
 	return true;
 }
