@@ -16,11 +16,11 @@ namespace HCN
 		static constinit inline REL::ID LoadMovieId{ 80302 };
 #endif
 	public:
+
 		static inline REL::Relocation<bool (*)(const RE::BSScaleformManager*, RE::IMenu*,
 			RE::GPtr<RE::GFxMovieView>&, const char*, RE::GFxMovieView::ScaleModeType, float)>
 			LoadMovie{ LoadMovieId };
 	};
-
 
 	class HUDMarkerManager
 	{
@@ -34,6 +34,7 @@ namespace HCN
 		static constinit inline REL::ID UpdateHUDMarkerId{ 0 };
 #endif
 	public:
+
 		static inline REL::Relocation<bool (*)(const RE::HUDMarkerManager*, RE::TESQuest**,
 			RE::BSTArray<RE::UnkValue>*)>
 			ProcessQuestMarker{ ProcessQuestMarkerId };
@@ -53,6 +54,7 @@ namespace HCN
 		static constinit inline REL::ID ProcessMessageId{ 0 };
 #endif
 	public:
+
 		static inline REL::Relocation<RE::UI_MESSAGE_RESULTS (*)(const RE::HUDMenu*, RE::UIMessage&)> ProcessMessage{ ProcessMessageId };
 	};
 
@@ -64,10 +66,12 @@ namespace HCN
 		static constinit inline REL::ID SetMarkersId{ 0 };
 #endif
 	public:
+
 		static inline REL::Relocation<std::uintptr_t> SetMarkers{ SetMarkersId };
 	};
 
 	void PatchMovie(RE::GFxMovieView* a_viewOut, float a_deltaT, std::uint32_t a_frameCatchUpCount);
+	void VisitMembersForDebug(RE::GFxMovieView* a_view);
 
 	bool ProcessQuestHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::ScaleformHUDMarkerData* a_markerData,
 		RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId,
@@ -101,6 +105,7 @@ namespace HCN
 
 					L(hookLabel);
 					dq(reinterpret_cast<std::uintptr_t>(&PatchMovie));
+
 					L(retnLabel);
 					dq(hookedAddress + 6);
 				}
@@ -129,6 +134,7 @@ namespace HCN
 
 					L(hookLabel);
 					dq(reinterpret_cast<std::uintptr_t>(&ProcessQuestHook));
+
 					L(retnLabel);
 					dq(hookedAddress + 5);
 				}
@@ -154,6 +160,7 @@ namespace HCN
 
 					L(hookLabel);
 					dq(reinterpret_cast<std::uintptr_t>(&ProcessLocationHook));
+
 					L(retnLabel);
 					dq(hookedAddress + 5);
 				}
@@ -179,6 +186,7 @@ namespace HCN
 
 					L(hookLabel);
 					dq(reinterpret_cast<std::uintptr_t>(&ProcessEnemyHook));
+
 					L(retnLabel);
 					dq(hookedAddress + 5);
 				}
@@ -204,6 +212,7 @@ namespace HCN
 
 					L(hookLabel);
 					dq(reinterpret_cast<std::uintptr_t>(&ProcessPlayerSetHook));
+
 					L(retnLabel);
 					dq(hookedAddress + 5);
 				}
