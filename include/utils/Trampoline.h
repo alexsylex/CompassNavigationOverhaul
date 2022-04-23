@@ -58,5 +58,5 @@ namespace utils
 }
 
 #else
-#error "Xbyak support needed for AutoTrampoline"
+#error "Xbyak support needed for Trampoline"
 #endif

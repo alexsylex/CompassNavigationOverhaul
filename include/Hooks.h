@@ -67,7 +67,7 @@ namespace HCN
 		static inline REL::Relocation<std::uintptr_t> SetMarkers{ SetMarkersId };
 	};
 
-	void PatchMovie(RE::GFxMovieView* a_viewOut);
+	void PatchMovie(RE::GFxMovieView* a_viewOut, float a_deltaT, std::uint32_t a_frameCatchUpCount);
 
 	bool ProcessQuestHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::ScaleformHUDMarkerData* a_markerData,
 		RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId,
@@ -94,13 +94,6 @@ namespace HCN
 				{
 					Xbyak::Label hookLabel;
 					Xbyak::Label retnLabel;
-
-					// Call original virtual function
-					push(rcx);
-					sub(rsp, 8);
-					call(ptr[rax + 0x128]);
-					add(rsp, 8);
-					pop(rcx);
 
 					call(ptr[rip + hookLabel]);
 
