@@ -3,10 +3,18 @@
 #include "utils/Logger.h"
 
 #include "QuestHandler.h"
+#include "SwfLoader.h"
 
 namespace HCN
 {
-	void VisitMembersForDebug(RE::GFxMovieView* a_view)
+	// 1. Create instance of swfloader by loading swfloader.swf
+	// 2. Check for folders in "Data/Interface/" named as the loaded file
+	// 3. Go through the folders until a .swf is found. The path to the .swf file
+	//    is the path to the member to create/replace
+	// 4a. If the member does not exist, createEmptyMovieClip -> loadMovie
+	// 4b. If the member does exist, unloadMovie -> loadMovie
+
+	static void VisitMembersForDebug(RE::GFxMovieView* a_view, const char* a_member)
 	{
 		struct GFxMemberVisitor : RE::GFxValue::ObjectVisitor
 		{
@@ -39,71 +47,58 @@ namespace HCN
 			}
 		} memberVisitor;
 
-		if (a_view) 
+		if (a_view)
 		{
-			RE::GFxValue root;
-			if (a_view->GetVariable(&root, "_root")) 
+			RE::GFxValue member;
+			if (a_view->GetVariable(&member, a_member)) 
 			{
-				logger::info("_root:");
-				root.VisitMembers(&memberVisitor);
+				logger::info("{}:", a_member);
+				member.VisitMembers(&memberVisitor);
 				logger::info("");
 
-				RE::GFxValue test;
-				if (a_view->GetVariable(&test, "_root.test")) 
-				{
-					logger::info("test:");
-					test.VisitMembers(&memberVisitor);
-					logger::info("");
-				}
-
-				RE::GFxValue widgetLoaderContainer;
-				if (a_view->GetVariable(&widgetLoaderContainer, "_root.widgetLoaderContainer")) 
-				{
-					logger::info("WidgetContainer:");
-					widgetLoaderContainer.VisitMembers(&memberVisitor);
-					logger::info("");
-				}
+				logger::flush();
 			}
-
-			logger::flush();
 		}
 	};
 
-	void PatchMovie(RE::GFxMovieView* a_viewOut, float a_deltaT, std::uint32_t a_frameCatchUpCount)
+	void PatchMovie(RE::GFxMovieView* a_view, float a_deltaT, std::uint32_t a_frameCatchUpCount)
 	{
-		logger::info("BSScaleformManager -> load movie: {}", a_viewOut->GetMovieDef()->GetFileURL());
+		std::string_view movieUrl = a_view->GetMovieDef()->GetFileURL();
+
+		logger::info("BSScaleformManager -> load movie: {}", movieUrl);
 		logger::flush();
 
+		a_view->Advance(a_deltaT, a_frameCatchUpCount);
+
 		RE::GFxValue hudMovieBaseInstance;
-		if (a_viewOut->GetVariable(&hudMovieBaseInstance, "_root.HUDMovieBaseInstance")) 
+		if (a_view->GetVariable(&hudMovieBaseInstance, "_root.HUDMovieBaseInstance"))
 		{
-			RE::GFxValue args[2];
+			VisitMembersForDebug(a_view, "_root");
 
-			args[0].SetString("test");
-			args[1].SetNumber(-1000);
-
-			if (!a_viewOut->Invoke("_root.createEmptyMovieClip", nullptr, args, 2)) 
 			{
-				logger::error("Something went wrong creating an empty movieclip");
+				IUI::SwfLoader swfloader(a_view, movieUrl);
+
+				VisitMembersForDebug(a_view, "_root");
+
+				if (a_view->IsAvailable("_root.swfloader")) 
+				{
+					VisitMembersForDebug(a_view, "_root.swfloader");
+
+					if (swfloader.LoadMovieClip()) 
+					{
+						VisitMembersForDebug(a_view, "_root.swfloader");
+					} 
+					else 
+					{
+						logger::error("Something went wrong loading the movieclip");
+						logger::flush();
+					}
+				}
 			}
 
-			// Paths are relative to the folder from where the GFxMovie was loaded
-			// E.g. Interface/Exported/HUDMenu.gfx -> start in exported/
-			// E.g. Interface/StartMenu.swf -> start in ./
-
-			// Compass.swf does not work, movieclips inside do not get loaded for some reason...
-			//args[0].SetString("../Compass.swf");
-			args[0].SetString("widgets/skyui/activeeffects.swf");
-			if (!a_viewOut->Invoke("_root.test.loadMovie", nullptr, args, 1)) 
-			{
-				logger::error("Something went wrong loading the movieclip");
-			}
+			VisitMembersForDebug(a_view, "_root");
+			VisitMembersForDebug(a_view, "_root.swfloader");
 		}
-
-		// After calling advance, the loadMovie() AS function is executed
-		a_viewOut->Advance(a_deltaT, a_frameCatchUpCount);
-
-		VisitMembersForDebug(a_viewOut);
 	}
 
 	bool ProcessQuestHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::ScaleformHUDMarkerData* a_markerData,

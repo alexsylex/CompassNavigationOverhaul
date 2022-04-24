@@ -115,7 +115,8 @@ set(headers
 	include/pch.h
 	include/Plugin.h
 	include/QuestHandler.h
- )
+	include/SwfLoader.h
+)
 
 set(sources
 	source/RE/G/GFxValue.cpp
@@ -124,7 +125,8 @@ set(sources
 	source/main.cpp
 	source/pch.cpp
 	source/QuestHandler.cpp
- )
+	source/SwfLoader.cpp
+)
 
 source_group(
 	TREE

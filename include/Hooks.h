@@ -71,7 +71,6 @@ namespace HCN
 	};
 
 	void PatchMovie(RE::GFxMovieView* a_viewOut, float a_deltaT, std::uint32_t a_frameCatchUpCount);
-	void VisitMembersForDebug(RE::GFxMovieView* a_view);
 
 	bool ProcessQuestHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::ScaleformHUDMarkerData* a_markerData,
 		RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId,
