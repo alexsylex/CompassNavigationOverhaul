@@ -63,8 +63,6 @@ namespace IUI
 	{
 		namespace fs = std::filesystem;
 
-		std::stack<fs::path> stack;
-
 		fs::path gfxMoviePath = fs::current_path().append("Data\\Interface");
 		if (movieDir.find("Interface/Exported/") != std::string_view::npos) 
 		{
@@ -80,6 +78,7 @@ namespace IUI
 		{
 			// Non-recursive Depth-First Search to traverse all nodes
 			// Reference: https://en.wikipedia.org/wiki/Depth-first_search
+			std::stack<fs::path> stack;
 
 			stack.push(rootPath);
 
@@ -93,7 +92,7 @@ namespace IUI
 		
 				if (fs::is_directory(path))
 				{
-					for (fs::directory_entry const& childPath : std::filesystem::directory_iterator{ path }) 
+					for (const fs::directory_entry& childPath : fs::directory_iterator{ path }) 
 					{
 						stack.push(childPath);
 					}
