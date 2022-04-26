@@ -106,14 +106,15 @@ namespace IUI
 
 		~SwfLoader();
 
-		bool LoadAvailableMovieClipPatches();
+		std::string GetMovieFilename() const {return movieFilename.substr(0, movieFilename.find('.')); }
+
+		int LoadAvailableMovieClipPatches();
 
 	private:
 
 		RE::GFxMovieView* movieView;
 		const std::string movieDir;
 		const std::string movieFilename;
-		const std::string rootDir = (movieDir.find("Interface//Exported//") == std::string_view::npos) ? "../" : "";
 		const std::unique_ptr<GFxMovieClip> _root = std::make_unique<GFxMovieClip>(movieView, "_root");
 		std::unique_ptr<GFxMovieClip> swfloader;
 	};

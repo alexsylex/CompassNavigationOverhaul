@@ -23,51 +23,45 @@ namespace HCN
 			RE::GFxValue member;
 			if (a_view->GetVariable(&member, a_member)) 
 			{
-				logger::info("{}:", a_member);
+				logger::debug("{}", a_member);
+				logger::debug("{");
 				member.VisitMembers(&memberVisitor);
-				logger::info("");
-
+				logger::debug("}");
 				logger::flush();
 			}
 		}
 	};
 
-	void PatchMovie(RE::GFxMovieView* a_view, float a_deltaT, std::uint32_t a_frameCatchUpCount)
+	void PatchGFxMovie(RE::GFxMovieView* a_view, float a_deltaT, std::uint32_t a_frameCatchUpCount)
 	{
 		std::string_view movieUrl = a_view->GetMovieDef()->GetFileURL();
 
-		logger::info("BSScaleformManager -> load movie: {}", movieUrl);
+		logger::info("Detected GFx movie load from {}", movieUrl);
 		logger::flush();
 
-		RE::GFxValue hudMovieBaseInstance;
-		if (a_view->GetVariable(&hudMovieBaseInstance, "_root.HUDMovieBaseInstance"))
 		{
-			VisitMembersForDebug(a_view, "_root");
+			IUI::SwfLoader swfloader(a_view, movieUrl);
 
+			if (a_view->IsAvailable("_root.swfloader")) 
 			{
-				IUI::SwfLoader swfloader(a_view, movieUrl);
-
-				VisitMembersForDebug(a_view, "_root");
-
-				if (a_view->IsAvailable("_root.swfloader")) 
+				if (int loadedMovieClipPatches = swfloader.LoadAvailableMovieClipPatches())
 				{
-					VisitMembersForDebug(a_view, "_root.swfloader");
+					std::string fmtMessage = "Loaded {} movieclip patch";
+					fmtMessage += loadedMovieClipPatches > 1 ? "es" : "";
+					fmtMessage += " for {}";
 
-					if (swfloader.LoadAvailableMovieClipPatches())
-					{
-						VisitMembersForDebug(a_view, "_root.swfloader");
-					} 
-					else 
-					{
-						logger::error("Something went wrong loading the movieclip");
-						logger::flush();
-					}
+					logger::info(fmtMessage, loadedMovieClipPatches, swfloader.GetMovieFilename());
 				}
+				else 
+				{
+					logger::info("Could not load any movieclip patches for {}", swfloader.GetMovieFilename());
+				}
+				logger::flush();
 			}
-
-			VisitMembersForDebug(a_view, "_root");
-			VisitMembersForDebug(a_view, "_root.swfloader");
 		}
+
+		VisitMembersForDebug(a_view, "_root");
+		VisitMembersForDebug(a_view, "_root.swfloader");
 
 		a_view->Advance(a_deltaT, a_frameCatchUpCount);
 	}

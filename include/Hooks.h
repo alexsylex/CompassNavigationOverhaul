@@ -70,7 +70,7 @@ namespace HCN
 		static inline REL::Relocation<std::uintptr_t> SetMarkers{ SetMarkersId };
 	};
 
-	void PatchMovie(RE::GFxMovieView* a_viewOut, float a_deltaT, std::uint32_t a_frameCatchUpCount);
+	void PatchGFxMovie(RE::GFxMovieView* a_viewOut, float a_deltaT, std::uint32_t a_frameCatchUpCount);
 
 	bool ProcessQuestHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::ScaleformHUDMarkerData* a_markerData,
 		RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId,
@@ -103,7 +103,7 @@ namespace HCN
 					jmp(ptr[rip + retnLabel]);
 
 					L(hookLabel);
-					dq(reinterpret_cast<std::uintptr_t>(&PatchMovie));
+					dq(reinterpret_cast<std::uintptr_t>(&PatchGFxMovie));
 
 					L(retnLabel);
 					dq(hookedAddress + 6);
