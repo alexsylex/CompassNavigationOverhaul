@@ -6,49 +6,68 @@
 
 namespace IUI
 {
-	SwfLoader::SwfLoader(RE::GFxMovieView* a_movieView, const std::string_view& a_movieUrl)
-	: movieView{ a_movieView }, movieUrl{ a_movieUrl }
-	{		
-		if (!_root->Invoke("createEmptyMovieClip", "swfloader", -1000))
+	void GFxMemberVisitor::Visit(const char* a_name, const RE::GFxValue& a_gfxValue)
+	{
+		if (a_gfxValue.GetType() == ValueType::kDisplayObject)
 		{
-			logger::error("Something went wrong creating an empty movieclip for the swf loader");
+			logger::info("Found member: var {}: {}", a_name, ValueTypeToString(a_gfxValue.GetType()));
 			logger::flush();
 		}
-		else 
+	}
+
+	SwfLoader::SwfLoader(RE::GFxMovieView* a_movieView, const std::string_view& a_movieUrl)
+	: movieView{ a_movieView }, movieDir{ a_movieUrl.substr(0, a_movieUrl.rfind('/') + 1) }, 
+	  movieFilename{ a_movieUrl.substr(a_movieUrl.rfind('/') + 1) }
+	{		
+		if (_root->CreateEmptyMovieClip("swfloader", -1000))
 		{
 			swfloader = std::make_unique<GFxMovieClip>(movieView, "_root.swfloader");
 
-			std::string swfloaderPath = (movieUrl.find("Interface//Exported//") == std::string_view::npos) ?
-											  "../" : "";
-			swfloaderPath += "swfloader.swf";
+			std::string swfloaderPath = rootDir + "swfloader.swf";
 
-			if (!swfloader->Invoke("loadMovie", swfloaderPath.c_str()))
+			if (swfloader->LoadMovie(swfloaderPath))
 			{
-				logger::error("Something went wrong loading the swf loader movieclip");
-				logger::flush();
+				RE::GFxValue version = swfloader->GetMember("version");
+				if (!version.IsUndefined())
+				{
+					logger::info("Successfully loaded swfloader v{}", version.GetNumber());
+					logger::info("");
+					logger::flush();
+
+					return;
+				}
 			}
+
+			logger::error("Something went wrong loading the swf loader movieclip");
 		}
+		else 
+		{
+			logger::error("Something went wrong creating an empty movieclip for the swf loader");
+		}
+
+		logger::flush();
 	}
 
 	SwfLoader::~SwfLoader()
 	{
-		if (!_root->Invoke("removeMovieClip", "swfloader"))
+		if (!_root->RemoveMovieClip("swfloader"))
 		{
 			logger::error("Something went wrong removing the swf loader movieclip");
 			logger::flush();
 		}
 	}
 
-	bool SwfLoader::LoadMovieClip()
+	bool SwfLoader::LoadAvailableMovieClipPatches()
 	{
-		std::string swfloaderPath = (movieUrl.find("Interface//Exported//") == std::string_view::npos) ?
-										  "../" :
-										  "";
-		if (!swfloader->Invoke("loadMovie", "HUDMenu/HUDMovieBaseInstance/CompassShoutMeterHolder.swf"))
+		// Non-recursive Depth-First Search to traverse all nodes
+		// Reference: https://en.wikipedia.org/wiki/Depth-first_search
+		
+
+		if (!swfloader->LoadMovie("HUDMenu/HUDMovieBaseInstance/CompassShoutMeterHolder.swf"))
 		{
 			return false;
 		}
 
 		return true;
-	}
+	}	
 }

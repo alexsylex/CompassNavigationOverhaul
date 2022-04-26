@@ -16,36 +16,7 @@ namespace HCN
 
 	static void VisitMembersForDebug(RE::GFxMovieView* a_view, const char* a_member)
 	{
-		struct GFxMemberVisitor : RE::GFxValue::ObjectVisitor
-		{
-			void Visit(const char* a_name, const RE::GFxValue& a_gfxValue)
-			{
-				auto name_sv = std::string_view{ a_name };
-				if (name_sv == "PlayReverse" || name_sv == "PlayForward") 
-				{
-					return;
-				}
-
-				using ValueType = RE::GFxValue::ValueType;
-
-				auto ValueTypeToString = [](ValueType a_valueType) -> const char* const
-				{
-					switch (a_valueType) {
-					case ValueType::kNull: return "Null";
-					case ValueType::kBoolean: return "Boolean";
-					case ValueType::kNumber: return "Number";
-					case ValueType::kString: return "String";
-					case ValueType::kStringW: return "StringW";
-					case ValueType::kArray: return "Array";
-					case ValueType::kObject: return "Object";
-					case ValueType::kDisplayObject: return "DisplayObject";
-					default: return "Undefined";
-					}
-				};
-
-				logger::info("Found member: var {}: {}", a_name, ValueTypeToString(a_gfxValue.GetType()));
-			}
-		} memberVisitor;
+		IUI::GFxMemberVisitor memberVisitor;
 
 		if (a_view)
 		{
@@ -68,8 +39,6 @@ namespace HCN
 		logger::info("BSScaleformManager -> load movie: {}", movieUrl);
 		logger::flush();
 
-		a_view->Advance(a_deltaT, a_frameCatchUpCount);
-
 		RE::GFxValue hudMovieBaseInstance;
 		if (a_view->GetVariable(&hudMovieBaseInstance, "_root.HUDMovieBaseInstance"))
 		{
@@ -84,7 +53,7 @@ namespace HCN
 				{
 					VisitMembersForDebug(a_view, "_root.swfloader");
 
-					if (swfloader.LoadMovieClip()) 
+					if (swfloader.LoadAvailableMovieClipPatches())
 					{
 						VisitMembersForDebug(a_view, "_root.swfloader");
 					} 
@@ -99,6 +68,8 @@ namespace HCN
 			VisitMembersForDebug(a_view, "_root");
 			VisitMembersForDebug(a_view, "_root.swfloader");
 		}
+
+		a_view->Advance(a_deltaT, a_frameCatchUpCount);
 	}
 
 	bool ProcessQuestHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::ScaleformHUDMarkerData* a_markerData,
