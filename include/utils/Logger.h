@@ -37,15 +37,12 @@ namespace SKSE::log
 	}
 }
 
-namespace GFx
+namespace GFxLogger
 {
-	namespace logger
-	{
-		struct info;
-		struct error;
+	struct info;
+	struct error;
 
-		bool RegisterGlobalFunctions(RE::GFxMovieView* a_view, RE::GFxValue* a_root);
-	}
+	bool RegisterStaticFunctions(RE::GFxMovieView* a_view);
 }
 
 namespace logger = SKSE::log;

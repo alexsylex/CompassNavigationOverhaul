@@ -8,19 +8,21 @@ namespace IUI
 {
 	void GFxMemberVisitor::Visit(const char* a_name, const RE::GFxValue& a_gfxValue)
 	{
-		if (a_gfxValue.GetType() == ValueType::kDisplayObject)
+		switch (a_gfxValue.GetType())
 		{
+		case ValueType::kObject:
+		case ValueType::kDisplayObject:
 			logger::debug("\tvar {}: {}", a_name, ValueTypeToString(a_gfxValue.GetType()));
 		}
 	}
 
-	SwfLoader::SwfLoader(RE::GFxMovieView* a_movieView, const std::string_view& a_movieUrl)
+	GFxMoviePatcher::GFxMoviePatcher(RE::GFxMovieView* a_movieView, const std::string_view& a_movieUrl)
 		: movieView{ a_movieView }, movieDir{ a_movieUrl.substr(0, a_movieUrl.rfind('/') + 1) },
 		movieFilename{ a_movieUrl.substr(a_movieUrl.rfind('/') + 1) }
 	{
 		if (_root->CreateEmptyMovieClip("swfloader", -1000))
 		{
-			swfloader = std::make_unique<GFxMovieClip>(movieView, "_root.swfloader");
+			swfloader = std::make_unique<SwfLoader>(movieView, "_root.swfloader");
 
 			std::string swfloaderPath = (movieDir.find("Interface/Exported/") == std::string_view::npos) ? "" : "../";
 			swfloaderPath += "swfloader.swf";
@@ -47,11 +49,11 @@ namespace IUI
 		logger::flush();
 	}
 
-	SwfLoader::~SwfLoader()
+	GFxMoviePatcher::~GFxMoviePatcher()
 	{
-		logger::trace("~SwfLoader() called");
+		logger::trace("~GFxMoviePatcher() called");
 
-		if (!_root->RemoveMovieClip("swfloader"))
+		if (!swfloader->RemoveMovieClip())
 		{
 			logger::error("Something went wrong removing the swf loader movieclip");
 		}
@@ -59,56 +61,67 @@ namespace IUI
 		logger::flush();
 	}
 
-	int SwfLoader::LoadAvailableMovieClipPatches()
+	int GFxMoviePatcher::LoadAvailableSwfPatches()
 	{
 		namespace fs = std::filesystem;
 
-		fs::path gfxMoviePath = fs::current_path().append("Data\\Interface");
+		fs::path rootPath = fs::current_path().append("Data\\Interface");
 		if (movieDir.find("Interface/Exported/") != std::string_view::npos) 
 		{
-			gfxMoviePath.append("Exported");
+			rootPath.append("Exported");
 		}
 
-		fs::path rootPath = gfxMoviePath;
-		rootPath.append(GetMovieFilename());
+		fs::path startPath = rootPath;
+		startPath.append(GetMovieFilename());
 		
-		int loadedMovieClipPatches = 0;
+		int loadedSwfPatches = 0;
 
-		if (fs::exists(rootPath))
+		if (fs::exists(startPath))
 		{
 			// Non-recursive Depth-First Search to traverse all nodes
 			// Reference: https://en.wikipedia.org/wiki/Depth-first_search
 			std::stack<fs::path> stack;
 
-			stack.push(rootPath);
+			stack.push(startPath);
 
 			while (!stack.empty())
 			{
-				fs::path path = stack.top();
+				fs::path currentPath = stack.top();
 				stack.pop();
 		
-				logger::debug("{}", path.string().c_str());
+				logger::debug("{}", currentPath.string().c_str());
 				logger::flush();
 		
-				if (fs::is_directory(path))
+				if (fs::is_directory(currentPath))
 				{
-					for (const fs::directory_entry& childPath : fs::directory_iterator{ path }) 
+					for (const fs::directory_entry& childPath : fs::directory_iterator{ currentPath }) 
 					{
 						stack.push(childPath);
 					}
 				}
 				else
 				{
-					fs::path moviePath = fs::relative(path, gfxMoviePath);
+					std::string pathToSwfPatch = fs::relative(currentPath, rootPath).string().c_str();
 
-					if (swfloader->LoadMovie(moviePath.string().c_str()))
+					std::size_t pathToMemberStart = pathToSwfPatch.find("\\") + 1;
+					std::size_t pathToMemberEnd = pathToSwfPatch.rfind('.');
+					std::size_t pathToMemberLen = pathToMemberEnd - pathToMemberStart;
+
+					std::string pathToMember = pathToSwfPatch.substr(pathToMemberStart, pathToMemberLen);
+
+					std::replace(pathToMember.begin(), pathToMember.end(), '\\', '.');
+
+					RE::GFxValue member;
+					if (movieView->GetVariable(&member, pathToMember.c_str())) 
 					{
-						loadedMovieClipPatches++;
+						RE::GFxValue result = swfloader->Replace(pathToSwfPatch, pathToMember);
+
+						loadedSwfPatches++;
 					}
 				}
 			}
 		}
 
-		return loadedMovieClipPatches;
+		return loadedSwfPatches;
 	}	
 }

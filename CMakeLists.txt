@@ -107,26 +107,29 @@ find_package(spdlog REQUIRED CONFIG)
 set(headers
 	include/RE/G/GFxValue.h
 	include/RE/H/HUDMarkerManager.h
+	include/utils/GFxFunction.h
 	include/utils/INISettingCollection.h
 	include/utils/Logger.h
 	include/utils/Setting.h
 	include/utils/Trampoline.h
+	include/utils/type_name.h
+	include/GFxMoviePatcher.h
 	include/Hooks.h
 	include/pch.h
 	include/Plugin.h
 	include/QuestHandler.h
-	include/SwfLoader.h
 )
 
 set(sources
 	source/RE/G/GFxValue.cpp
 	source/utils/INISettingCollection.cpp
+	source/utils/Logger.cpp
+	source/GFxMoviePatcher.cpp
 	source/Hooks.cpp
 	source/main.cpp
 	source/pch.cpp
 	source/QuestHandler.cpp
-	source/SwfLoader.cpp
-)
+ )
 
 source_group(
 	TREE

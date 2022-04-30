@@ -102,11 +102,8 @@ namespace HCN
 
 					jmp(ptr[rip + retnLabel]);
 
-					L(hookLabel);
-					dq(reinterpret_cast<std::uintptr_t>(&PatchGFxMovie));
-
-					L(retnLabel);
-					dq(hookedAddress + 6);
+					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&PatchGFxMovie));
+					L(retnLabel), dq(hookedAddress + 6);
 				}
 			};
 
@@ -131,11 +128,8 @@ namespace HCN
 
 					jmp(ptr[rip + retnLabel]);
 
-					L(hookLabel);
-					dq(reinterpret_cast<std::uintptr_t>(&ProcessQuestHook));
-
-					L(retnLabel);
-					dq(hookedAddress + 5);
+					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessQuestHook));
+					L(retnLabel), dq(hookedAddress + 5);
 				}
 			};
 
@@ -157,11 +151,8 @@ namespace HCN
 
 					jmp(ptr[rip + retnLabel]);
 
-					L(hookLabel);
-					dq(reinterpret_cast<std::uintptr_t>(&ProcessLocationHook));
-
-					L(retnLabel);
-					dq(hookedAddress + 5);
+					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessLocationHook));
+					L(retnLabel), dq(hookedAddress + 5);
 				}
 			};
 
@@ -183,11 +174,8 @@ namespace HCN
 
 					jmp(ptr[rip + retnLabel]);
 
-					L(hookLabel);
-					dq(reinterpret_cast<std::uintptr_t>(&ProcessEnemyHook));
-
-					L(retnLabel);
-					dq(hookedAddress + 5);
+					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessEnemyHook));
+					L(retnLabel), dq(hookedAddress + 5);
 				}
 			};
 
@@ -209,11 +197,8 @@ namespace HCN
 
 					jmp(ptr[rip + retnLabel]);
 
-					L(hookLabel);
-					dq(reinterpret_cast<std::uintptr_t>(&ProcessPlayerSetHook));
-
-					L(retnLabel);
-					dq(hookedAddress + 5);
+					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessPlayerSetHook));
+					L(retnLabel), dq(hookedAddress + 5);
 				}
 			};
 

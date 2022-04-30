@@ -260,6 +260,8 @@ namespace RE
 
 			bool IsSameContext(const ObjectInterface* a_rhs) const;
 
+			void ToString(GString* pstr, const GFxValue& thisVal) const;
+
 		protected:
 			// members
 			GFxMovieRoot* _movieRoot;  // 0

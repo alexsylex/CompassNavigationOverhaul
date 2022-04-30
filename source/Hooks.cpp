@@ -24,9 +24,9 @@ namespace HCN
 			if (a_view->GetVariable(&member, a_member)) 
 			{
 				logger::debug("{}", a_member);
-				logger::debug("{");
+				logger::debug("{}", "{");
 				member.VisitMembers(&memberVisitor);
-				logger::debug("}");
+				logger::debug("{}", "}");
 				logger::flush();
 			}
 		}
@@ -39,29 +39,34 @@ namespace HCN
 		logger::info("Detected GFx movie load from {}", movieUrl);
 		logger::flush();
 
-		{
-			IUI::SwfLoader swfloader(a_view, movieUrl);
+		GFxLogger::RegisterStaticFunctions(a_view);
 
-			if (a_view->IsAvailable("_root.swfloader")) 
+		//a_view->;
+
+		{
+			IUI::GFxMoviePatcher moviePatcher(a_view, movieUrl);
+
+			if (moviePatcher.IsReady()) 
 			{
-				if (int loadedMovieClipPatches = swfloader.LoadAvailableMovieClipPatches())
+				if (int loadedSwfPatches = moviePatcher.LoadAvailableSwfPatches())
 				{
-					std::string fmtMessage = "Loaded {} movieclip patch";
-					fmtMessage += loadedMovieClipPatches > 1 ? "es" : "";
+					std::string fmtMessage = "Loaded {} swf patch";
+					fmtMessage += loadedSwfPatches > 1 ? "es" : "";
 					fmtMessage += " for {}";
 
-					logger::info(fmtMessage, loadedMovieClipPatches, swfloader.GetMovieFilename());
+					logger::info(fmtMessage, loadedSwfPatches, moviePatcher.GetMovieFilename());
+					logger::flush();
 				}
-				else 
-				{
-					logger::info("Could not load any movieclip patches for {}", swfloader.GetMovieFilename());
-				}
-				logger::flush();
+				
 			}
 		}
 
 		VisitMembersForDebug(a_view, "_root");
-		VisitMembersForDebug(a_view, "_root.swfloader");
+		VisitMembersForDebug(a_view, "_global.skse.log");
+		if (a_view->IsAvailable("_root.HUDMovieBaseInstance.CompassShoutMeterHolder")) 
+		{
+			VisitMembersForDebug(a_view, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder");
+		}
 
 		a_view->Advance(a_deltaT, a_frameCatchUpCount);
 	}

@@ -501,6 +501,13 @@ namespace RE
 		return _movieRoot == a_rhs->_movieRoot;
 	}
 
+	void GFxValue::ObjectInterface::ToString(GString* a_pstr, const GFxValue& a_thisVal) const
+	{
+		using func_t = decltype(&GFxValue::ObjectInterface::ToString);
+		REL::Relocation<func_t> func{ REL::ID(80275) };
+		return func(this, a_pstr, a_thisVal);
+	}
+
 	GFxValue::GFxValue() :
 		_objectInterface(nullptr),
 		_type(ValueType::kUndefined),
@@ -708,7 +715,13 @@ namespace RE
 
 	GString GFxValue::ToString() const
 	{
-		return { GetString() };
+		GString retVal;
+
+		using func_t = GString*(*)(const GFxValue*, GString*);
+		REL::Relocation<func_t> func{ REL::ID(80274) };
+		func(this, &retVal);
+
+		return retVal;
 	}
 
 	GFxValue::ValueType GFxValue::GetType() const
