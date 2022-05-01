@@ -29,16 +29,17 @@ namespace GFxLogger
 	bool RegisterStaticFunctions(RE::GFxMovieView* a_view)
 	{
 		static bool registered = false;
+		bool registeredThisTime = false;
 
 		if (!registered) 
 		{
 			RE::GFxValue skse;
 			a_view->CreateObject(&skse);
-			a_view->SetVariable("_global.skse", skse);
+			a_view->SetVariable("_global.skse", skse, RE::GFxMovie::SetVarType::kPermanent);
 
 			RE::GFxValue log;
 			a_view->CreateObject(&log);
-			a_view->SetVariable("_global.skse.log", log);
+			a_view->SetVariable("_global.skse.log", log, RE::GFxMovie::SetVarType::kPermanent);
 
 			if (a_view->GetVariable(&log, "_global.skse.log"))
 			{
@@ -47,18 +48,12 @@ namespace GFxLogger
 				{
 					a_view->Advance(0.0);
 
-					logger::debug("GFxLogger registered");
-					logger::flush();
-
-					return true;
+					registered = true;
+					registeredThisTime = true;
 				}
 			}
+		}
 
-			return false;
-		}
-		else 
-		{
-			return true;
-		}
+		return registeredThisTime;
 	}
 }

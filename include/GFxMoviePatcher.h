@@ -5,6 +5,22 @@ namespace RE
 	class GFxMovieView;
 }
 
+constexpr const char* const GFxValueTypeToString(RE::GFxValue::ValueType a_valueType)
+{
+	switch (a_valueType)
+	{
+	case RE::GFxValue::ValueType::kNull: return "Null";
+	case RE::GFxValue::ValueType::kBoolean: return "Boolean";
+	case RE::GFxValue::ValueType::kNumber: return "Number";
+	case RE::GFxValue::ValueType::kString: return "String";
+	case RE::GFxValue::ValueType::kStringW: return "StringW";
+	case RE::GFxValue::ValueType::kArray: return "Array";
+	case RE::GFxValue::ValueType::kObject: return "Object";
+	case RE::GFxValue::ValueType::kDisplayObject: return "DisplayObject";
+	default: return "Undefined";
+	}
+};
+
 namespace IUI
 {
 	class GFxMemberVisitor : public RE::GFxValue::ObjectVisitor
@@ -13,24 +29,10 @@ namespace IUI
 
 		using ValueType = RE::GFxValue::ValueType;
 
-		const char* const ValueTypeToString(ValueType a_valueType)
-		{
-			switch (a_valueType) 
-			{
-			case ValueType::kNull: return "Null";
-			case ValueType::kBoolean: return "Boolean";
-			case ValueType::kNumber: return "Number";
-			case ValueType::kString: return "String";
-			case ValueType::kStringW: return "StringW";
-			case ValueType::kArray: return "Array";
-			case ValueType::kObject: return "Object";
-			case ValueType::kDisplayObject: return "DisplayObject";
-			default: return "Undefined";
-			}
-		};
-
 		void Visit(const char* a_name, const RE::GFxValue& a_gfxValue) override;
 	};
+
+	void VisitMembersForDebug(RE::GFxMovieView* a_view, const char* a_pathToMember);
 
 	class GFxMovieClip : GFxMemberVisitor
 	{
@@ -120,28 +122,14 @@ namespace IUI
 		: GFxMovieClip{ a_movieView, a_pathToMovieClip }
 		{ }
 
-		RE::GFxValue Replace(const std::string_view& a_pathToSwfPatch, const std::string_view& a_pathToDestMember)
+		bool LoadPatch(const std::string_view& a_pathToSwfPatch)
 		{
-			RE::GFxValue result;
-
-			if (!Invoke("replace", &result, a_pathToSwfPatch.data(), a_pathToDestMember.data())) 
-			{
-				throw("");
-			}
-
-			return result;
+			return Invoke("loadPatch", nullptr, a_pathToSwfPatch.data());
 		}
 
-		RE::GFxValue Replace(const std::string_view& a_pathToSwfPatch, const RE::GFxValue& a_destMember)
+		bool Replace(const std::string_view& a_pathToDestMember)
 		{
-			RE::GFxValue result;
-
-			if (!Invoke("replace", &result, a_pathToSwfPatch.data(), a_destMember)) 
-			{
-				throw("");
-			}
-
-			return result;
+			return Invoke("replace", nullptr, a_pathToDestMember.data());
 		}
 	};
 
@@ -151,13 +139,13 @@ namespace IUI
 
 		GFxMoviePatcher(RE::GFxMovieView* a_movieView, const std::string_view& a_movieUrl);
 
-		~GFxMoviePatcher();
-
 		bool IsReady() const { return movieView->IsAvailable("_root.swfloader"); }
 
 		std::string GetMovieFilename() const {return movieFilename.substr(0, movieFilename.find('.')); }
 
 		int LoadAvailableSwfPatches();
+
+		void TestLog();
 
 	private:
 

@@ -56,7 +56,7 @@ public:
 		std::string functionPath{ a_pathToFunctionHolder };
 		functionPath.append(".").append(g_functionName);
 
-		if (a_view->SetVariable(functionPath.c_str(), g_functionObj)) 
+		if (a_view->SetVariable(functionPath.c_str(), g_functionObj, RE::GFxMovie::SetVarType::kPermanent)) 
 		{
 			return a_view->IsAvailable(functionPath.c_str());
 		}

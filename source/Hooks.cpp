@@ -3,71 +3,64 @@
 #include "utils/Logger.h"
 
 #include "QuestHandler.h"
-#include "SwfLoader.h"
+#include "GFxMoviePatcher.h"
 
 namespace HCN
 {
-	// 1. Create instance of swfloader by loading swfloader.swf
-	// 2. Check for folders in "Data/Interface/" named as the loaded file
-	// 3. Go through the folders until a .swf is found. The path to the .swf file
-	//    is the path to the member to create/replace
-	// 4a. If the member does not exist, createEmptyMovieClip -> loadMovie
-	// 4b. If the member does exist, unloadMovie -> loadMovie
-
-	static void VisitMembersForDebug(RE::GFxMovieView* a_view, const char* a_member)
+	void ProcessMoviePatcher(RE::GFxMovieView* a_view)
 	{
-		IUI::GFxMemberVisitor memberVisitor;
+		GFxLogger::RegisterStaticFunctions(a_view);
 
-		if (a_view)
+		IUI::GFxMoviePatcher moviePatcher(a_view, a_view->GetMovieDef()->GetFileURL());
+
+		if (moviePatcher.IsReady())
 		{
-			RE::GFxValue member;
-			if (a_view->GetVariable(&member, a_member)) 
+			IUI::VisitMembersForDebug(a_view, "_root.HUDMovieBaseInstance.test");
+			if (int loadedSwfPatches = moviePatcher.LoadAvailableSwfPatches()) 
 			{
-				logger::debug("{}", a_member);
-				logger::debug("{}", "{");
-				member.VisitMembers(&memberVisitor);
-				logger::debug("{}", "}");
+				std::string fmtMessage = "Loaded {} swf patch";
+				fmtMessage += loadedSwfPatches > 1 ? "es" : "";
+				fmtMessage += " for {}";
+
+				logger::info(fmtMessage, loadedSwfPatches, moviePatcher.GetMovieFilename());
 				logger::flush();
+				
+				logger::info("");
+
+				if (a_view->IsAvailable("_root.HUDMovieBaseInstance.test"))
+				{
+					IUI::VisitMembersForDebug(a_view, "_root.HUDMovieBaseInstance.test");
+
+					RE::GFxValue test;
+					if (a_view->GetVariable(&test, "_root.HUDMovieBaseInstance.test"))
+					{
+						test.GotoAndStop("start");
+					}
+				}
+
+				//if (a_view->IsAvailable("_root.HUDMovieBaseInstance.CompassShoutMeterHolder2"))
+				//{
+				//	IUI::VisitMembersForDebug(a_view, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder2");
+				//}
+
+				//if (a_view->IsAvailable("_root.HUDMovieBaseInstance.CompassShoutMeterHolder"))
+				//{
+				//	IUI::VisitMembersForDebug(a_view, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder");
+				//}
 			}
 		}
-	};
+	}
 
 	void PatchGFxMovie(RE::GFxMovieView* a_view, float a_deltaT, std::uint32_t a_frameCatchUpCount)
 	{
 		std::string_view movieUrl = a_view->GetMovieDef()->GetFileURL();
 
-		logger::info("Detected GFx movie load from {}", movieUrl);
-		logger::flush();
+		logger::trace("Detected GFx movie load from {}", movieUrl);
 
-		GFxLogger::RegisterStaticFunctions(a_view);
-
-		//a_view->;
-
+		if (a_view->IsAvailable("_root.HUDMovieBaseInstance"))
 		{
-			IUI::GFxMoviePatcher moviePatcher(a_view, movieUrl);
-
-			if (moviePatcher.IsReady()) 
-			{
-				if (int loadedSwfPatches = moviePatcher.LoadAvailableSwfPatches())
-				{
-					std::string fmtMessage = "Loaded {} swf patch";
-					fmtMessage += loadedSwfPatches > 1 ? "es" : "";
-					fmtMessage += " for {}";
-
-					logger::info(fmtMessage, loadedSwfPatches, moviePatcher.GetMovieFilename());
-					logger::flush();
-				}
-				
-			}
+			ProcessMoviePatcher(a_view);
 		}
-
-		VisitMembersForDebug(a_view, "_root");
-		VisitMembersForDebug(a_view, "_global.skse.log");
-		if (a_view->IsAvailable("_root.HUDMovieBaseInstance.CompassShoutMeterHolder")) 
-		{
-			VisitMembersForDebug(a_view, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder");
-		}
-
 		a_view->Advance(a_deltaT, a_frameCatchUpCount);
 	}
 
@@ -75,6 +68,14 @@ namespace HCN
 		RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId, RE::TESQuest*& a_quest)
 	{
 		RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
+
+		//static bool entered;
+		//
+		//if (!entered)
+		//{
+		//	ProcessMoviePatcher(RE::UI::GetSingleton()->GetMenu(RE::HUDMenu::MENU_NAME)->uiMovie.get());
+		//	entered = true;
+		//}
 
 		if (markerRef->GetFormType() == RE::FormType::Reference)
 		{
