@@ -21,9 +21,11 @@ namespace IUI
 
 		if (a_view) {
 			RE::GFxValue member;
-			if (a_view->GetVariable(&member, a_pathToMember)) {
+			if (a_view->GetVariable(&member, a_pathToMember)) 
+			{
 				logger::debug("{}: {}", a_pathToMember, GFxValueTypeToString(member.GetType()));
-				if (member.IsObject()) {
+				if (member.IsObject())
+				{
 					logger::debug("{}", "{");
 					member.VisitMembers(&memberVisitor);
 					logger::debug("{}", "}");
@@ -36,32 +38,7 @@ namespace IUI
 	GFxMoviePatcher::GFxMoviePatcher(RE::GFxMovieView* a_movieView, const std::string_view& a_movieUrl)
 	: movieView{ a_movieView }, movieDir{ a_movieUrl.substr(0, a_movieUrl.rfind('/') + 1) },
 	  movieFilename{ a_movieUrl.substr(a_movieUrl.rfind('/') + 1) }
-	{
-		if (_root->CreateEmptyMovieClip("swfloader", -1000))
-		{
-			swfloader = std::make_unique<SwfLoader>(movieView, "_root.swfloader");
-
-			std::string swfloaderPath = (movieDir.find("Interface/Exported/") == std::string_view::npos) ? "" : "../";
-			swfloaderPath += "swfloader.swf";
-
-			if (swfloader->LoadMovie(swfloaderPath))
-			{
-				RE::GFxValue version = swfloader->GetMember("version");
-				if (!version.IsUndefined())
-				{
-					return;
-				}
-			}
-
-			logger::error("Something went wrong loading the swf loader movieclip");
-		}
-		else
-		{
-			logger::error("Something went wrong creating an empty movieclip for the swf loader");
-		}
-
-		logger::flush();
-	}
+	{ }
 
 	int GFxMoviePatcher::LoadAvailableSwfPatches()
 	{
@@ -118,16 +95,16 @@ namespace IUI
 						RE::GFxValue member;
 						if (movieView->GetVariable(&member, pathToMember.c_str()))
 						{
-							if (swfloader->LoadPatch(pathToSwfPatch))
-							{
-								VisitMembersForDebug(movieView, "_root.swfloader.container");
+							IUI::VisitMembersForDebug(movieView, "_root.HUDMovieBaseInstance");
 
-								if (movieView->IsAvailable("_root.swfloader.container.test"))
-								if (swfloader->Replace(pathToMember))
-								{
-									loadedSwfPatches++;
-								}
-							}
+							GFxMovieClip container = _root.CreateEmptyMovieClip("container");
+							container.LoadMovie("HUDMenu/HUDMovieBaseInstance/CompassShoutMeterHolder.swf");
+							IUI::VisitMembersForDebug(movieView, "_root.container");
+							IUI::VisitMembersForDebug(movieView, "_root.container[0]");
+
+							IUI::VisitMembersForDebug(movieView, "_root.HUDMovieBaseInstance");
+
+							loadedSwfPatches++;
 						}
 					}
 				}
@@ -135,12 +112,5 @@ namespace IUI
 		}
 
 		return loadedSwfPatches;
-	}
-
-	void GFxMoviePatcher::TestLog()
-	{
-		RE::GFxValue testStr{ "Hello world from AS!" };
-
-		movieView->Invoke("_root.swfloader.testLog", nullptr, &testStr, 1);
 	}
 }

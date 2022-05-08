@@ -1,10 +1,5 @@
 #pragma once
 
-namespace RE
-{
-	class GFxMovieView;
-}
-
 constexpr const char* const GFxValueTypeToString(RE::GFxValue::ValueType a_valueType)
 {
 	switch (a_valueType)
@@ -34,27 +29,57 @@ namespace IUI
 
 	void VisitMembersForDebug(RE::GFxMovieView* a_view, const char* a_pathToMember);
 
-	class GFxMovieClip : GFxMemberVisitor
+	class GFxMovieClip : 
+		public RE::GFxValue,
+		GFxMemberVisitor
 	{
 	public:
 
-		GFxMovieClip(RE::GFxMovieView* a_movieView, const std::string_view& a_pathToMovieClip) 
-		: movieView{ a_movieView }, pathToThis{ a_pathToMovieClip }
-		{ }
+		GFxMovieClip() = default;
 
-		bool CreateEmptyMovieClip(const std::string_view& a_name, int a_depth)
+		GFxMovieClip(RE::GFxMovieView* a_movieView, const std::string_view& a_pathToMovieClip)
 		{
-			return Invoke("createEmptyMovieClip", nullptr, a_name.data(), a_depth);
+			a_movieView->GetVariable(this, a_pathToMovieClip.data());
+
+			while (GetMovieView() != a_movieView);
 		}
 
-		bool LoadMovie(const std::string_view& a_swfPath)
+		GFxMovieClip(const RE::GFxValue& a_value)
 		{
-			return Invoke("loadMovie", nullptr, a_swfPath.data());
+			assert(a_value.IsDisplayObject());
+
+			*static_cast<RE::GFxValue*>(this) = a_value;
 		}
 
-		bool UnloadMovie()
+		GFxMovieClip CreateEmptyMovieClip(const std::string_view& a_name)
 		{
-			return Invoke("unloadMovie", nullptr);
+			RE::GFxValue nextHighestDepth;
+			Invoke("getNextHighestDepth", &nextHighestDepth);
+			return CreateEmptyMovieClip(a_name, nextHighestDepth.GetNumber());
+		}
+
+		GFxMovieClip CreateEmptyMovieClip(const std::string_view& a_name, double a_depth)
+		{
+			GFxMovieClip mc;
+			Invoke("createEmptyMovieClip", &mc, a_name.data(), a_depth);
+			return mc;
+		}
+
+		GFxMovieClip AttachMovie(const std::string_view& a_className, const std::string_view& a_name, double a_depth)
+		{
+			GFxMovieClip mc;
+			Invoke("attachMovie", &mc, a_className.data(), a_name.data(), a_depth);
+			return mc;
+		}
+
+		void LoadMovie(const std::string_view& a_swfPath)
+		{
+			Invoke("loadMovie", nullptr, a_swfPath.data());
+		}
+
+		void UnloadMovie()
+		{
+			Invoke("unloadMovie", nullptr);
 		}
 
 		bool RemoveMovieClip()
@@ -72,64 +97,51 @@ namespace IUI
 
 		RE::GFxValue GetMember(const std::string_view& a_memberName) const
 		{
-			std::string memberName = GetMemberPath(a_memberName);
-
 			RE::GFxValue member;
-			movieView->GetVariable(&member, memberName.c_str());
+			RE::GFxValue::GetMember(a_memberName.data(), &member);
 
 			return member;
 		}
 
-	protected:
-
-		constexpr std::string GetMemberPath(const std::string_view& a_memberName) const
+		RE::GFxValue GetMember(int a_index) const
 		{
-			std::string pathToMember = pathToThis;
-			pathToMember.append(".").append(a_memberName);
-
-			return pathToMember;
+			// TODO: Get member by index (instead of by name)
+			// _root.container: DisplayObject
+			// {
+			//		var instance67: DisplayObject
+			// }
+			// Anonymous movieclips are given name = instance + i
 		}
+
+		bool SetMember(const std::string_view& a_memberName, const RE::GFxValue& a_value)
+		{
+			RE::GFxValue::SetMember(a_memberName.data(), a_value);
+		}
+
+		RE::GFxMovieView* GetMovieView()
+		{
+			return **reinterpret_cast<RE::GFxMovieView***>(static_cast<RE::GFxValue*>(this));
+		}
+
+	protected:
 
 		template <typename... Args>
 		bool Invoke(const std::string_view& a_functionName, RE::GFxValue* a_result, Args&&... args)
 		{
-			if (!movieView->IsAvailable(pathToThis.c_str()))
+			if (!IsDisplayObject())
 			{
 				return false;
 			}
 
-			std::string methodName = GetMemberPath(a_functionName);
-
 			std::array<RE::GFxValue, sizeof...(Args)> gfxArgs{ std::forward<Args>(args)... };
 
-			bool retVal = movieView->Invoke(methodName.c_str(), a_result,
-											sizeof...(Args) ? &gfxArgs[0] : nullptr, sizeof...(Args));
+			bool ret = RE::GFxValue::Invoke(a_functionName.data(), a_result, sizeof...(Args) ? &gfxArgs[0] : nullptr, sizeof...(Args));
+
+			RE::GFxMovieView* movieView = GetMovieView();
 
 			movieView->Advance(0.0);
 
-			return retVal;
-		}
-
-		RE::GFxMovieView* movieView;
-		const std::string pathToThis;
-	};
-
-	class SwfLoader : public GFxMovieClip
-	{
-	public:
-
-		SwfLoader(RE::GFxMovieView* a_movieView, const std::string_view& a_pathToMovieClip) 
-		: GFxMovieClip{ a_movieView, a_pathToMovieClip }
-		{ }
-
-		bool LoadPatch(const std::string_view& a_pathToSwfPatch)
-		{
-			return Invoke("loadPatch", nullptr, a_pathToSwfPatch.data());
-		}
-
-		bool Replace(const std::string_view& a_pathToDestMember)
-		{
-			return Invoke("replace", nullptr, a_pathToDestMember.data());
+			return ret;
 		}
 	};
 
@@ -139,20 +151,15 @@ namespace IUI
 
 		GFxMoviePatcher(RE::GFxMovieView* a_movieView, const std::string_view& a_movieUrl);
 
-		bool IsReady() const { return movieView->IsAvailable("_root.swfloader"); }
-
 		std::string GetMovieFilename() const {return movieFilename.substr(0, movieFilename.find('.')); }
 
 		int LoadAvailableSwfPatches();
-
-		void TestLog();
 
 	private:
 
 		RE::GFxMovieView* movieView;
 		const std::string movieDir;
 		const std::string movieFilename;
-		const std::unique_ptr<GFxMovieClip> _root = std::make_unique<GFxMovieClip>(movieView, "_root");
-		std::unique_ptr<SwfLoader> swfloader;
+		GFxMovieClip _root{ movieView, "_root" };
 	};
 }

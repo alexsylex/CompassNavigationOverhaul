@@ -9,45 +9,23 @@ namespace HCN
 {
 	void ProcessMoviePatcher(RE::GFxMovieView* a_view)
 	{
-		GFxLogger::RegisterStaticFunctions(a_view);
-
 		IUI::GFxMoviePatcher moviePatcher(a_view, a_view->GetMovieDef()->GetFileURL());
 
-		if (moviePatcher.IsReady())
+		IUI::VisitMembersForDebug(a_view, "_root");
+		IUI::VisitMembersForDebug(a_view, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder");
+
+		if (int loadedSwfPatches = moviePatcher.LoadAvailableSwfPatches()) 
 		{
-			IUI::VisitMembersForDebug(a_view, "_root.HUDMovieBaseInstance.test");
-			if (int loadedSwfPatches = moviePatcher.LoadAvailableSwfPatches()) 
-			{
-				std::string fmtMessage = "Loaded {} swf patch";
-				fmtMessage += loadedSwfPatches > 1 ? "es" : "";
-				fmtMessage += " for {}";
+			std::string fmtMessage = "Loaded {} swf patch";
+			fmtMessage += loadedSwfPatches > 1 ? "es" : "";
+			fmtMessage += " for {}";
 
-				logger::info(fmtMessage, loadedSwfPatches, moviePatcher.GetMovieFilename());
-				logger::flush();
+			logger::info(fmtMessage, loadedSwfPatches, moviePatcher.GetMovieFilename());
+			logger::flush();
 				
-				logger::info("");
+			logger::info("");
 
-				if (a_view->IsAvailable("_root.HUDMovieBaseInstance.test"))
-				{
-					IUI::VisitMembersForDebug(a_view, "_root.HUDMovieBaseInstance.test");
-
-					RE::GFxValue test;
-					if (a_view->GetVariable(&test, "_root.HUDMovieBaseInstance.test"))
-					{
-						test.GotoAndStop("start");
-					}
-				}
-
-				//if (a_view->IsAvailable("_root.HUDMovieBaseInstance.CompassShoutMeterHolder2"))
-				//{
-				//	IUI::VisitMembersForDebug(a_view, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder2");
-				//}
-
-				//if (a_view->IsAvailable("_root.HUDMovieBaseInstance.CompassShoutMeterHolder"))
-				//{
-				//	IUI::VisitMembersForDebug(a_view, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder");
-				//}
-			}
+			IUI::VisitMembersForDebug(a_view, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder");
 		}
 	}
 
@@ -57,11 +35,35 @@ namespace HCN
 
 		logger::trace("Detected GFx movie load from {}", movieUrl);
 
+		a_view->Advance(a_deltaT, a_frameCatchUpCount);
+
 		if (a_view->IsAvailable("_root.HUDMovieBaseInstance"))
 		{
 			ProcessMoviePatcher(a_view);
 		}
-		a_view->Advance(a_deltaT, a_frameCatchUpCount);
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	void Test(RE::GFxMovieView* a_view)
+	{
+		//IUI::VisitMembersForDebug(a_view, "_root.HUDMovieBaseInstance");
+		//IUI::VisitMembersForDebug(a_view, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder");
+
+		IUI::GFxMovieClip hudMovieBaseInstance{ a_view, "_root.HUDMovieBaseInstance" };
+		IUI::GFxMovieClip compassShoutMeterHolder = hudMovieBaseInstance.GetMember("CompassShoutMeterHolder");
+
+		//if (!compassShoutMeterHolder.IsUndefined())
+		//{
+		//	IUI::GFxMemberVisitor memberVisitor;
+		//	compassShoutMeterHolder.VisitMembers(&memberVisitor);
+		//}
+		//else 
+		//{
+		//	logger::info("CompassShoutMeterHolder is undefined, address of HUDMovieBaseInstance 0x{:08x}", ptr[0x10 / sizeof(std::uintptr_t)]);
+		//}
 	}
 
 	bool ProcessQuestHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::ScaleformHUDMarkerData* a_markerData,
@@ -69,13 +71,7 @@ namespace HCN
 	{
 		RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
 
-		//static bool entered;
-		//
-		//if (!entered)
-		//{
-		//	ProcessMoviePatcher(RE::UI::GetSingleton()->GetMenu(RE::HUDMenu::MENU_NAME)->uiMovie.get());
-		//	entered = true;
-		//}
+		Test(RE::UI::GetSingleton()->GetMenu(RE::HUDMenu::MENU_NAME)->uiMovie.get());
 
 		if (markerRef->GetFormType() == RE::FormType::Reference)
 		{
