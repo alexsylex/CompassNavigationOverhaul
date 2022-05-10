@@ -62,7 +62,7 @@ namespace HCN
 		//}
 		//else 
 		//{
-		//	logger::info("CompassShoutMeterHolder is undefined, address of HUDMovieBaseInstance 0x{:08x}", ptr[0x10 / sizeof(std::uintptr_t)]);
+		//	logger::info("CompassShoutMeterHolder is undefined");
 		//}
 	}
 

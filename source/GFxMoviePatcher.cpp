@@ -6,12 +6,12 @@
 
 namespace IUI
 {
-	void GFxMemberVisitor::Visit(const char* a_name, const RE::GFxValue& a_gfxValue)
+	void GFxMemberVisitor::Visit(const char* a_name, const RE::GFxValue& a_value)
 	{
 		std::string_view name = a_name;
 		if (name != "PlayReverse" && name != "PlayForward")
 		{
-			logger::debug("\tvar {}: {}", a_name, GFxValueTypeToString(a_gfxValue.GetType()));
+			logger::debug("\tvar {}: {}", a_name, GFxValueTypeToString(a_value.GetType()));
 		}
 	}
 
@@ -28,6 +28,31 @@ namespace IUI
 				{
 					logger::debug("{}", "{");
 					member.VisitMembers(&memberVisitor);
+					logger::debug("{}", "}");
+				}
+				logger::flush();
+			}
+		}
+	};
+
+	void GFxElementVisitor::Visit(std::uint32_t a_idx, const RE::GFxValue& a_value)
+	{
+		logger::debug("\t[{}] {}: {}", a_idx, a_value.ToString(), GFxValueTypeToString(a_value.GetType()));
+	}
+
+	void VisitElementsForDebug(RE::GFxMovieView* a_view, const char* a_pathToMember)
+	{
+		IUI::GFxElementVisitor elementVisitor;
+
+		if (a_view) {
+			RE::GFxValue member;
+			if (a_view->GetVariable(&member, a_pathToMember)) 
+			{
+				logger::debug("{}: {}", a_pathToMember, GFxValueTypeToString(member.GetType()));
+				if (member.IsArray())
+				{
+					logger::debug("{}", "{");
+					member.VisitElements(&elementVisitor);
 					logger::debug("{}", "}");
 				}
 				logger::flush();
@@ -95,14 +120,22 @@ namespace IUI
 						RE::GFxValue member;
 						if (movieView->GetVariable(&member, pathToMember.c_str()))
 						{
-							IUI::VisitMembersForDebug(movieView, "_root.HUDMovieBaseInstance");
+							VisitMembersForDebug(movieView, "_root.HUDMovieBaseInstance");
+
+							VisitElementsForDebug(movieView, "_root.HUDMovieBaseInstance.HudElements");
 
 							GFxMovieClip container = _root.CreateEmptyMovieClip("container");
 							container.LoadMovie("HUDMenu/HUDMovieBaseInstance/CompassShoutMeterHolder.swf");
-							IUI::VisitMembersForDebug(movieView, "_root.container");
-							IUI::VisitMembersForDebug(movieView, "_root.container[0]");
 
-							IUI::VisitMembersForDebug(movieView, "_root.HUDMovieBaseInstance");
+							VisitElementsForDebug(movieView, "_root.HUDMovieBaseInstance.HudElements");
+
+							RE::GFxValue CompassRect;
+							movieView->GetVariable(&CompassRect, "_root.HUDMovieBaseInstance.CompassRect");
+							logger::info("CompassRect = {}", CompassRect.ToString());
+
+							VisitMembersForDebug(movieView, "_root.container");
+
+							VisitMembersForDebug(movieView, "_root.HUDMovieBaseInstance");
 
 							loadedSwfPatches++;
 						}

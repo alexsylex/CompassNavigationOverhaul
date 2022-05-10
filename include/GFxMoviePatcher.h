@@ -24,7 +24,15 @@ namespace IUI
 
 		using ValueType = RE::GFxValue::ValueType;
 
-		void Visit(const char* a_name, const RE::GFxValue& a_gfxValue) override;
+		void Visit(const char* a_name, const RE::GFxValue& a_value) override;
+	};
+
+	class GFxElementVisitor : public RE::GFxValue::ArrayVisitor
+	{
+	protected:
+		using ValueType = RE::GFxValue::ValueType;
+
+		void Visit(std::uint32_t a_idx, const RE::GFxValue& a_value) override;
 	};
 
 	void VisitMembersForDebug(RE::GFxMovieView* a_view, const char* a_pathToMember);
@@ -51,6 +59,13 @@ namespace IUI
 			*static_cast<RE::GFxValue*>(this) = a_value;
 		}
 
+		GFxMovieClip CreateEmptyMovieClip(const std::string_view& a_name, double a_depth)
+		{
+			GFxMovieClip mc;
+			RE::GFxValue::CreateEmptyMovieClip(&mc, a_name.data(), static_cast<std::int32_t>(a_depth));
+			return mc;
+		}
+
 		GFxMovieClip CreateEmptyMovieClip(const std::string_view& a_name)
 		{
 			RE::GFxValue nextHighestDepth;
@@ -58,18 +73,19 @@ namespace IUI
 			return CreateEmptyMovieClip(a_name, nextHighestDepth.GetNumber());
 		}
 
-		GFxMovieClip CreateEmptyMovieClip(const std::string_view& a_name, double a_depth)
-		{
-			GFxMovieClip mc;
-			Invoke("createEmptyMovieClip", &mc, a_name.data(), a_depth);
-			return mc;
-		}
-
 		GFxMovieClip AttachMovie(const std::string_view& a_className, const std::string_view& a_name, double a_depth)
 		{
 			GFxMovieClip mc;
-			Invoke("attachMovie", &mc, a_className.data(), a_name.data(), a_depth);
+			RE::GFxValue::AttachMovie(&mc, a_className.data(), a_name.data(), static_cast<std::int32_t>(a_depth));
+			mc.GetMovieView()->Advance(0.0F);
 			return mc;
+		}
+
+		GFxMovieClip AttachMovie(const std::string_view& a_className, const std::string_view& a_name)
+		{
+			RE::GFxValue nextHighestDepth;
+			Invoke("getNextHighestDepth", &nextHighestDepth);
+			return AttachMovie(a_className, a_name, nextHighestDepth.GetNumber());
 		}
 
 		void LoadMovie(const std::string_view& a_swfPath)
@@ -105,6 +121,10 @@ namespace IUI
 
 		RE::GFxValue GetMember(int a_index) const
 		{
+			RE::GFxValue val = a_index;
+
+			return val;
+
 			// TODO: Get member by index (instead of by name)
 			// _root.container: DisplayObject
 			// {
@@ -122,8 +142,6 @@ namespace IUI
 		{
 			return **reinterpret_cast<RE::GFxMovieView***>(static_cast<RE::GFxValue*>(this));
 		}
-
-	protected:
 
 		template <typename... Args>
 		bool Invoke(const std::string_view& a_functionName, RE::GFxValue* a_result, Args&&... args)

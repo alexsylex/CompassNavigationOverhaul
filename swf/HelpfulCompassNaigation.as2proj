@@ -21,12 +21,12 @@
   </classpaths>
   <!-- Build options -->
   <build>
-    <option verbose="False" />
+    <option verbose="True" />
     <option strict="True" />
     <option infer="True" />
     <option useMain="True" />
     <option useMX="False" />
-    <option warnUnusedImports="False" />
+    <option warnUnusedImports="True" />
     <option traceMode="Disable" />
     <option traceFunction="" />
     <option libraryPrefix="" />
