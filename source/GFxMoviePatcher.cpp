@@ -125,7 +125,7 @@ namespace IUI
 							VisitElementsForDebug(movieView, "_root.HUDMovieBaseInstance.HudElements");
 
 							GFxMovieClip container = _root.CreateEmptyMovieClip("container");
-							container.LoadMovie("HUDMenu/HUDMovieBaseInstance/CompassShoutMeterHolder.swf");
+							container.LoadMovie(pathToSwfPatch);
 
 							VisitElementsForDebug(movieView, "_root.HUDMovieBaseInstance.HudElements");
 
