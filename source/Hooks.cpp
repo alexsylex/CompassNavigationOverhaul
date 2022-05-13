@@ -11,8 +11,10 @@ namespace HCN
 	{
 		IUI::GFxMoviePatcher moviePatcher(a_view, a_view->GetMovieDef()->GetFileURL());
 
-		IUI::VisitMembersForDebug(a_view, "_root");
-		IUI::VisitMembersForDebug(a_view, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder");
+		IUI::GFxMemberVisitor memberVisitor;
+
+		//memberVisitor.Visit(a_view, "_root");
+		//memberVisitor.Visit(a_view, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder");
 
 		if (int loadedSwfPatches = moviePatcher.LoadAvailableSwfPatches()) 
 		{
@@ -23,9 +25,9 @@ namespace HCN
 			logger::info(fmtMessage, loadedSwfPatches, moviePatcher.GetMovieFilename());
 			logger::flush();
 				
-			logger::info("");
+			//logger::info("");
 
-			IUI::VisitMembersForDebug(a_view, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder");
+			//memberVisitor.Visit(a_view, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder");
 		}
 	}
 

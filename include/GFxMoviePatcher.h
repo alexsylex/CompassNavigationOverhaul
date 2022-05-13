@@ -20,6 +20,10 @@ namespace IUI
 {
 	class GFxMemberVisitor : public RE::GFxValue::ObjectVisitor
 	{
+	public:
+
+		void Visit(RE::GFxMovieView* a_view, const char* a_pathToMember);
+
 	protected:
 
 		using ValueType = RE::GFxValue::ValueType;
@@ -27,15 +31,32 @@ namespace IUI
 		void Visit(const char* a_name, const RE::GFxValue& a_value) override;
 	};
 
+	class GFxRecursiveMemberVisitor : public GFxMemberVisitor
+	{
+	public:
+
+		void Visit(RE::GFxMovieView* a_view, const char* a_pathToMember)
+		{
+			GFxMemberVisitor::Visit(a_view, a_pathToMember);
+		}
+
+	protected:
+
+		void Visit(const char* a_name, const RE::GFxValue& a_value) override;
+	};
+
 	class GFxElementVisitor : public RE::GFxValue::ArrayVisitor
 	{
+	public:
+
+		void Visit(RE::GFxMovieView* a_view, const char* a_pathToMember);
+
 	protected:
+
 		using ValueType = RE::GFxValue::ValueType;
 
 		void Visit(std::uint32_t a_idx, const RE::GFxValue& a_value) override;
 	};
-
-	void VisitMembersForDebug(RE::GFxMovieView* a_view, const char* a_pathToMember);
 
 	class GFxMovieClip : 
 		public RE::GFxValue,

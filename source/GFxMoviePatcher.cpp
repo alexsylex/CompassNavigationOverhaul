@@ -6,6 +6,25 @@
 
 namespace IUI
 {
+	void GFxMemberVisitor::Visit(RE::GFxMovieView* a_view, const char* a_pathToMember)
+	{
+		if (a_view) 
+		{
+			RE::GFxValue member;
+			if (a_view->GetVariable(&member, a_pathToMember)) 
+			{
+				logger::debug("{}: {}", a_pathToMember, GFxValueTypeToString(member.GetType()));
+				if (member.IsObject())
+				{
+					logger::debug("{}", "{");
+					member.VisitMembers(this);
+					logger::debug("{}", "}");
+				}
+				logger::flush();
+			}
+		}
+	};
+
 	void GFxMemberVisitor::Visit(const char* a_name, const RE::GFxValue& a_value)
 	{
 		std::string_view name = a_name;
@@ -15,19 +34,35 @@ namespace IUI
 		}
 	}
 
-	void VisitMembersForDebug(RE::GFxMovieView* a_view, const char* a_pathToMember)
+	void GFxRecursiveMemberVisitor::Visit(const char* a_name, const RE::GFxValue& a_value)
 	{
-		IUI::GFxMemberVisitor memberVisitor;
-
-		if (a_view) {
+		std::string_view name = a_name;
+		if (name != "PlayReverse" && name != "PlayForward") 
+		{
+			if (a_value.IsDisplayObject()) 
+			{
+				GFxMovieClip movieClip{ a_value };
+				GFxMemberVisitor::Visit(movieClip.GetMovieView(), movieClip.ToString().c_str());
+			}
+			else
+			{
+				logger::debug("\tvar {}: {}", a_name, GFxValueTypeToString(a_value.GetType()));
+			}
+		}
+	}
+	
+	void GFxElementVisitor::Visit(RE::GFxMovieView* a_view, const char* a_pathToMember)
+	{
+		if (a_view)
+		{
 			RE::GFxValue member;
 			if (a_view->GetVariable(&member, a_pathToMember)) 
 			{
 				logger::debug("{}: {}", a_pathToMember, GFxValueTypeToString(member.GetType()));
-				if (member.IsObject())
+				if (member.IsArray())
 				{
 					logger::debug("{}", "{");
-					member.VisitMembers(&memberVisitor);
+					member.VisitElements(this);
 					logger::debug("{}", "}");
 				}
 				logger::flush();
@@ -39,26 +74,6 @@ namespace IUI
 	{
 		logger::debug("\t[{}] {}: {}", a_idx, a_value.ToString(), GFxValueTypeToString(a_value.GetType()));
 	}
-
-	void VisitElementsForDebug(RE::GFxMovieView* a_view, const char* a_pathToMember)
-	{
-		IUI::GFxElementVisitor elementVisitor;
-
-		if (a_view) {
-			RE::GFxValue member;
-			if (a_view->GetVariable(&member, a_pathToMember)) 
-			{
-				logger::debug("{}: {}", a_pathToMember, GFxValueTypeToString(member.GetType()));
-				if (member.IsArray())
-				{
-					logger::debug("{}", "{");
-					member.VisitElements(&elementVisitor);
-					logger::debug("{}", "}");
-				}
-				logger::flush();
-			}
-		}
-	};
 
 	GFxMoviePatcher::GFxMoviePatcher(RE::GFxMovieView* a_movieView, const std::string_view& a_movieUrl)
 	: movieView{ a_movieView }, movieDir{ a_movieUrl.substr(0, a_movieUrl.rfind('/') + 1) },
@@ -120,22 +135,25 @@ namespace IUI
 						RE::GFxValue member;
 						if (movieView->GetVariable(&member, pathToMember.c_str()))
 						{
-							VisitMembersForDebug(movieView, "_root.HUDMovieBaseInstance");
+							GFxMemberVisitor memberVisitor;
+							GFxElementVisitor elementVisitor;
+							GFxRecursiveMemberVisitor recursiveMemberVisitor;
 
-							VisitElementsForDebug(movieView, "_root.HUDMovieBaseInstance.HudElements");
+							//memberVisitor.Visit(movieView, "_root.HUDMovieBaseInstance");
+							//recursiveMemberVisitor.Visit(movieView, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder");
+							//elementVisitor.Visit(movieView, "_root.HUDMovieBaseInstance.HudElements");
+
+							RE::GFxValue::DisplayInfo displayInfo;
+							member.GetDisplayInfo(&displayInfo);
 
 							GFxMovieClip container = _root.CreateEmptyMovieClip("container");
 							container.LoadMovie(pathToSwfPatch);
 
-							VisitElementsForDebug(movieView, "_root.HUDMovieBaseInstance.HudElements");
+							member.SetDisplayInfo(&displayInfo);
 
-							RE::GFxValue CompassRect;
-							movieView->GetVariable(&CompassRect, "_root.HUDMovieBaseInstance.CompassRect");
-							logger::info("CompassRect = {}", CompassRect.ToString());
-
-							VisitMembersForDebug(movieView, "_root.container");
-
-							VisitMembersForDebug(movieView, "_root.HUDMovieBaseInstance");
+							elementVisitor.Visit(movieView, "_root.HUDMovieBaseInstance.HudElements");
+							memberVisitor.Visit(movieView, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder");
+							memberVisitor.Visit(movieView, "_root.HUDMovieBaseInstance");
 
 							loadedSwfPatches++;
 						}
