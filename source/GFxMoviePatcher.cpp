@@ -93,7 +93,7 @@ namespace IUI
 		fs::path startPath = rootPath;
 		startPath.append(GetMovieFilename());
 		
-		int loadedSwfPatches = 0;
+		int loadedPatchesCount = 0;
 
 		if (fs::exists(startPath))
 		{
@@ -117,51 +117,37 @@ namespace IUI
 				}
 				else
 				{
-					std::string pathToSwfPatch = fs::relative(currentPath, rootPath).string().c_str();
+					std::string filePath = fs::relative(currentPath, rootPath).string().c_str();
 
-					std::size_t pathToMemberEnd = pathToSwfPatch.find(".swf", pathToSwfPatch.size() - 4);
-					if (pathToMemberEnd != std::string::npos)
+					std::size_t filePathEnd = filePath.find(".swf", filePath.size() - 4);
+					if (filePathEnd != std::string::npos)
 					{
 						logger::debug("{}", currentPath.string().c_str());
 						logger::flush();
 
-						std::size_t pathToMemberStart = pathToSwfPatch.find("\\") + 1;
-						std::size_t pathToMemberLen = pathToMemberEnd - pathToMemberStart;
+						std::size_t filePathStart = filePath.find("\\") + 1;
+						std::size_t filePathLen = filePathEnd - filePathStart;
 
-						std::string pathToMember = pathToSwfPatch.substr(pathToMemberStart, pathToMemberLen);
+						std::string fullQualyMemberName = filePath.substr(filePathStart, filePathLen);
 
-						std::replace(pathToMember.begin(), pathToMember.end(), '\\', '.');
+						std::replace(fullQualyMemberName.begin(), fullQualyMemberName.end(), '\\', '.');
 
 						RE::GFxValue member;
-						if (movieView->GetVariable(&member, pathToMember.c_str()))
+						if (movieView->GetVariable(&member, fullQualyMemberName.c_str()))
 						{
-							GFxMemberVisitor memberVisitor;
-							GFxElementVisitor elementVisitor;
-							GFxRecursiveMemberVisitor recursiveMemberVisitor;
+							std::string patchContainerName = "patch";
+							patchContainerName += std::to_string(loadedPatchesCount);
 
-							//memberVisitor.Visit(movieView, "_root.HUDMovieBaseInstance");
-							//recursiveMemberVisitor.Visit(movieView, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder");
-							//elementVisitor.Visit(movieView, "_root.HUDMovieBaseInstance.HudElements");
+							GFxMovieClip patch = _root.CreateEmptyMovieClip(patchContainerName);
+							patch.LoadMovie(filePath);
 
-							RE::GFxValue::DisplayInfo displayInfo;
-							member.GetDisplayInfo(&displayInfo);
-
-							GFxMovieClip container = _root.CreateEmptyMovieClip("container");
-							container.LoadMovie(pathToSwfPatch);
-
-							member.SetDisplayInfo(&displayInfo);
-
-							elementVisitor.Visit(movieView, "_root.HUDMovieBaseInstance.HudElements");
-							memberVisitor.Visit(movieView, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder");
-							memberVisitor.Visit(movieView, "_root.HUDMovieBaseInstance");
-
-							loadedSwfPatches++;
+							loadedPatchesCount++;
 						}
 					}
 				}
 			}
 		}
 
-		return loadedSwfPatches;
+		return loadedPatchesCount;
 	}
 }

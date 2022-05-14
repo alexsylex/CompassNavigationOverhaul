@@ -13,7 +13,19 @@
 
 	public function CompassShoutMeterBase()
 	{
-		var hud = _root.HUDMovieBaseInstance;
+		var hud:MovieClip = _root.HUDMovieBaseInstance;
+
+		var originalPos:Object = { x:0, y:0 };
+		hud.CompassShoutMeterHolder.localToGlobal(originalPos);
+
+		_x = originalPos.x;
+		_y = originalPos.y;
+
+		var replacerPos:Object = { x:0, y:0 };
+		localToGlobal(replacerPos);
+
+		_parent.originalPosTextfield.text = "Original x: " + originalPos.x.toString() + ", y: " + originalPos.y.toString();
+		_parent.replacerPosTextField.text = "Replacer x: " + replacerPos.x.toString() + ", y: " + replacerPos.y.toString();
 
 		var hadTemperatureMeter:Boolean = hud["TemperatureMeter_mc"] != undefined;
 
