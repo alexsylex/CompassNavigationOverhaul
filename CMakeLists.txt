@@ -105,8 +105,10 @@ find_package(spdlog REQUIRED CONFIG)
 # ---- Add source files ----
 
 set(headers
+	include/RE/C/Compass.h
 	include/RE/G/GFxValue.h
 	include/RE/H/HUDMarkerManager.h
+	include/RE/N/NiPoint3.h
 	include/utils/GFxFunction.h
 	include/utils/INISettingCollection.h
 	include/utils/Logger.h
@@ -122,6 +124,7 @@ set(headers
 
 set(sources
 	source/RE/G/GFxValue.cpp
+	source/RE/N/NiPoint3.cpp
 	source/utils/INISettingCollection.cpp
 	source/utils/Logger.cpp
 	source/GFxMoviePatcher.cpp
@@ -129,7 +132,7 @@ set(sources
 	source/main.cpp
 	source/pch.cpp
 	source/QuestHandler.cpp
- )
+)
 
 source_group(
 	TREE

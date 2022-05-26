@@ -188,11 +188,14 @@ namespace IUI
 	{
 	public:
 
-		GFxMoviePatcher(RE::GFxMovieView* a_movieView, const std::string_view& a_movieUrl);
+		GFxMoviePatcher(RE::GFxMovieView* a_movieView, const std::string_view& a_movieUrl)
+		: movieView{ a_movieView }, movieDir{ a_movieUrl.substr(0, a_movieUrl.rfind('/') + 1) },
+		  movieFilename{ a_movieUrl.substr(a_movieUrl.rfind('/') + 1) }
+		{ }
 
 		std::string GetMovieFilename() const {return movieFilename.substr(0, movieFilename.find('.')); }
 
-		int LoadAvailableSwfPatches();
+		int LoadAvailablePatches();
 
 	private:
 

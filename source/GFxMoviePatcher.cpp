@@ -75,12 +75,7 @@ namespace IUI
 		logger::debug("\t[{}] {}: {}", a_idx, a_value.ToString(), GFxValueTypeToString(a_value.GetType()));
 	}
 
-	GFxMoviePatcher::GFxMoviePatcher(RE::GFxMovieView* a_movieView, const std::string_view& a_movieUrl)
-	: movieView{ a_movieView }, movieDir{ a_movieUrl.substr(0, a_movieUrl.rfind('/') + 1) },
-	  movieFilename{ a_movieUrl.substr(a_movieUrl.rfind('/') + 1) }
-	{ }
-
-	int GFxMoviePatcher::LoadAvailableSwfPatches()
+	int GFxMoviePatcher::LoadAvailablePatches()
 	{
 		namespace fs = std::filesystem;
 
@@ -135,10 +130,10 @@ namespace IUI
 						RE::GFxValue member;
 						if (movieView->GetVariable(&member, fullQualyMemberName.c_str()))
 						{
-							std::string patchContainerName = "patch";
-							patchContainerName += std::to_string(loadedPatchesCount);
+							std::string patchName = "Patch";
+							patchName += std::to_string(loadedPatchesCount);
 
-							GFxMovieClip patch = _root.CreateEmptyMovieClip(patchContainerName);
+							GFxMovieClip patch = _root.CreateEmptyMovieClip(patchName);
 							patch.LoadMovie(filePath);
 
 							loadedPatchesCount++;

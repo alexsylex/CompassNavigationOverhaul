@@ -1,6 +1,7 @@
 ﻿class CompassShoutMeterBase extends MovieClip
 {
 	var Compass:MovieClip;
+	var CompassMarkerList:Array;
 	var ShoutMeterInstance:MovieClip;
 	var ShoutWarningInstance:MovieClip;
 	var All:Boolean;
@@ -15,18 +16,14 @@
 	{
 		var hud:MovieClip = _root.HUDMovieBaseInstance;
 
+		// Move to original position
 		var originalPos:Object = { x:0, y:0 };
 		hud.CompassShoutMeterHolder.localToGlobal(originalPos);
 
 		_x = originalPos.x;
 		_y = originalPos.y;
 
-		var replacerPos:Object = { x:0, y:0 };
-		localToGlobal(replacerPos);
-
-		_parent.originalPosTextfield.text = "Original x: " + originalPos.x.toString() + ", y: " + originalPos.y.toString();
-		_parent.replacerPosTextField.text = "Replacer x: " + replacerPos.x.toString() + ", y: " + replacerPos.y.toString();
-
+		// Get state conditions before replacing
 		var hadTemperatureMeter:Boolean = hud["TemperatureMeter_mc"] != undefined;
 
 		var hudElementIndex:Number = -1;
@@ -38,6 +35,13 @@
 			}
 		}
 
+		// Replace references to the old clip
+		// MovieClip.removeMovieClip() does not remove a movie clip assigned
+		// to a negative depth value. Movie clips created in the authoring tool
+		// are assigned negative depth values by default. To remove a movie clip
+		// that is assigned to a negative depth value, first use the MovieClip.swapDepths()
+		// method to move the movie clip to a positive depth value.
+		// Reference: http://homepage.divms.uiowa.edu/~slonnegr/flash/ActionScript2Reference.pdf#page=917
 		hud.CompassShoutMeterHolder.swapDepths(1);
 		hud.CompassShoutMeterHolder.removeMovieClip();
 		hud.CompassShoutMeterHolder = this;
@@ -58,6 +62,7 @@
 
 		hud.HudElements[hudElementIndex] = this;
 
+		// Init our own variables
 		All = true;
 		Favor = true;
 		DialogueMode = true;
@@ -65,5 +70,7 @@
 		Swimming = true;
 		HorseMode = true;
 		WarHorseMode = true;
+
+		CompassMarkerList = hud.CompassMarkerList;
 	}
 }
