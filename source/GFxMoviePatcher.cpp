@@ -2,79 +2,12 @@
 
 #include "RE/G/GFxMovieView.h"
 
+#include "utils/GFxVisitors.h"
+
 #include "utils/Logger.h"
 
 namespace IUI
 {
-	void GFxMemberVisitor::Visit(RE::GFxMovieView* a_view, const char* a_pathToMember)
-	{
-		if (a_view) 
-		{
-			RE::GFxValue member;
-			if (a_view->GetVariable(&member, a_pathToMember)) 
-			{
-				logger::debug("{}: {}", a_pathToMember, GFxValueTypeToString(member.GetType()));
-				if (member.IsObject())
-				{
-					logger::debug("{}", "{");
-					member.VisitMembers(this);
-					logger::debug("{}", "}");
-				}
-				logger::flush();
-			}
-		}
-	};
-
-	void GFxMemberVisitor::Visit(const char* a_name, const RE::GFxValue& a_value)
-	{
-		std::string_view name = a_name;
-		if (name != "PlayReverse" && name != "PlayForward")
-		{
-			logger::debug("\tvar {}: {}", a_name, GFxValueTypeToString(a_value.GetType()));
-		}
-	}
-
-	void GFxRecursiveMemberVisitor::Visit(const char* a_name, const RE::GFxValue& a_value)
-	{
-		std::string_view name = a_name;
-		if (name != "PlayReverse" && name != "PlayForward") 
-		{
-			if (a_value.IsDisplayObject()) 
-			{
-				GFxMovieClip movieClip{ a_value };
-				GFxMemberVisitor::Visit(movieClip.GetMovieView(), movieClip.ToString().c_str());
-			}
-			else
-			{
-				logger::debug("\tvar {}: {}", a_name, GFxValueTypeToString(a_value.GetType()));
-			}
-		}
-	}
-	
-	void GFxElementVisitor::Visit(RE::GFxMovieView* a_view, const char* a_pathToMember)
-	{
-		if (a_view)
-		{
-			RE::GFxValue member;
-			if (a_view->GetVariable(&member, a_pathToMember)) 
-			{
-				logger::debug("{}: {}", a_pathToMember, GFxValueTypeToString(member.GetType()));
-				if (member.IsArray())
-				{
-					logger::debug("{}", "{");
-					member.VisitElements(this);
-					logger::debug("{}", "}");
-				}
-				logger::flush();
-			}
-		}
-	};
-
-	void GFxElementVisitor::Visit(std::uint32_t a_idx, const RE::GFxValue& a_value)
-	{
-		logger::debug("\t[{}] {}: {}", a_idx, a_value.ToString(), GFxValueTypeToString(a_value.GetType()));
-	}
-
 	int GFxMoviePatcher::LoadAvailablePatches()
 	{
 		namespace fs = std::filesystem;
@@ -135,6 +68,28 @@ namespace IUI
 
 							GFxMovieClip patch = _root.CreateEmptyMovieClip(patchName);
 							patch.LoadMovie(filePath);
+
+							GFxMovieClip compassShoutMeterHolder = patch.GetMember("CompassShoutMeterHolder");
+
+							compassShoutMeterHolder.Invoke("addAttachMovieAnywhere", nullptr);
+							compassShoutMeterHolder.Invoke("attachTestSymbol", nullptr);
+
+							GFxMemberVisitor memberVisitor;
+
+							memberVisitor.VisitMembersOf(compassShoutMeterHolder);
+
+							//GFxMovieClip testSymbolSwf1 = compassShoutMeterHolder.GetMember("testSymbolSwf1");
+							//memberVisitor.VisitMembersOf(movieView, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder.testSymbolSwf1");
+							//memberVisitor.VisitMembersOf(testSymbolSwf1);
+
+							//GFxMovieClip baseIcon = testSymbolSwf1.GetMember("baseIcon");
+							//memberVisitor.VisitMembersOf(baseIcon);
+							//GFxMovieClip emblemIcon = testSymbolSwf1.GetMember("emblemIcon");
+							//memberVisitor.VisitMembersOf(emblemIcon);
+
+							GFxMovieClip testSymbolSwf = compassShoutMeterHolder.GetMember("testSymbolSwf");
+							memberVisitor.VisitMembersOf(movieView, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder.testSymbolSwf");
+							memberVisitor.VisitMembersOf(testSymbolSwf);
 
 							loadedPatchesCount++;
 						}

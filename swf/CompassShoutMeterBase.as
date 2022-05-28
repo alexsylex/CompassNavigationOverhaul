@@ -73,4 +73,33 @@
 
 		CompassMarkerList = hud.CompassMarkerList;
 	}
+
+	function addAttachMovieAnywhere():Void
+	{
+		MovieClip.prototype.attachMovieAnywhere = function(url:String, id:String, name:String, depth:Number, initObject:Object)
+		{
+			if(depth == undefined) depth = getNextHighestDepth();
+			var parent:MovieClip = this;
+			var container:MovieClip = this.createEmptyMovieClip(name, depth);
+			var mcLoader:MovieClipLoader = new MovieClipLoader();
+			var listener:Object = new Object();
+			listener.onLoadInit = function (mc)
+			{
+				mc.attachMovie(id, "mc", mc.getNextHighestDepth());
+				parent[name] = parent[name]["mc"];
+			}
+			mcLoader.addListener(listener);
+			mcLoader.loadClip(url, container);
+		}
+	}
+
+	function attachTestSymbol():Void
+	{
+		var attachExternalMovie:Function = MovieClip.prototype.attachMovieAnywhere;
+
+		attachExternalMovie("Test.swf", "Test", "testSymbolSwf", getNextHighestDepth());
+		//attachMovie("TestSymbol", "testSymbolLocal", getNextHighestDepth());
+
+		delete MovieClip.prototype.attachMovieAnywhere;
+	}
 }

@@ -6,6 +6,18 @@
 
 static constexpr Plugin plugin{ "Helpful Compass Navigation" };
 
+void SKSEMessageListener(SKSE::MessagingInterface::Message* a_msg)
+{
+	// If all plugins have been loaded
+	if (a_msg->type == SKSE::MessagingInterface::kPostLoad) 
+	{
+		if (SKSE::GetMessagingInterface()->RegisterListener("Infinity UI", HCN::InfinityUIMessageListener)) 
+		{
+			logger::info("Successfully registered for Infinity UI messages");
+		}
+	}
+}
+
 #if BUILD_SE
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* a_skse, SKSE::PluginInfo* a_info)
 {
@@ -72,6 +84,11 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	auto loggerLevel = !enableLog ? logger::level::err :
 									  static_cast<logger::level>(iniSettingCollection->GetSetting<std::uint32_t>("uLogLevel:Debug"));
 	logger::set_level(loggerLevel, loggerLevel);
+
+	if (!SKSE::GetMessagingInterface()->RegisterListener("SKSE", SKSEMessageListener))
+	{
+		return false;
+	}
 
 	HCN::InstallHooks();
 

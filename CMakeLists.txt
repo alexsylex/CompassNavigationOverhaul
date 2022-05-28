@@ -120,7 +120,7 @@ set(headers
 	include/pch.h
 	include/Plugin.h
 	include/QuestHandler.h
-)
+ "include/utils/GFxVisitors.h")
 
 set(sources
 	source/RE/G/GFxValue.cpp
@@ -132,7 +132,7 @@ set(sources
 	source/main.cpp
 	source/pch.cpp
 	source/QuestHandler.cpp
-)
+ "source/RE/G/GFxVisitors.cpp")
 
 source_group(
 	TREE

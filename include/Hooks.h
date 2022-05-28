@@ -8,20 +8,6 @@
 
 namespace HCN
 {
-	class BSScaleformManager
-	{
-#if BUILD_SE
-		static constinit inline REL::ID LoadMovieId{ 80302 };
-#else
-		static constinit inline REL::ID LoadMovieId{ 80302 };
-#endif
-	public:
-
-		static inline REL::Relocation<bool (*)(const RE::BSScaleformManager*, RE::IMenu*,
-			RE::GPtr<RE::GFxMovieView>&, const char*, RE::GFxMovieView::ScaleModeType, float)>
-			LoadMovie{ LoadMovieId };
-	};
-
 	class HUDMarkerManager
 	{
 #if BUILD_SE
@@ -70,8 +56,6 @@ namespace HCN
 		static inline REL::Relocation<std::uintptr_t> SetMarkers{ SetMarkersId };
 	};
 
-	void PatchGFxMovie(RE::GFxMovieView* a_viewOut, float a_deltaT, std::uint32_t a_frameCatchUpCount);
-
 	bool ProcessQuestHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 		RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId,
 		RE::TESQuest*& a_quest);
@@ -87,29 +71,6 @@ namespace HCN
 
 	static inline void InstallHooks()
 	{
-		// BSScaleformManager::LoadMovie
-		{
-			static std::uintptr_t hookedAddress = BSScaleformManager::LoadMovie.address() + 0x39B;
-
-			struct HookCode : Xbyak::CodeGenerator
-			{
-				HookCode()
-				{
-					Xbyak::Label hookLabel;
-					Xbyak::Label retnLabel;
-
-					call(ptr[rip + hookLabel]);
-
-					jmp(ptr[rip + retnLabel]);
-
-					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&PatchGFxMovie));
-					L(retnLabel), dq(hookedAddress + 6);
-				}
-			};
-
-			utils::WriteBranchTrampoline<6>(hookedAddress, HookCode());
-		}
-
 		// HUDMarkerManager::ProcessQuestMarker
 		{
 			static std::uintptr_t hookedAddress = HUDMarkerManager::ProcessQuestMarker.address() + 0x114;
@@ -205,4 +166,6 @@ namespace HCN
 			utils::WriteBranchTrampoline<5>(hookedAddress, Hook());
 		}
 	}
+
+	void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg);
 }

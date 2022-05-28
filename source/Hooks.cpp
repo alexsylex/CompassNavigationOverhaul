@@ -9,23 +9,13 @@
 
 namespace HCN
 {
-	void PatchGFxMovie(RE::GFxMovieView* a_view, float a_deltaT, std::uint32_t a_frameCatchUpCount)
+	void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg)
 	{
-		std::string_view movieUrl = a_view->GetMovieDef()->GetFileURL();
-
-		logger::trace("Detected GFx movie load from {}", movieUrl);
-
-		a_view->Advance(a_deltaT, a_frameCatchUpCount);
-
-		IUI::GFxMoviePatcher moviePatcher(a_view, a_view->GetMovieDef()->GetFileURL());
-
-		if (int loadedSwfPatches = moviePatcher.LoadAvailablePatches()) 
+		if (a_msg->type == 0)
 		{
-			std::string fmtMessage = "Loaded {} swf patch";
-			fmtMessage += loadedSwfPatches > 1 ? "es" : "";
-			fmtMessage += " for {}";
+			auto msgData = static_cast<const char*>(a_msg->data);
 
-			logger::info(fmtMessage, loadedSwfPatches, moviePatcher.GetMovieFilename());
+			logger::info("Message received from {}: {}", a_msg->sender, msgData);
 			logger::flush();
 		}
 	}
@@ -77,15 +67,11 @@ namespace HCN
 			CropAngleRange(compassAngle);
 			CropAngleRange(headingAngle);
 
-			RE::GFxValue parent;
-			hudMenuMovieView->GetVariable(&parent, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder._parent");
+			IUI::GFxMovieClip _parent{ hudMenuMovieView, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder._parent" };
 
-			RE::GFxValue textField0;
-			parent.GetMember("TextField0", &textField0);
-			RE::GFxValue textField1;
-			parent.GetMember("TextField1", &textField1);
-			RE::GFxValue textField2;
-			parent.GetMember("TextField2", &textField2);
+			RE::GFxValue textField0 = _parent.GetMember("TextField0");
+			RE::GFxValue textField1 = _parent.GetMember("TextField1");
+			RE::GFxValue textField2 = _parent.GetMember("TextField2");
 
 			std::string questInfo{ a_quest->GetName() };
 			if (a_quest->GetType() == RE::QUEST_DATA::Type::kMiscellaneous) 
@@ -107,9 +93,11 @@ namespace HCN
 					if (auto questTeleporter = markerRef->As<RE::TESObjectREFR>()) 
 					{
 						questInfo += ", ";
+						questInfo += questTeleporter->GetName();
+
 						// TODO: Get the location where the marker teleports us to (this attempt returns nullptr)
-						auto teleportLocation = questTeleporter->extraList.GetByType<RE::ExtraLocationRefType>()->locRefType->As<RE::TESObjectREFR>();
-						questInfo += teleportLocation->GetName();
+						//auto teleportLocation = questTeleporter->extraList.GetByType<RE::ExtraLocationRefType>()->locRefType->As<RE::TESObjectREFR>();
+						//questInfo += teleportLocation->GetName();
 					}
 					break;
 				}
