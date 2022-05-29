@@ -105,6 +105,7 @@ find_package(spdlog REQUIRED CONFIG)
 # ---- Add source files ----
 
 set(headers
+	include/IUI/GFxArray.h
 	include/IUI/GFxDisplayObject.h
 	include/IUI/GFxObject.h
 	include/RE/C/Compass.h

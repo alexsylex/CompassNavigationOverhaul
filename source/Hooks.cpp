@@ -4,8 +4,10 @@
 
 #include "utils/Logger.h"
 
-#include "QuestHandler.h"
+#include "IUI/GFxArray.h"
 #include "IUI/GFxDisplayObject.h"
+
+#include "QuestHandler.h"
 
 namespace HCN
 {
@@ -19,22 +21,43 @@ namespace HCN
 		};
 
 		// DONE: Load position of the CompassShoutMeterHolder object (localToGlobal)
-		// TODO: Get if HUDMovieBaseInstance had temperature meter (HUDMovieBaseInstance["TemperatureMeter_mc"] != undefined)
-		// TODO: Get the index of the HUD element for replacement (HUDMovieBaseInstance.HudElements[i] == HUDMovieBaseInstance.CompassShoutMeterHolder)
+		// DONE: Get if HUDMovieBaseInstance had temperature meter (HUDMovieBaseInstance["TemperatureMeter_mc"] != undefined)
+		// DONE: Get the index of the HUD element for replacement (HUDMovieBaseInstance.HudElements[i] == HUDMovieBaseInstance.CompassShoutMeterHolder)
 
 		switch (a_msg->type) 
 		{
 		case Status::kPreLoad:
 			{
-				auto originalMember = static_cast<GFxDisplayObject*>(a_msg->data);
-				RE::GPointF pos = originalMember->LocalToGlobal();
+				auto& compassShoutMeterHolder = *static_cast<GFxDisplayObject*>(a_msg->data);
+				RE::GPointF compassShoutMeterHolderPos = compassShoutMeterHolder.LocalToGlobal();
 
-				GFxDisplayObject _parent = originalMember->GetMember("_parent");
-				RE::GPointF parentPos = _parent.LocalToGlobal();
+				logger::info("Message received ({}) from {}: CompassShoutMeterHolder position = ({}, {})",
+							 a_msg->type, a_msg->sender, compassShoutMeterHolderPos.x, compassShoutMeterHolderPos.y);
 
-				logger::info("Message received ({}) from {}: DisplayObject position = ({}, {})",
-					a_msg->type, a_msg->sender, pos.x, pos.y);
-				logger::info("Parent position = ({}, {})", parentPos.x, parentPos.y);
+				GFxDisplayObject hudMovieBaseInstance = compassShoutMeterHolder.GetMember("_parent");
+
+				if (hudMovieBaseInstance.GetMember("TemperatureMeter_mc").IsUndefined())
+				{
+					logger::info("HUDMovieBaseInstance had NOT a TemperatureMeter_mc");
+				}
+				else 
+				{
+					logger::info("HUDMovieBaseInstance had a TemperatureMeter_mc");
+				}
+
+				GFxArray hudElements = hudMovieBaseInstance.GetMember("HudElements");
+
+				std::uint32_t hudElementIndex = hudElements.FindElement(compassShoutMeterHolder);
+
+				if (hudElementIndex != static_cast<std::uint32_t>(-1)) 
+				{
+					logger::info("CompassShoutMeterHolder found at index {}", hudElementIndex);
+				}
+				else 
+				{
+					logger::info("Could not find CompassShoutMeterHolder in HudElements array");
+				}
+
 				break;
 			}
 		case Status::kPosLoad:

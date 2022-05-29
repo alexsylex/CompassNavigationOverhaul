@@ -24,24 +24,12 @@ public:
 		assert(IsObject());
 	}
 
-	bool operator==(const RE::GFxValue& a_rhs) const
-	{
-		if (a_rhs.IsObject()) 
-		{
-			auto& other = reinterpret_cast<const GFxObject &>(a_rhs);
-
-			return _value.obj == other._value.obj;
-		}
-
-		return false;
-	}
-
 	RE::GFxMovieView* GetMovieView()
 	{
 		return **reinterpret_cast<RE::GFxMovieView***>(static_cast<RE::GFxValue*>(this));
 	}
 
-	RE::GFxValue GetMember(const std::string_view& a_memberName)
+	RE::GFxValue GetMember(const std::string_view& a_memberName) const
 	{
 		RE::GFxValue value;
 		RE::GFxValue::GetMember(a_memberName.data(), &value);

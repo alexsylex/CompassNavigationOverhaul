@@ -20,18 +20,6 @@ public:
 		assert(a_value.IsDisplayObject());
 	}
 
-	bool operator==(const RE::GFxValue& a_rhs) const
-	{
-		if (a_rhs.IsDisplayObject()) 
-		{
-			auto& other = reinterpret_cast<const GFxDisplayObject&>(a_rhs);
-
-			return _value.obj == other._value.obj;
-		}
-
-		return false;
-	}
-
 	GFxDisplayObject CreateEmptyMovieClip(const std::string_view& a_name, std::int32_t a_depth)
 	{
 		GFxDisplayObject mc;
