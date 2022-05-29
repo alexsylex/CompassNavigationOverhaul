@@ -13,7 +13,11 @@ void SKSEMessageListener(SKSE::MessagingInterface::Message* a_msg)
 	{
 		if (SKSE::GetMessagingInterface()->RegisterListener("Infinity UI", HCN::InfinityUIMessageListener)) 
 		{
-			logger::info("Successfully registered for Infinity UI messages");
+			logger::info("Successfully registered for Infinity UI messages!");
+		}
+		else 
+		{
+			logger::error("Infinity UI installation not detected. Please, go to ... to get it");
 		}
 	}
 }
@@ -66,7 +70,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 		return false;
 	}
 
-	logger::info("{} {}.{}", plugin.name, plugin.versionMajor, plugin.versionMinor);
+	logger::info("Loading {} {}.{}...", plugin.name, plugin.versionMajor, plugin.versionMinor);
 
 	SKSE::Init(a_skse);
 
@@ -93,7 +97,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	HCN::InstallHooks();
 
 	logger::set_level(logger::level::info, logger::level::info);
-	logger::info("{} succesfully loaded", plugin.name);
+	logger::info("Succesfully loaded!");
 
 	logger::set_level(loggerLevel, loggerLevel);
 

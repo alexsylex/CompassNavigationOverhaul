@@ -3,6 +3,7 @@
 #include "utils/Trampoline.h"
 
 #include "RE/B/BSCoreTypes.h"
+#include "RE/C/Compass.h"
 #include "RE/H/HUDMarkerManager.h"
 #include "RE/N/NiPoint3.h"
 
@@ -22,14 +23,12 @@ namespace HCN
 	public:
 
 		static inline REL::Relocation<bool (*)(const RE::HUDMarkerManager*, RE::TESQuest**,
-			RE::BSTArray<RE::UnkValue>*)>
-			ProcessQuestMarker{ ProcessQuestMarkerId };
+											   RE::BSTArray<RE::UnkValue>*)> ProcessQuestMarker{ ProcessQuestMarkerId };
 
 		static inline REL::Relocation<bool (*)(const RE::HUDMarkerManager*)> ProcessLocationMarkers{ ProcessLocationMarkersId };
 
 		static inline REL::Relocation<bool (*)(const RE::HUDMarkerManager*, RE::HUDMarker::ScaleformData*,
-			RE::NiPoint3*, const RE::RefHandle&, std::int32_t)>
-			UpdateHUDMarker{ UpdateHUDMarkerId };
+											   RE::NiPoint3*, const RE::RefHandle&, std::int32_t)> UpdateHUDMarker{ UpdateHUDMarkerId };
 	};
 
 	class HUDMenu
@@ -53,21 +52,21 @@ namespace HCN
 #endif
 	public:
 
-		static inline REL::Relocation<std::uintptr_t> SetMarkers{ SetMarkersId };
+		static inline REL::Relocation<bool (*)(RE::Compass*)> SetMarkers{ SetMarkersId };
 	};
 
 	bool ProcessQuestHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
-		RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId,
-		RE::TESQuest*& a_quest);
+						  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId,
+						  RE::TESQuest*& a_quest);
 
 	bool ProcessLocationHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
-		RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId);
+							 RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId);
 
 	bool ProcessEnemyHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
-		RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId);
+						  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId);
 
 	bool ProcessPlayerSetHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
-		RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId);
+							  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId);
 
 	static inline void InstallHooks()
 	{

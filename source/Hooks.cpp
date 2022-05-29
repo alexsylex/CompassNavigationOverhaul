@@ -5,19 +5,51 @@
 #include "utils/Logger.h"
 
 #include "QuestHandler.h"
-#include "GFxMoviePatcher.h"
+#include "IUI/GFxDisplayObject.h"
 
 namespace HCN
 {
 	void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg)
 	{
-		if (a_msg->type == 0)
+		enum Status
 		{
-			auto msgData = static_cast<const char*>(a_msg->data);
+			kPreLoad,
+			kPosLoad,
+			kAbortLoad
+		};
 
-			logger::info("Message received from {}: {}", a_msg->sender, msgData);
-			logger::flush();
+		// DONE: Load position of the CompassShoutMeterHolder object (localToGlobal)
+		// TODO: Get if HUDMovieBaseInstance had temperature meter (HUDMovieBaseInstance["TemperatureMeter_mc"] != undefined)
+		// TODO: Get the index of the HUD element for replacement (HUDMovieBaseInstance.HudElements[i] == HUDMovieBaseInstance.CompassShoutMeterHolder)
+
+		switch (a_msg->type) 
+		{
+		case Status::kPreLoad:
+			{
+				auto originalMember = static_cast<GFxDisplayObject*>(a_msg->data);
+				RE::GPointF pos = originalMember->LocalToGlobal();
+
+				logger::info("Message received ({}) from {}: DisplayObject position = ({}, {})",
+					a_msg->type, a_msg->sender, pos.x, pos.y);
+				break;
+			}
+		case Status::kPosLoad:
+			{
+				auto msgData = *static_cast<const char**>(a_msg->data);
+				logger::info("Message received ({}) from {}: {}", a_msg->type, a_msg->sender, msgData);
+				break;
+			}
+		case Status::kAbortLoad:
+			{
+				auto msgData = *static_cast<const char**>(a_msg->data);
+				logger::info("Message received ({}) from {}: {}", a_msg->type, a_msg->sender, msgData);
+				break;
+			}
+		default:
+			break;
 		}
+
+		logger::flush();
 	}
 
 	bool ProcessQuestHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
@@ -120,7 +152,7 @@ namespace HCN
 
 			auto ToDegrees = [](float a_angle) -> float { return a_angle * 180.0F / pi; };
 
-			textField0.SetText(questInfo.c_str());
+			//textField0.SetText(questInfo.c_str());
 			textField1.SetText((std::string{ "Heading angle: " } + std::to_string(ToDegrees(headingAngle))).c_str());
 			textField2.SetText((std::string{ "Relative angle: " } + std::to_string(ToDegrees(headingAngle - playerCameraAngle))).c_str());
 

@@ -23,6 +23,10 @@
 		_x = originalPos.x;
 		_y = originalPos.y;
 
+		var textField0:TextField = _parent.TextField0;
+
+		textField0.text = "Pos: " + _x.toString() + ", " + _y.toString();
+
 		// Get state conditions before replacing
 		var hadTemperatureMeter:Boolean = hud["TemperatureMeter_mc"] != undefined;
 
