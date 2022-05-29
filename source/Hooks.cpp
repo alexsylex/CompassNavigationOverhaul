@@ -29,8 +29,12 @@ namespace HCN
 				auto originalMember = static_cast<GFxDisplayObject*>(a_msg->data);
 				RE::GPointF pos = originalMember->LocalToGlobal();
 
+				GFxDisplayObject _parent = originalMember->GetMember("_parent");
+				RE::GPointF parentPos = _parent.LocalToGlobal();
+
 				logger::info("Message received ({}) from {}: DisplayObject position = ({}, {})",
 					a_msg->type, a_msg->sender, pos.x, pos.y);
+				logger::info("Parent position = ({}, {})", parentPos.x, parentPos.y);
 				break;
 			}
 		case Status::kPosLoad:
@@ -41,8 +45,8 @@ namespace HCN
 			}
 		case Status::kAbortLoad:
 			{
-				auto msgData = *static_cast<const char**>(a_msg->data);
-				logger::info("Message received ({}) from {}: {}", a_msg->type, a_msg->sender, msgData);
+				auto originalMember = static_cast<RE::GFxValue*>(a_msg->data);
+				logger::warn("Message received ({}) from {}: Aborted replacement of {}", a_msg->type, a_msg->sender, originalMember->ToString());
 				break;
 			}
 		default:
@@ -99,11 +103,11 @@ namespace HCN
 			CropAngleRange(compassAngle);
 			CropAngleRange(headingAngle);
 
-			IUI::GFxMovieClip _parent{ hudMenuMovieView, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder._parent" };
+			GFxDisplayObject _parent{ hudMenuMovieView, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder._parent" };
 
-			RE::GFxValue textField0 = _parent.GetMember("TextField0");
-			RE::GFxValue textField1 = _parent.GetMember("TextField1");
-			RE::GFxValue textField2 = _parent.GetMember("TextField2");
+			GFxDisplayObject textField0 = _parent.GetMember("TextField0");
+			GFxDisplayObject textField1 = _parent.GetMember("TextField1");
+			GFxDisplayObject textField2 = _parent.GetMember("TextField2");
 
 			std::string questInfo{ a_quest->GetName() };
 			if (a_quest->GetType() == RE::QUEST_DATA::Type::kMiscellaneous) 
