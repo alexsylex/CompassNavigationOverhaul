@@ -4,8 +4,7 @@
 
 #include "utils/Logger.h"
 
-#include "IUI/GFxArray.h"
-#include "IUI/GFxDisplayObject.h"
+#include "IUI/API.h"
 
 #include "QuestHandler.h"
 
@@ -13,29 +12,34 @@ namespace HCN
 {
 	void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg)
 	{
-		enum Status
+		if (!a_msg || std::string_view(a_msg->sender) != "Infinity UI") 
 		{
-			kPreLoad,
-			kPosLoad,
-			kAbortLoad
-		};
+			return;
+		}
 
-		// DONE: Load position of the CompassShoutMeterHolder object (localToGlobal)
-		// DONE: Get if HUDMovieBaseInstance had temperature meter (HUDMovieBaseInstance["TemperatureMeter_mc"] != undefined)
-		// DONE: Get the index of the HUD element for replacement (HUDMovieBaseInstance.HudElements[i] == HUDMovieBaseInstance.CompassShoutMeterHolder)
+		const char* msgType = a_msg->type == IUI::API::kPreLoad	  ? "PreLoad" :
+							  a_msg->type == IUI::API::kPostLoad  ? "PostLoad" :
+							  a_msg->type == IUI::API::kAbortLoad ? "AbortLoad" :
+																	"Unknown";
+
+		logger::debug("{} message received", msgType);
 
 		switch (a_msg->type) 
 		{
-		case Status::kPreLoad:
+		case IUI::API::kPreLoad:
+		{
+			if (auto preLoadMessage = IUI::API::TranslateAs<IUI::API::PreLoadMessage>(a_msg))
 			{
-				auto& compassShoutMeterHolder = *static_cast<GFxDisplayObject*>(a_msg->data);
-				RE::GPointF compassShoutMeterHolderPos = compassShoutMeterHolder.LocalToGlobal();
+				GFxDisplayObject compassShoutMeterHolder = *preLoadMessage->originalDisplayObject;
 
-				logger::info("Message received ({}) from {}: CompassShoutMeterHolder position = ({}, {})",
-							 a_msg->type, a_msg->sender, compassShoutMeterHolderPos.x, compassShoutMeterHolderPos.y);
+				// DONE: Load position of the CompassShoutMeterHolder object (localToGlobal)
+				RE::GPointF pos = compassShoutMeterHolder.LocalToGlobal();
+
+				logger::info("CompassShoutMeterHolder position = ({}, {})", pos.x, pos.y);
 
 				GFxDisplayObject hudMovieBaseInstance = compassShoutMeterHolder.GetMember("_parent");
 
+				// DONE: Get if HUDMovieBaseInstance had temperature meter (HUDMovieBaseInstance["TemperatureMeter_mc"] != undefined)
 				if (hudMovieBaseInstance.GetMember("TemperatureMeter_mc").IsUndefined())
 				{
 					logger::info("HUDMovieBaseInstance had NOT a TemperatureMeter_mc");
@@ -47,6 +51,7 @@ namespace HCN
 
 				GFxArray hudElements = hudMovieBaseInstance.GetMember("HudElements");
 
+				// DONE: Get the index of the HUD element for replacement (HUDMovieBaseInstance.HudElements[i] == HUDMovieBaseInstance.CompassShoutMeterHolder)
 				std::uint32_t hudElementIndex = hudElements.FindElement(compassShoutMeterHolder);
 
 				if (hudElementIndex != static_cast<std::uint32_t>(-1)) 
@@ -57,21 +62,27 @@ namespace HCN
 				{
 					logger::info("Could not find CompassShoutMeterHolder in HudElements array");
 				}
-
-				break;
 			}
-		case Status::kPosLoad:
+			break;
+		}
+		case IUI::API::Status::kPostLoad:
+		{
+			if (auto postLoadMessage = IUI::API::TranslateAs<IUI::API::PostLoadMessage>(a_msg))
 			{
-				auto msgData = *static_cast<const char**>(a_msg->data);
-				logger::info("Message received ({}) from {}: {}", a_msg->type, a_msg->sender, msgData);
-				break;
+				auto msgData = postLoadMessage->payload;
+				logger::info("{}", msgData);
 			}
-		case Status::kAbortLoad:
+			break;
+		}
+		case IUI::API::Status::kAbortLoad:
+		{
+			if (auto abortLoadMessage = IUI::API::TranslateAs<IUI::API::AbortLoadMessage>(a_msg))
 			{
-				auto originalMember = static_cast<RE::GFxValue*>(a_msg->data);
-				logger::warn("Message received ({}) from {}: Aborted replacement of {}", a_msg->type, a_msg->sender, originalMember->ToString());
-				break;
+				RE::GFxValue originalValue = *abortLoadMessage->originalValue;
+				logger::warn("Aborted replacement of {}", originalValue.ToString());
 			}
+			break;
+		}
 		default:
 			break;
 		}
