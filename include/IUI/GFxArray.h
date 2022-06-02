@@ -32,7 +32,7 @@ public:
 		return RE::GFxValue::SetElement(a_index, &a_value);
 	}
 
-	std::uint32_t FindElement(const RE::GFxValue& a_value)
+	std::int32_t FindElement(const RE::GFxValue& a_value)
 	{
 		for (std::uint32_t i = 0; i < GetArraySize(); i++) 
 		{
@@ -42,6 +42,6 @@ public:
 			}
 		}
 
-		return static_cast<std::uint32_t>(-1);
+		return -1;
 	}
 };

@@ -10,6 +10,43 @@
 
 namespace HCN
 {
+	class CompassShoutMeterHolderReplacer
+	{
+	public: 
+
+		static CompassShoutMeterHolderReplacer* GetSingleton()
+		{
+			static CompassShoutMeterHolderReplacer singleton;
+
+			return &singleton;
+		}
+
+		void GetOriginalWidgetInfo(GFxDisplayObject& a_compassShoutMeterHolder)
+		{
+			_x = a_compassShoutMeterHolder.GetMember("_x").GetNumber();
+			_y = a_compassShoutMeterHolder.GetMember("_y").GetNumber();
+
+			GFxDisplayObject hudMovieBaseInstance = a_compassShoutMeterHolder.GetMember("_parent");
+
+			hadTemperatureMeter = !hudMovieBaseInstance.GetMember("TemperatureMeter_mc").IsUndefined();
+
+			GFxArray hudElements = hudMovieBaseInstance.GetMember("HudElements");
+
+			hudElementIndex = hudElements.FindElement(a_compassShoutMeterHolder);
+		}
+
+		void SetNewWidgetInfo(GFxDisplayObject& a_compassShoutMeterHolder)
+		{
+			a_compassShoutMeterHolder.Invoke("CompassShoutMeterHolder", _x, _y + 10, hadTemperatureMeter, hudElementIndex);
+		}
+
+		double _x;
+		double _y;
+		bool hadTemperatureMeter;
+		std::int32_t hudElementIndex;
+	};
+
+
 	void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg)
 	{
 		if (!a_msg || std::string_view(a_msg->sender) != "Infinity UI") 
@@ -30,38 +67,8 @@ namespace HCN
 		{
 			if (auto preLoadMessage = IUI::API::TranslateAs<IUI::API::PreLoadMessage>(a_msg))
 			{
-				GFxDisplayObject compassShoutMeterHolder = *preLoadMessage->originalDisplayObject;
-
-				// DONE: Load position of the CompassShoutMeterHolder object (localToGlobal)
-				RE::GPointF pos = compassShoutMeterHolder.LocalToGlobal();
-
-				logger::info("CompassShoutMeterHolder position = ({}, {})", pos.x, pos.y);
-
-				GFxDisplayObject hudMovieBaseInstance = compassShoutMeterHolder.GetMember("_parent");
-
-				// DONE: Get if HUDMovieBaseInstance had temperature meter (HUDMovieBaseInstance["TemperatureMeter_mc"] != undefined)
-				if (hudMovieBaseInstance.GetMember("TemperatureMeter_mc").IsUndefined())
-				{
-					logger::info("HUDMovieBaseInstance had NOT a TemperatureMeter_mc");
-				}
-				else 
-				{
-					logger::info("HUDMovieBaseInstance had a TemperatureMeter_mc");
-				}
-
-				GFxArray hudElements = hudMovieBaseInstance.GetMember("HudElements");
-
-				// DONE: Get the index of the HUD element for replacement (HUDMovieBaseInstance.HudElements[i] == HUDMovieBaseInstance.CompassShoutMeterHolder)
-				std::uint32_t hudElementIndex = hudElements.FindElement(compassShoutMeterHolder);
-
-				if (hudElementIndex != static_cast<std::uint32_t>(-1)) 
-				{
-					logger::info("CompassShoutMeterHolder found at index {}", hudElementIndex);
-				}
-				else 
-				{
-					logger::info("Could not find CompassShoutMeterHolder in HudElements array");
-				}
+				CompassShoutMeterHolderReplacer::GetSingleton()->GetOriginalWidgetInfo(preLoadMessage->originalDisplayObject);
+				logger::info("{}", preLoadMessage->originalDisplayObject.ToString());
 			}
 			break;
 		}
@@ -69,8 +76,8 @@ namespace HCN
 		{
 			if (auto postLoadMessage = IUI::API::TranslateAs<IUI::API::PostLoadMessage>(a_msg))
 			{
-				auto msgData = postLoadMessage->payload;
-				logger::info("{}", msgData);
+				CompassShoutMeterHolderReplacer::GetSingleton()->SetNewWidgetInfo(postLoadMessage->newDisplayObject);
+				logger::info("{}", postLoadMessage->newDisplayObject.ToString());
 			}
 			break;
 		}
@@ -78,8 +85,7 @@ namespace HCN
 		{
 			if (auto abortLoadMessage = IUI::API::TranslateAs<IUI::API::AbortLoadMessage>(a_msg))
 			{
-				RE::GFxValue originalValue = *abortLoadMessage->originalValue;
-				logger::warn("Aborted replacement of {}", originalValue.ToString());
+				logger::warn("Aborted replacement of {}", abortLoadMessage->originalValue.ToString());
 			}
 			break;
 		}
@@ -89,6 +95,25 @@ namespace HCN
 
 		logger::flush();
 	}
+
+	static constexpr float pi = std::numbers::pi_v<float>;
+
+	void CropAngleRange(float& a_angle)
+	{
+		if (a_angle <= 2 * pi)
+		{
+			if (a_angle < 0.0F) 
+			{
+				a_angle = std::fmodf(a_angle, 2 * pi) + 2 * pi;
+			}
+		}
+		else 
+		{
+			a_angle = std::fmodf(a_angle, 2 * pi);
+		}
+	};
+
+	constexpr float RadiansToDeg(float a_angle) { return a_angle * 180.0F / pi; }
 
 	bool ProcessQuestHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 		RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId, RE::TESQuest*& a_quest)
@@ -105,23 +130,6 @@ namespace HCN
 
 			RE::NiPoint3 markerPos = markerRef->GetLookingAtLocation();
 
-			static constexpr float pi = std::numbers::pi_v<float>;
-
-			static auto CropAngleRange = [](float& a_angle) -> void
-			{
-				if (a_angle <= 2 * pi)
-				{
-					if (a_angle < 0.0F) 
-					{
-						a_angle = std::fmodf(a_angle, 2 * pi) + 2 * pi;
-					}
-				}
-				else 
-				{
-					a_angle = std::fmodf(a_angle, 2 * pi);
-				}
-			};
-
 			float playerCameraAngle = RE::PlayerCamera::GetSingleton()->yaw;
 
 			float compassAngle = playerCameraAngle;
@@ -137,11 +145,11 @@ namespace HCN
 			CropAngleRange(compassAngle);
 			CropAngleRange(headingAngle);
 
-			GFxDisplayObject _parent{ hudMenuMovieView, "_root.HUDMovieBaseInstance.CompassShoutMeterHolder._parent" };
+			GFxDisplayObject test{ hudMenuMovieView, "_root.Test" };
 
-			GFxDisplayObject textField0 = _parent.GetMember("TextField0");
-			GFxDisplayObject textField1 = _parent.GetMember("TextField1");
-			GFxDisplayObject textField2 = _parent.GetMember("TextField2");
+			GFxDisplayObject textField0 = test.GetMember("TextField0");
+			GFxDisplayObject textField1 = test.GetMember("TextField1");
+			GFxDisplayObject textField2 = test.GetMember("TextField2");
 
 			std::string questInfo{ a_quest->GetName() };
 			if (a_quest->GetType() == RE::QUEST_DATA::Type::kMiscellaneous) 
@@ -188,11 +196,9 @@ namespace HCN
 				}
 			}
 
-			auto ToDegrees = [](float a_angle) -> float { return a_angle * 180.0F / pi; };
-
-			//textField0.SetText(questInfo.c_str());
-			textField1.SetText((std::string{ "Heading angle: " } + std::to_string(ToDegrees(headingAngle))).c_str());
-			textField2.SetText((std::string{ "Relative angle: " } + std::to_string(ToDegrees(headingAngle - playerCameraAngle))).c_str());
+			textField0.SetText(questInfo.c_str());
+			textField1.SetText((std::string{ "Heading angle: " } + std::to_string(RadiansToDeg(headingAngle))).c_str());
+			textField2.SetText((std::string{ "Relative angle: " } + std::to_string(RadiansToDeg(headingAngle - playerCameraAngle))).c_str());
 
 			return true;
 		}
