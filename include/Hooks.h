@@ -165,6 +165,4 @@ namespace HCN
 			utils::WriteBranchTrampoline<5>(hookedAddress, Hook());
 		}
 	}
-
-	void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg);
 }

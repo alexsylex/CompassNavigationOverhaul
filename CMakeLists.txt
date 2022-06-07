@@ -118,10 +118,10 @@ set(headers
 	include/utils/Setting.h
 	include/utils/Trampoline.h
 	include/utils/type_name.h
+	include/CompassShoutMeterHolder.h
 	include/Hooks.h
 	include/pch.h
 	include/Plugin.h
-	include/QuestHandler.h
 )
 
 set(sources
@@ -129,10 +129,11 @@ set(sources
 	source/RE/N/NiPoint3.cpp
 	source/utils/INISettingCollection.cpp
 	source/utils/Logger.cpp
+	source/CompassShoutMeterHolder.cpp
 	source/Hooks.cpp
 	source/main.cpp
+	source/MessageListeners.cpp
 	source/pch.cpp
-	source/QuestHandler.cpp
 )
 
 source_group(

@@ -6,21 +6,7 @@
 
 static constexpr Plugin plugin{ "Helpful Compass Navigation" };
 
-void SKSEMessageListener(SKSE::MessagingInterface::Message* a_msg)
-{
-	// If all plugins have been loaded
-	if (a_msg->type == SKSE::MessagingInterface::kPostLoad) 
-	{
-		if (SKSE::GetMessagingInterface()->RegisterListener("Infinity UI", HCN::InfinityUIMessageListener)) 
-		{
-			logger::info("Successfully registered for Infinity UI messages!");
-		}
-		else 
-		{
-			logger::error("Infinity UI installation not detected. Please, go to ... to get it");
-		}
-	}
-}
+void SKSEMessageListener(SKSE::MessagingInterface::Message* a_msg);
 
 #if BUILD_SE
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* a_skse, SKSE::PluginInfo* a_info)

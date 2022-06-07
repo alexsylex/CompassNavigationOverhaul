@@ -12,38 +12,50 @@ namespace IUI::API
 		kAbortLoad
 	};
 
-	struct PreLoadMessage
+	struct Message
+	{
+		std::string_view movieUrl;
+	};
+
+	struct PreLoadMessage : Message
 	{
 		static constexpr inline Status type = Status::kPreLoad;
 
 		GFxDisplayObject& originalDisplayObject;
 	};
 
-	struct PostLoadMessage
+	struct PostLoadMessage : Message
 	{
 		static constexpr inline Status type = Status::kPostLoad;
 
 		GFxDisplayObject& newDisplayObject;
 	};
 
-	struct AbortLoadMessage
+	struct AbortLoadMessage : Message
 	{
 		static constexpr inline Status type = Status::kAbortLoad;
 
 		RE::GFxValue& originalValue;
 	};
 
-	template <typename Message>
-	concept is_valid_message = std::is_enum<decltype(Message::type)>::value;
+	template <typename T>
+	concept valid_message = std::is_base_of_v<Message, T>;
 
-	template <typename Message> requires is_valid_message<Message>
-	inline const Message* TranslateAs(SKSE::MessagingInterface::Message* a_msg)
+	template <typename MessageT> requires valid_message<MessageT>
+	inline const MessageT* TranslateAs(SKSE::MessagingInterface::Message* a_msg)
 	{
-		if (a_msg->type == Message::type && a_msg->dataLen == sizeof(Message)) 
+		if constexpr (std::is_same_v<Message, MessageT>)
 		{
 			return static_cast<Message*>(a_msg->data);
 		}
+		else
+		{
+			if (a_msg->type == MessageT::type && a_msg->dataLen == sizeof(MessageT)) 
+			{
+				return static_cast<MessageT*>(a_msg->data);
+			}
 
-		return nullptr;
+			return nullptr;
+		}
 	}
 }
