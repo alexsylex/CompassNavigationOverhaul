@@ -5,37 +5,52 @@
 
 namespace IUI::API
 {
-	enum Status
-	{
-		kPreLoad,
-		kPostLoad,
-		kAbortLoad
-	};
-
 	struct Message
 	{
-		std::string_view movieUrl;
+		enum Type : std::uint32_t
+		{
+			kStartLoad,
+			kPreReplace,
+			kPostPatch,
+			kAbortPatch,
+			kFinishLoad
+		};
+
+		RE::GFxMovieView* contextMovieView;
+		std::string_view contextMovieUrl;
 	};
 
-	struct PreLoadMessage : Message
+	struct StartLoadMessage : Message
 	{
-		static constexpr inline Status type = Status::kPreLoad;
+		static constexpr inline Type type = Type::kStartLoad;
+	};
+
+	struct PreReplaceMessage : Message
+	{
+		static constexpr inline Type type = Type::kPreReplace;
 
 		GFxDisplayObject& originalDisplayObject;
 	};
 
-	struct PostLoadMessage : Message
+	struct PostPatchMessage : Message
 	{
-		static constexpr inline Status type = Status::kPostLoad;
+		static constexpr inline Type type = Type::kPostPatch;
 
 		GFxDisplayObject& newDisplayObject;
 	};
 
-	struct AbortLoadMessage : Message
+	struct AbortPatchMessage : Message
 	{
-		static constexpr inline Status type = Status::kAbortLoad;
+		static constexpr inline Type type = Type::kAbortPatch;
 
 		RE::GFxValue& originalValue;
+	};
+
+	struct FinishLoadMessage : Message
+	{
+		static constexpr inline Type type = Type::kFinishLoad;
+
+		int loadedCount;
 	};
 
 	template <typename T>

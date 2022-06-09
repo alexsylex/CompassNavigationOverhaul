@@ -68,6 +68,10 @@ namespace HCN
 	bool ProcessPlayerSetHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 							  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId);
 
+	bool SetCompassMarkersHook(RE::GFxValue::ObjectInterface* a_objectInterface, void* a_data, 
+							   RE::GFxValue* a_result, const char* a_name, const RE::GFxValue* a_args, 
+							   std::uint32_t a_numArgs, bool a_isDObj);
+
 	static inline void InstallHooks()
 	{
 		// HUDMarkerManager::ProcessQuestMarker
@@ -158,6 +162,29 @@ namespace HCN
 					jmp(ptr[rip + retnLabel]);
 
 					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessPlayerSetHook));
+					L(retnLabel), dq(hookedAddress + 5);
+				}
+			};
+
+			utils::WriteBranchTrampoline<5>(hookedAddress, Hook());
+		}
+
+		// Compass::SetMarkers (Invoke AS2 "SetCompassMarkers")
+		{
+			static std::uintptr_t hookedAddress = Compass::SetMarkers.address() + 0x10F;
+
+			struct Hook : Xbyak::CodeGenerator
+			{
+				Hook()
+				{
+					Xbyak::Label hookLabel;
+					Xbyak::Label retnLabel;
+
+					call(ptr[rip + hookLabel]);
+
+					jmp(ptr[rip + retnLabel]);
+
+					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&SetCompassMarkersHook));
 					L(retnLabel), dq(hookedAddress + 5);
 				}
 			};

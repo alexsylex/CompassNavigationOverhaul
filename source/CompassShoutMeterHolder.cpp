@@ -31,21 +31,7 @@ namespace HCN
 		}
 	}
 
-	class Test : GFxDisplayObject
-	{
-	public:
-
-		Test(const GFxDisplayObject& a_test) 
-		: GFxDisplayObject{ a_test }
-		{ }
-
-		// DEBUG
-		GFxDisplayObject textField0 = GetMember("TextField0");
-		GFxDisplayObject textField1 = GetMember("TextField1");
-		GFxDisplayObject textField2 = GetMember("TextField2");
-	};
-
-	std::tuple<float, float, float> CompassShoutMeterHolder::ProcessRelativeAngle(RE::TESObjectREFR* a_markerRef)
+	float CompassShoutMeterHolder::ProcessRelativeAngle(RE::TESObjectREFR* a_markerRef)
 	{
 		RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
 
@@ -66,14 +52,16 @@ namespace HCN
 		util::CropAngleRange(compassAngle);
 		util::CropAngleRange(headingAngle);
 
-		return std::make_tuple(playerCameraAngle, compassAngle, headingAngle);
+		float relativeAngle = headingAngle - playerCameraAngle;
+
+		util::CropAngleRange(relativeAngle);
+
+		return relativeAngle;
 	}
 
 	bool CompassShoutMeterHolder::ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef)
 	{
-		logger::trace("\"{}\" quest hooked", a_quest->GetName());
-
-		auto [playerCameraAngle, compassAngle, headingAngle] = ProcessRelativeAngle(a_markerRef);
+		float relativeAngle = ProcessRelativeAngle(a_markerRef);
 
 		std::string questInfo{ a_quest->GetName() };
 		if (a_quest->GetType() == RE::QUEST_DATA::Type::kMiscellaneous) 
@@ -123,15 +111,11 @@ namespace HCN
 			}
 		}
 
-		float relativeAngle = util::RadiansToDeg(headingAngle - playerCameraAngle);
+		float relativeAngleDeg = util::RadiansToDeg(relativeAngle);
 
-		if (std::abs(relativeAngle) < 20.0F) 
+		if (relativeAngleDeg < tolerance || relativeAngleDeg > (360.0F - tolerance))
 		{
-			Test test{ GFxDisplayObject{ GetMovieView(), "_root.Test" } };
-
-			test.textField0.SetText(questInfo.c_str());
-			test.textField1.SetText((std::string{ "Heading angle: " } + std::to_string(util::RadiansToDeg(headingAngle))).c_str());
-			test.textField2.SetText((std::string{ "Relative angle: " } + std::to_string(relativeAngle)).c_str());
+			focusedMarker = FocusedMarker{ .name = questInfo.c_str(), .relativeAngle = relativeAngle };
 		}
 
 		return true;
@@ -139,20 +123,13 @@ namespace HCN
 
 	bool CompassShoutMeterHolder::ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef)
 	{
-		auto [playerCameraAngle, compassAngle, headingAngle] = ProcessRelativeAngle(a_markerRef);
+		float relativeAngle = ProcessRelativeAngle(a_markerRef);
 
-		logger::trace("\"{}\" location hooked", a_mapMarker->mapData->locationName.GetFullName());
-		logger::flush();
+		float relativeAngleDeg = util::RadiansToDeg(relativeAngle);
 
-		float relativeAngle = util::RadiansToDeg(headingAngle - playerCameraAngle);
-
-		if (std::abs(relativeAngle) < 20.0F) 
+		if (relativeAngleDeg < tolerance || relativeAngleDeg > (360.0F - tolerance))
 		{
-			Test test{ GFxDisplayObject{ GetMovieView(), "_root.Test" } };
-
-			test.textField0.SetText(a_mapMarker->mapData->locationName.GetFullName());
-			test.textField1.SetText((std::string{ "Heading angle: " } + std::to_string(util::RadiansToDeg(headingAngle))).c_str());
-			test.textField2.SetText((std::string{ "Relative angle: " } + std::to_string(relativeAngle)).c_str());
+			focusedMarker = FocusedMarker{ .name = a_mapMarker->mapData->locationName.GetFullName(), .relativeAngle = relativeAngle };
 		}
 
 		return true;
@@ -160,22 +137,35 @@ namespace HCN
 
 	bool CompassShoutMeterHolder::ProcessEnemyMarker(RE::Character* a_enemy)
 	{
-		auto [playerCameraAngle, compassAngle, headingAngle] = ProcessRelativeAngle(a_enemy);
+		float relativeAngle = ProcessRelativeAngle(a_enemy);
 
-		logger::trace("\"{}\" enemy hooked", a_enemy->GetName());
-		logger::flush();
+		float relativeAngleDeg = util::RadiansToDeg(relativeAngle);
 
-		float relativeAngle = util::RadiansToDeg(headingAngle - playerCameraAngle);
-
-		if (std::abs(relativeAngle) < 20.0F) 
+		if (relativeAngleDeg < tolerance || relativeAngleDeg > (360.0F - tolerance))
 		{
-			Test test{ GFxDisplayObject{ GetMovieView(), "_root.Test" } };
-
-			test.textField0.SetText(a_enemy->GetName());
-			test.textField1.SetText((std::string{ "Heading angle: " } + std::to_string(util::RadiansToDeg(headingAngle))).c_str());
-			test.textField2.SetText((std::string{ "Relative angle: " } + std::to_string(relativeAngle)).c_str());
+			focusedMarker = FocusedMarker{ .name = a_enemy->GetName(), .relativeAngle = relativeAngle };
 		}
 
 		return true;
+	}
+
+	void CompassShoutMeterHolder::SetMarkerInfoEx()
+	{
+		auto test = Test::GetSingleton();
+
+		if (focusedMarker) 
+		{
+			test->textField0.SetText(focusedMarker->name.c_str());
+			test->textField1.SetText((std::string{ "Relative angle: " } + std::to_string(util::RadiansToDeg(focusedMarker->relativeAngle))).c_str());
+			//test->textField2.SetText((std::string{ "Heading angle: " } + std::to_string(util::RadiansToDeg(focusedMarker->headingAngle))).c_str());
+
+			focusedMarker = { };
+		}
+		else 
+		{
+			test->textField0.SetText("");
+			test->textField1.SetText("");
+			//test->textField2.SetText("");
+		}
 	}
 }

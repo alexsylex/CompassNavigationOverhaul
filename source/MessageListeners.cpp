@@ -15,49 +15,75 @@ namespace HCN
 
 		if (auto message = IUI::API::TranslateAs<IUI::API::Message>(a_msg)) 
 		{
-			if (message->movieUrl.find("HUDMenu") == std::string::npos)
+			if (message->contextMovieUrl.find("HUDMenu") == std::string::npos)
 			{
 				return;
 			}
 
 			switch (a_msg->type) 
 			{
-			case IUI::API::kPreLoad:
+			case IUI::API::Message::Type::kStartLoad:
 			{
-				if (auto preLoadMessage = IUI::API::TranslateAs<IUI::API::PreLoadMessage>(a_msg))
-				{
-					std::string pathToOriginal = preLoadMessage->originalDisplayObject.ToString().c_str();
-
-					if (pathToOriginal == "_level0.HUDMovieBaseInstance.CompassShoutMeterHolder")
-					{
-						CompassShoutMeterHolder::InitSingleton(preLoadMessage->originalDisplayObject);
-					}
-				}
 				break;
 			}
-			case IUI::API::Status::kPostLoad:
+			case IUI::API::Message::Type::kPreReplace:
 			{
-				if (auto postLoadMessage = IUI::API::TranslateAs<IUI::API::PostLoadMessage>(a_msg))
+				if (auto preReplaceMessage = IUI::API::TranslateAs<IUI::API::PreReplaceMessage>(a_msg))
 				{
-					if (CompassShoutMeterHolder::GetSingleton()) 
-					{
-						std::string pathToOriginal = CompassShoutMeterHolder::GetSingleton()->GetPathToMember();
-						std::string pathToNew = postLoadMessage->newDisplayObject.ToString().c_str();
+					std::string pathToOriginal = preReplaceMessage->originalDisplayObject.ToString().c_str();
 
-						if (pathToOriginal == pathToNew) 
+					if (pathToOriginal == CompassShoutMeterHolder::path)
+					{
+						if (CompassShoutMeterHolder::InitSingleton(preReplaceMessage->originalDisplayObject))
 						{
-							CompassShoutMeterHolder::UpdateSingleton(postLoadMessage->newDisplayObject);
+							logger::debug("CompassShoutMeterHolder instance initialised for {}", CompassShoutMeterHolder::path);
 						}
 					}
 				}
 				break;
 			}
-			case IUI::API::Status::kAbortLoad:
+			case IUI::API::Message::Type::kPostPatch:
 			{
-				if (auto abortLoadMessage = IUI::API::TranslateAs<IUI::API::AbortLoadMessage>(a_msg))
+				if (auto postPatchMessage = IUI::API::TranslateAs<IUI::API::PostPatchMessage>(a_msg))
 				{
-					logger::warn("Aborted replacement of {}", abortLoadMessage->originalValue.ToString());
-					logger::flush();
+					std::string pathToNew = postPatchMessage->newDisplayObject.ToString().c_str();
+
+					if (pathToNew == CompassShoutMeterHolder::path) 
+					{
+						// We initialised the CompassShoutMeterHolder singleton in the pre-replace step,
+						// if not, there has been an error
+						if (CompassShoutMeterHolder::GetSingleton()) 
+						{
+							CompassShoutMeterHolder::UpdateSingleton(postPatchMessage->newDisplayObject);
+						}
+						else 
+						{
+							logger::error("CompassShoutMeterHolder instance counterpart not ready for {}", CompassShoutMeterHolder::path);
+							logger::flush();
+						}
+					}
+				}
+				break;
+			}
+			case IUI::API::Message::Type::kAbortPatch:
+			{
+				if (auto abortPatchMessage = IUI::API::TranslateAs<IUI::API::AbortPatchMessage>(a_msg))
+				{
+					std::string pathToOriginal = abortPatchMessage->originalValue.ToString().c_str();
+
+					if (pathToOriginal == CompassShoutMeterHolder::path)
+					{
+						logger::error("Aborted replacement of {}", CompassShoutMeterHolder::path);
+						logger::flush();
+					}
+				}
+				break;
+			}
+			case IUI::API::Message::Type::kFinishLoad:
+			{
+				if (auto finishLoadMessage = IUI::API::TranslateAs<IUI::API::FinishLoadMessage>(a_msg)) 
+				{
+					Test::InitSingleton(GFxDisplayObject{ finishLoadMessage->contextMovieView, Test::path });
 				}
 				break;
 			}
