@@ -85,10 +85,8 @@ namespace HCN
 					Xbyak::Label hookLabel;
 					Xbyak::Label retnLabel;
 
-					sub(rsp, 0x30);
 					mov(ptr[rsp + 0x28], r14);	// r14 = TESQuest**
 					call(ptr[rip + hookLabel]);
-					add(rsp, 0x30);
 
 					jmp(ptr[rip + retnLabel]);
 

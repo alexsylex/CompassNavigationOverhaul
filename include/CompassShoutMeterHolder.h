@@ -81,7 +81,7 @@ namespace HCN
 		bool ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef);
 		bool ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef);
 		bool ProcessEnemyMarker(RE::Character* a_enemy);
-		void SetMarkerInfoEx();
+		void SetMarkersInfoEx();
 
 	private:
 

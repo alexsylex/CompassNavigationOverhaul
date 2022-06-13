@@ -149,7 +149,7 @@ namespace HCN
 		return true;
 	}
 
-	void CompassShoutMeterHolder::SetMarkerInfoEx()
+	void CompassShoutMeterHolder::SetMarkersInfoEx()
 	{
 		auto test = Test::GetSingleton();
 
