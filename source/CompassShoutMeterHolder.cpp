@@ -115,7 +115,7 @@ namespace HCN
 
 		if (relativeAngleDeg < tolerance || relativeAngleDeg > (360.0F - tolerance))
 		{
-			focusedMarker = FocusedMarker{ .name = questInfo.c_str(), .relativeAngle = relativeAngle };
+			focusedMarker = FocusedMarker { .name = questInfo.c_str(), .relativeAngle = relativeAngle, .questType = a_quest->data.questType.get() };
 		}
 
 		return true;
@@ -129,7 +129,10 @@ namespace HCN
 
 		if (relativeAngleDeg < tolerance || relativeAngleDeg > (360.0F - tolerance))
 		{
-			focusedMarker = FocusedMarker{ .name = a_mapMarker->mapData->locationName.GetFullName(), .relativeAngle = relativeAngle };
+			if (!focusedMarker || focusedMarker->questType == RE::QUEST_DATA::Type::kNone) 
+			{
+				focusedMarker = FocusedMarker{ .name = a_mapMarker->mapData->locationName.GetFullName(), .relativeAngle = relativeAngle };
+			}
 		}
 
 		return true;
@@ -143,7 +146,10 @@ namespace HCN
 
 		if (relativeAngleDeg < tolerance || relativeAngleDeg > (360.0F - tolerance))
 		{
-			focusedMarker = FocusedMarker{ .name = a_enemy->GetName(), .relativeAngle = relativeAngle };
+			if (!focusedMarker || focusedMarker->questType == RE::QUEST_DATA::Type::kNone) 
+			{
+				focusedMarker = FocusedMarker{ .name = a_enemy->GetName(), .relativeAngle = relativeAngle };
+			}
 		}
 
 		return true;
@@ -159,13 +165,22 @@ namespace HCN
 			test->textField1.SetText((std::string{ "Relative angle: " } + std::to_string(util::RadiansToDeg(focusedMarker->relativeAngle))).c_str());
 			//test->textField2.SetText((std::string{ "Heading angle: " } + std::to_string(util::RadiansToDeg(focusedMarker->headingAngle))).c_str());
 
+			SetQuestTitleEndPieces(focusedMarker->questType);
+
 			focusedMarker = { };
 		}
 		else 
 		{
+			SetQuestTitleEndPieces(RE::QUEST_DATA::Type::kNone);
+
 			test->textField0.SetText("");
 			test->textField1.SetText("");
 			//test->textField2.SetText("");
 		}
+	}
+
+	void CompassShoutMeterHolder::SetQuestTitleEndPieces(RE::QUEST_DATA::Type a_questType)
+	{
+		Invoke("SetQuestTitleEndPieces", a_questType, a_questType != RE::QUEST_DATA::Type::kNone);
 	}
 }

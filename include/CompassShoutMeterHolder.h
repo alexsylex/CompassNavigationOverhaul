@@ -3,6 +3,8 @@
 #include "IUI/GFxArray.h"
 #include "IUI/GFxDisplayObject.h"
 
+#include "utils/GFxVisitors.h"
+
 #include "utils/Logger.h"
 
 namespace HCN
@@ -50,6 +52,7 @@ namespace HCN
 			float playerCameraAngle = 0.0F;
 			float compassAngle = 0.0F;
 			float headingAngle = 0.0F;
+			RE::QUEST_DATA::Type questType = RE::QUEST_DATA::Type::kNone;
 		};
 
 		static constexpr inline std::string_view path = "_level0.HUDMovieBaseInstance.CompassShoutMeterHolder";
@@ -103,6 +106,8 @@ namespace HCN
 				Invoke("CompassShoutMeterHolder", _x, _y, hadTemperatureMeter, hudElementIndex);
 			}
 		}
+
+		void SetQuestTitleEndPieces(RE::QUEST_DATA::Type a_questType);
 
 		static inline CompassShoutMeterHolder* singleton = nullptr;
 

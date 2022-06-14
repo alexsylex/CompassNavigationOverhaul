@@ -491,8 +491,15 @@ namespace RE
 
 	bool GFxValue::ObjectInterface::GotoAndPlay(void* a_data, const char* a_frame, bool a_stop)
 	{
-		using func_t = decltype(&GFxValue::ObjectInterface::GotoAndPlay);
+		using func_t = bool (ObjectInterface::*)(void*, const char*, bool);
 		REL::Relocation<func_t> func{ Offset::GFxValue::ObjectInterface::GotoAndPlay };
+		return func(this, a_data, a_frame, a_stop);
+	}
+
+	bool GFxValue::ObjectInterface::GotoAndPlay(void* a_data, std::uint32_t a_frame, bool a_stop)
+	{
+		using func_t = bool (ObjectInterface::*)(void*, std::uint32_t, bool);
+		REL::Relocation<func_t> func{ REL::ID(80229) };
 		return func(this, a_data, a_frame, a_stop);
 	}
 
@@ -1020,6 +1027,18 @@ namespace RE
 	}
 
 	bool GFxValue::GotoAndStop(const char* a_frame)
+	{
+		assert(IsDisplayObject());
+		return _objectInterface->GotoAndPlay(_value.obj, a_frame, true);
+	}
+
+	bool GFxValue::GotoAndPlay(std::uint32_t a_frame)
+	{
+		assert(IsDisplayObject());
+		return _objectInterface->GotoAndPlay(_value.obj, a_frame, false);
+	}
+
+	bool GFxValue::GotoAndStop(std::uint32_t a_frame)
 	{
 		assert(IsDisplayObject());
 		return _objectInterface->GotoAndPlay(_value.obj, a_frame, true);

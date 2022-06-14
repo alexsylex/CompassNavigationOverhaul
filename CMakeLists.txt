@@ -113,6 +113,7 @@ set(headers
 	include/RE/G/GFxValue.h
 	include/RE/H/HUDMarkerManager.h
 	include/RE/N/NiPoint3.h
+	include/utils/GFxVisitors.h
 	include/utils/INISettingCollection.h
 	include/utils/Logger.h
 	include/utils/Setting.h
@@ -127,6 +128,7 @@ set(headers
 set(sources
 	source/RE/G/GFxValue.cpp
 	source/RE/N/NiPoint3.cpp
+	source/utils/GFxVisitors.cpp
 	source/utils/INISettingCollection.cpp
 	source/utils/Logger.cpp
 	source/CompassShoutMeterHolder.cpp
