@@ -4,7 +4,7 @@
 
 #include "IUI/API.h"
 
-#include "CompassShoutMeterHolder.h"
+#include "Compass.h"
 
 namespace HCN
 {
@@ -13,11 +13,11 @@ namespace HCN
 	{
 		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerId))
 		{
-			if (auto compassShoutMeterHolder = CompassShoutMeterHolder::GetSingleton())
+			if (auto compass = extended::Compass::GetSingleton())
 			{
 				RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
 
-				compassShoutMeterHolder->ProcessQuestMarker(a_quest, markerRef.get());
+				compass->ProcessQuestMarker(a_quest, markerRef.get());
 			}
 
 			return true;
@@ -31,7 +31,7 @@ namespace HCN
 	{
 		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerId)) 
 		{
-			if (auto compassShoutMeterHolder = CompassShoutMeterHolder::GetSingleton())
+			if (auto compass = extended::Compass::GetSingleton())
 			{
 				RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
 				for (auto locationRef : a_hudMarkerManager->locationRefs) 
@@ -45,7 +45,7 @@ namespace HCN
 
 				if (markerRef) 
 				{
-					compassShoutMeterHolder->ProcessLocationMarker(markerRef->extraList.GetByType<RE::ExtraMapMarker>(), markerRef.get());
+					compass->ProcessLocationMarker(markerRef->extraList.GetByType<RE::ExtraMapMarker>(), markerRef.get());
 				}
 			}
 
@@ -60,13 +60,13 @@ namespace HCN
 	{
 		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerId)) 
 		{
-			if (auto compassShoutMeterHolder = CompassShoutMeterHolder::GetSingleton())
+			if (auto compass = extended::Compass::GetSingleton())
 			{
 				RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
 
 				if (markerRef)
 				{
-					compassShoutMeterHolder->ProcessEnemyMarker(markerRef->As<RE::Character>());
+					compass->ProcessEnemyMarker(markerRef->As<RE::Character>());
 				}
 			}
 
@@ -96,9 +96,9 @@ namespace HCN
 							   RE::GFxValue* a_result, const char* a_name, const RE::GFxValue* a_args,
 							   std::uint32_t a_numArgs, bool a_isDObj)
 	{
-		if (auto compassShoutMeterHolder = CompassShoutMeterHolder::GetSingleton()) 
+		if (auto compass = extended::Compass::GetSingleton()) 
 		{
-			compassShoutMeterHolder->SetMarkersInfoEx();
+			compass->SetMarkersExtraInfo();
 		}
 
 		return a_objectInterface->Invoke(a_data, a_result, a_name, a_args, a_numArgs, a_isDObj);

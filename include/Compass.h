@@ -12,13 +12,11 @@ namespace HCN
 	class Test : GFxDisplayObject
 	{
 	public:
-
 		static constexpr inline std::string_view path = "_level0.Test";
 
 		static Test* InitSingleton(const GFxDisplayObject& a_compassShoutMeterHolder)
 		{
-			if (!singleton) 
-			{
+			if (!singleton) {
 				// First time
 				singleton = new Test(a_compassShoutMeterHolder);
 			}
@@ -33,15 +31,17 @@ namespace HCN
 		GFxDisplayObject textField2 = GetMember("TextField2");
 
 	private:
-
-		Test(const GFxDisplayObject& a_test) 
-		:	GFxDisplayObject{ a_test }
-		{ }
+		Test(const GFxDisplayObject& a_test) :
+			GFxDisplayObject{ a_test }
+		{}
 
 		static inline Test* singleton = nullptr;
 	};
+}
 
-	class CompassShoutMeterHolder : public GFxDisplayObject
+namespace HCN::extended
+{
+	class Compass : public GFxDisplayObject
 	{
 	public:
 
@@ -55,67 +55,63 @@ namespace HCN
 			RE::QUEST_DATA::Type questType = RE::QUEST_DATA::Type::kNone;
 		};
 
-		static constexpr inline std::string_view path = "_level0.HUDMovieBaseInstance.CompassShoutMeterHolder";
+		static constexpr inline std::string_view path = "_level0.HUDMovieBaseInstance.CompassShoutMeterHolder.Compass";
 
-		static CompassShoutMeterHolder* InitSingleton(const GFxDisplayObject& a_compassShoutMeterHolder)
+		static Compass* InitSingleton(const GFxDisplayObject& a_compass)
 		{
 			if (!singleton) 
 			{
 				// First time
-				singleton = new CompassShoutMeterHolder(a_compassShoutMeterHolder);
+				singleton = new Compass(a_compass);
 			}
 
 			return singleton;
 		}
 
-		static CompassShoutMeterHolder* UpdateSingleton(const GFxDisplayObject& a_compassShoutMeterHolder)
+		static Compass* UpdateSingleton(const GFxDisplayObject& a_compass)
 		{
 			if (singleton) 
 			{
-				singleton->SetupMod(a_compassShoutMeterHolder);
+				singleton->SetupMod(a_compass);
 			}
 
 			return singleton;
 		}
 
-		static CompassShoutMeterHolder* GetSingleton() { return singleton; }
+		static Compass* GetSingleton() { return singleton; }
 
 		float ProcessRelativeAngle(RE::TESObjectREFR* a_markerRef);
 		bool ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef);
 		bool ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef);
 		bool ProcessEnemyMarker(RE::Character* a_enemy);
-		void SetMarkersInfoEx();
+		void SetMarkersExtraInfo();
 
 	private:
 
-		CompassShoutMeterHolder(const GFxDisplayObject& a_compassShoutMeterHolder) 
-		:	GFxDisplayObject{ a_compassShoutMeterHolder },
-			_parent{ GetMember("_parent") },
+		Compass(const GFxDisplayObject& a_compass) 
+		:	GFxDisplayObject{ a_compass },
 			_x{ GetMember("_x").GetNumber() },
 			_y{ GetMember("_y").GetNumber() },
-			hadTemperatureMeter{ !_parent.GetMember("TemperatureMeter_mc").IsUndefined() },
-			hudElementIndex{ GFxArray(_parent.GetMember("HudElements")).FindElement(this) }
+			hadTemperatureMeter{ !GetMember("CompassTemperatureHolderInstance").IsUndefined() }
 		{ }
 
-		void SetupMod(const GFxDisplayObject& a_compassShoutMeterHolder)
+		void SetupMod(const GFxDisplayObject& a_compass)
 		{
-			if (a_compassShoutMeterHolder.HasMember("CompassShoutMeterHolder"))
+			if (a_compass.HasMember("Compass"))
 			{
-				*static_cast<GFxDisplayObject*>(this) = a_compassShoutMeterHolder;
+				*static_cast<GFxDisplayObject*>(this) = a_compass;
 
-				Invoke("CompassShoutMeterHolder", _x, _y, hadTemperatureMeter, hudElementIndex);
+				Invoke("Compass", _x, _y, hadTemperatureMeter);
 			}
 		}
 
-		void SetQuestTitleEndPieces(RE::QUEST_DATA::Type a_questType);
+		void SetQuestInfo(const std::string& a_questTitle, RE::QUEST_DATA::Type a_questType);
 
-		static inline CompassShoutMeterHolder* singleton = nullptr;
+		static inline Compass* singleton = nullptr;
 
-		GFxDisplayObject _parent;
 		double _x;
 		double _y;
 		bool hadTemperatureMeter;
-		std::int32_t hudElementIndex;
 
 		float tolerance = 10.0F;
 		std::optional<FocusedMarker> focusedMarker;

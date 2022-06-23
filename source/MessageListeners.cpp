@@ -2,7 +2,7 @@
 
 #include "IUI/API.h"
 
-#include "CompassShoutMeterHolder.h"
+#include "Compass.h"
 
 namespace HCN
 {
@@ -32,11 +32,11 @@ namespace HCN
 				{
 					std::string pathToOriginal = preReplaceMessage->originalDisplayObject.ToString().c_str();
 
-					if (pathToOriginal == CompassShoutMeterHolder::path)
+					if (pathToOriginal == extended::Compass::path)
 					{
-						if (CompassShoutMeterHolder::InitSingleton(preReplaceMessage->originalDisplayObject))
+						if (extended::Compass::InitSingleton(preReplaceMessage->originalDisplayObject))
 						{
-							logger::debug("CompassShoutMeterHolder instance initialised for {}", CompassShoutMeterHolder::path);
+							logger::debug("Compass instance initialised for {}", extended::Compass::path);
 						}
 					}
 				}
@@ -48,17 +48,17 @@ namespace HCN
 				{
 					std::string pathToNew = postPatchMessage->newDisplayObject.ToString().c_str();
 
-					if (pathToNew == CompassShoutMeterHolder::path) 
+					if (pathToNew == extended::Compass::path)
 					{
 						// We initialised the CompassShoutMeterHolder singleton in the pre-replace step,
 						// if not, there has been an error
-						if (CompassShoutMeterHolder::GetSingleton()) 
+						if (extended::Compass::GetSingleton())
 						{
-							CompassShoutMeterHolder::UpdateSingleton(postPatchMessage->newDisplayObject);
+							extended::Compass::UpdateSingleton(postPatchMessage->newDisplayObject);
 						}
-						else 
+						else
 						{
-							logger::error("CompassShoutMeterHolder instance counterpart not ready for {}", CompassShoutMeterHolder::path);
+							logger::error("Compass instance counterpart not ready for {}", extended::Compass::path);
 							logger::flush();
 						}
 					}
@@ -71,9 +71,9 @@ namespace HCN
 				{
 					std::string pathToOriginal = abortPatchMessage->originalValue.ToString().c_str();
 
-					if (pathToOriginal == CompassShoutMeterHolder::path)
+					if (pathToOriginal == extended::Compass::path)
 					{
-						logger::error("Aborted replacement of {}", CompassShoutMeterHolder::path);
+						logger::error("Aborted replacement of {}", extended::Compass::path);
 						logger::flush();
 					}
 				}
@@ -81,7 +81,7 @@ namespace HCN
 			}
 			case IUI::API::Message::Type::kFinishLoad:
 			{
-				if (auto finishLoadMessage = IUI::API::TranslateAs<IUI::API::FinishLoadMessage>(a_msg)) 
+				if (auto finishLoadMessage = IUI::API::TranslateAs<IUI::API::FinishLoadMessage>(a_msg))
 				{
 					Test::InitSingleton(GFxDisplayObject{ finishLoadMessage->contextMovieView, Test::path });
 				}

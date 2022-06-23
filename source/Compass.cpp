@@ -1,4 +1,4 @@
-#include "CompassShoutMeterHolder.h"
+#include "Compass.h"
 
 #include <numbers>
 
@@ -6,7 +6,7 @@
 
 static constexpr float pi = std::numbers::pi_v<float>;
 
-namespace HCN
+namespace HCN::extended
 {
 	namespace util
 	{
@@ -31,7 +31,7 @@ namespace HCN
 		}
 	}
 
-	float CompassShoutMeterHolder::ProcessRelativeAngle(RE::TESObjectREFR* a_markerRef)
+	float Compass::ProcessRelativeAngle(RE::TESObjectREFR* a_markerRef)
 	{
 		RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
 
@@ -59,7 +59,7 @@ namespace HCN
 		return relativeAngle;
 	}
 
-	bool CompassShoutMeterHolder::ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef)
+	bool Compass::ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef)
 	{
 		float relativeAngle = ProcessRelativeAngle(a_markerRef);
 
@@ -121,7 +121,7 @@ namespace HCN
 		return true;
 	}
 
-	bool CompassShoutMeterHolder::ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef)
+	bool Compass::ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef)
 	{
 		float relativeAngle = ProcessRelativeAngle(a_markerRef);
 
@@ -138,7 +138,7 @@ namespace HCN
 		return true;
 	}
 
-	bool CompassShoutMeterHolder::ProcessEnemyMarker(RE::Character* a_enemy)
+	bool Compass::ProcessEnemyMarker(RE::Character* a_enemy)
 	{
 		float relativeAngle = ProcessRelativeAngle(a_enemy);
 
@@ -155,7 +155,7 @@ namespace HCN
 		return true;
 	}
 
-	void CompassShoutMeterHolder::SetMarkersInfoEx()
+	void Compass::SetMarkersExtraInfo()
 	{
 		auto test = Test::GetSingleton();
 
@@ -165,13 +165,13 @@ namespace HCN
 			test->textField1.SetText((std::string{ "Relative angle: " } + std::to_string(util::RadiansToDeg(focusedMarker->relativeAngle))).c_str());
 			//test->textField2.SetText((std::string{ "Heading angle: " } + std::to_string(util::RadiansToDeg(focusedMarker->headingAngle))).c_str());
 
-			SetQuestTitleEndPieces(focusedMarker->questType);
+			SetQuestInfo(focusedMarker->name, focusedMarker->questType);
 
 			focusedMarker = { };
 		}
 		else 
 		{
-			SetQuestTitleEndPieces(RE::QUEST_DATA::Type::kNone);
+			SetQuestInfo("", RE::QUEST_DATA::Type::kNone);
 
 			test->textField0.SetText("");
 			test->textField1.SetText("");
@@ -179,8 +179,8 @@ namespace HCN
 		}
 	}
 
-	void CompassShoutMeterHolder::SetQuestTitleEndPieces(RE::QUEST_DATA::Type a_questType)
+	void Compass::SetQuestInfo(const std::string& a_questTitle, RE::QUEST_DATA::Type a_questType)
 	{
-		Invoke("SetQuestTitleEndPieces", a_questType, a_questType != RE::QUEST_DATA::Type::kNone);
+		Invoke("SetQuestInfo", a_questTitle.c_str(), a_questType, a_questType != RE::QUEST_DATA::Type::kNone);
 	}
 }
