@@ -722,12 +722,11 @@ namespace RE
 
 	GString GFxValue::ToString() const
 	{
-		GString retVal;
-
-		using func_t = GString*(*)(const GFxValue*, GString*);
+		using func_t = GString*(GFxValue::*)(GString*) const;
 		REL::Relocation<func_t> func{ REL::ID(80274) };
-		func(this, &retVal);
 
+		GString retVal;
+		func(this, &retVal);
 		return retVal;
 	}
 

@@ -3,10 +3,6 @@
 #include "IUI/GFxArray.h"
 #include "IUI/GFxDisplayObject.h"
 
-#include "utils/GFxVisitors.h"
-
-#include "utils/Logger.h"
-
 namespace HCN
 {
 	class Test : GFxDisplayObject
@@ -47,12 +43,21 @@ namespace HCN::extended
 
 		struct FocusedMarker
 		{
-			std::string name;
+			// Quest
+			std::string questName;
+
 			float relativeAngle = 0.0F;
+
+			RE::QUEST_DATA::Type questType = RE::QUEST_DATA::Type::kNone;
+			//std::string questCharacterName;
+
+			
 			float playerCameraAngle = 0.0F;
 			float compassAngle = 0.0F;
 			float headingAngle = 0.0F;
-			RE::QUEST_DATA::Type questType = RE::QUEST_DATA::Type::kNone;
+
+			// Location
+			std::string location;
 		};
 
 		static constexpr inline std::string_view path = "_level0.HUDMovieBaseInstance.CompassShoutMeterHolder.Compass";

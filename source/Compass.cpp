@@ -2,6 +2,8 @@
 
 #include <numbers>
 
+#include "RE/B/BGSInstancedQuestObjective.h"
+
 #include "utils/Logger.h"
 
 static constexpr float pi = std::numbers::pi_v<float>;
@@ -63,33 +65,62 @@ namespace HCN::extended
 	{
 		float relativeAngle = ProcessRelativeAngle(a_markerRef);
 
-		std::string questInfo{ a_quest->GetName() };
-		if (a_quest->GetType() == RE::QUEST_DATA::Type::kMiscellaneous) 
+		std::string questName{ a_quest->GetName() };
+		
+		static REL::Relocation<void (RE::TESQuest::*)(RE::BSString&, std::int32_t)> GetQuestDescription{ REL::ID(24549) };
+
+		static std::vector<std::pair<RE::TESQuest*, std::uint16_t>> questStageShown;
+
+		for (RE::BGSInstancedQuestObjective& playerObjective : RE::PlayerCharacter::GetSingleton()->objectives) 
 		{
-			for (RE::BGSQuestObjective* objective : a_quest->objectives) 
+			if (playerObjective.objective->ownerQuest == a_quest)
 			{
-				if (objective->index == a_quest->currentStage) 
+				RE::BSString objectiveText = playerObjective.GetDisplayTextWithReplacedTags();
+
+				if (a_quest->GetType() == RE::QUEST_DATA::Type::kMiscellaneous) 
 				{
-					questInfo += objective->displayText;
-					break;
+					questName += objectiveText;
 				}
+
+				auto questStage = std::make_pair(a_quest, a_quest->currentStage);
+
+				if (std::find(questStageShown.begin(), questStageShown.end(), questStage) == questStageShown.end())
+				{
+					RE::BSString questDescription = a_quest->GetCurrentDescriptionWithReplacedTags();
+
+					logger::info("Description: {}", questDescription);
+					logger::info("Objective: {}", objectiveText);
+					logger::flush();
+
+					questStageShown.push_back(questStage);
+				}
+
+				break;
 			}
 		}
+
+		std::string questLocation;
 
 		// A quest marker can reference to a character or a location
 		switch (a_markerRef->GetFormType())
 		{
 			case RE::FormType::Reference:
 			{
-				if (auto questTeleporter = a_markerRef->As<RE::TESObjectREFR>()) 
+				if (auto questRef = a_markerRef->As<RE::TESObjectREFR>()) 
 				{
-					questInfo += ", ";
-					//questInfo += questTeleporter->GetName();
-
-					auto startingPosition = questTeleporter->extraList.GetByType<RE::ExtraStartingPosition>();
-					if (startingPosition) 
+					// If it is a teleport door, we can get the door at the other side
+					if (auto teleportLinkedDoor = questRef->extraList.GetTeleportLinkedDoor().get()) 
 					{
-						questInfo += startingPosition->location->GetFullName();
+						// First, try interior cell
+						if (RE::TESObjectCELL* cell = teleportLinkedDoor->GetParentCell()) 
+						{
+							questLocation = cell->GetName();
+						}
+						// Exterior cell
+						else if (RE::TESWorldSpace* worldSpace = teleportLinkedDoor->GetWorldspace())
+						{
+							questLocation = worldSpace->GetName();
+						}
 					}
 				}
 				break;
@@ -98,15 +129,14 @@ namespace HCN::extended
 			{
 				if (auto questCharacter = a_markerRef->As<RE::Character>())
 				{
-					questInfo += ", ";
-					questInfo += questCharacter->GetName();
+					questName += ", ";
+					questName += questCharacter->GetName();
 				}
 				break;
 			}
 			default:
 			{
-				questInfo += ", Unknown quest marker type ";
-				questInfo += std::to_string((int)a_markerRef->GetFormType());
+				logger::debug("Unknown quest marker type: {}", (int)a_markerRef->GetFormType());
 				break;
 			}
 		}
@@ -115,7 +145,7 @@ namespace HCN::extended
 
 		if (relativeAngleDeg < tolerance || relativeAngleDeg > (360.0F - tolerance))
 		{
-			focusedMarker = FocusedMarker { .name = questInfo.c_str(), .relativeAngle = relativeAngle, .questType = a_quest->data.questType.get() };
+			focusedMarker = FocusedMarker{ .questName = questName.c_str(), .relativeAngle = relativeAngle, .questType = a_quest->data.questType.get() };
 		}
 
 		return true;
@@ -131,7 +161,7 @@ namespace HCN::extended
 		{
 			if (!focusedMarker || focusedMarker->questType == RE::QUEST_DATA::Type::kNone) 
 			{
-				focusedMarker = FocusedMarker{ .name = a_mapMarker->mapData->locationName.GetFullName(), .relativeAngle = relativeAngle };
+				focusedMarker = FocusedMarker{ .questName = a_mapMarker->mapData->locationName.GetFullName(), .relativeAngle = relativeAngle };
 			}
 		}
 
@@ -148,7 +178,7 @@ namespace HCN::extended
 		{
 			if (!focusedMarker || focusedMarker->questType == RE::QUEST_DATA::Type::kNone) 
 			{
-				focusedMarker = FocusedMarker{ .name = a_enemy->GetName(), .relativeAngle = relativeAngle };
+				focusedMarker = FocusedMarker{ .questName = a_enemy->GetName(), .relativeAngle = relativeAngle };
 			}
 		}
 
@@ -161,11 +191,11 @@ namespace HCN::extended
 
 		if (focusedMarker) 
 		{
-			test->textField0.SetText(focusedMarker->name.c_str());
+			test->textField0.SetText(focusedMarker->questName.c_str());
 			test->textField1.SetText((std::string{ "Relative angle: " } + std::to_string(util::RadiansToDeg(focusedMarker->relativeAngle))).c_str());
 			//test->textField2.SetText((std::string{ "Heading angle: " } + std::to_string(util::RadiansToDeg(focusedMarker->headingAngle))).c_str());
 
-			SetQuestInfo(focusedMarker->name, focusedMarker->questType);
+			SetQuestInfo(focusedMarker->questName, focusedMarker->questType);
 
 			focusedMarker = { };
 		}

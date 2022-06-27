@@ -109,10 +109,12 @@ set(headers
 	include/IUI/GFxArray.h
 	include/IUI/GFxDisplayObject.h
 	include/IUI/GFxObject.h
+	include/RE/B/BGSInstancedQuestObjective.h
 	include/RE/C/Compass.h
 	include/RE/G/GFxValue.h
 	include/RE/H/HUDMarkerManager.h
 	include/RE/N/NiPoint3.h
+	include/RE/T/TESQuest.h
 	include/utils/GFxVisitors.h
 	include/utils/INISettingCollection.h
 	include/utils/Logger.h
@@ -128,6 +130,7 @@ set(headers
 set(sources
 	source/RE/G/GFxValue.cpp
 	source/RE/N/NiPoint3.cpp
+	source/RE/T/TESQuest.cpp
 	source/utils/GFxVisitors.cpp
 	source/utils/INISettingCollection.cpp
 	source/utils/Logger.cpp
