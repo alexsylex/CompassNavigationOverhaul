@@ -29,14 +29,14 @@ function SetQuestInfo(a_title:String, a_endPiecesFrame:Number, a_visible:Boolean
 {
 	QuestTitleEndPieces._visible = a_visible;
 	QuestTitleText._visible = a_visible;
+	QuestTitleEndPieces.gotoAndStop(a_endPiecesFrame);
 
-	if (a_visible)
+	if (a_endPiecesFrame)
 	{
-		QuestTitleText.text = a_title;
-		QuestTitleEndPieces.gotoAndStop(a_endPiecesFrame);
+		QuestTitleText.text = a_title.toUpperCase();
 	}
 	else
 	{
-		QuestTitleText.text = "";
+		QuestTitleText.text = " ";
 	}
 }
