@@ -1,10 +1,17 @@
-﻿var CompassFrame:MovieClip;
+﻿// Instances
+var CompassFrame:MovieClip;
 var CompassTemperatureHolderInstance:MovieClip;
 var CompassMask_mc:MovieClip;
 var DirectionRect:MovieClip;
+var QuestTitle:MovieClip;
+var QuestDescription:MovieClip;
+
+// References
+var MarkerList:Array;
 var QuestTitleText:TextField;
 var QuestTitleEndPieces:MovieClip;
-var CompassMarkerList:Array;
+var QuestDescriptionText:TextField;
+var QuestDescription
 
 function Compass(a_x:Number, a_y:Number, a_hadTemperatureMeter:Boolean):Void
 {
@@ -17,26 +24,26 @@ function Compass(a_x:Number, a_y:Number, a_hadTemperatureMeter:Boolean):Void
 	}
 	else
 	{
+		// We have it, but we will not use it
 		CompassTemperatureHolderInstance.gotoAndStop("Empty");
 	}
 
 	_root.HUDMovieBaseInstance.CompassRect = DirectionRect;
 
-	CompassMarkerList = _root.HUDMovieBaseInstance.CompassMarkerList;
+	MarkerList = _root.HUDMovieBaseInstance.CompassMarkerList;
 }
 
-function SetQuestInfo(a_title:String, a_endPiecesFrame:Number, a_visible:Boolean):Void
+function SetQuestInfo(a_title:String, a_endPiecesFrame:Number, a_show:Boolean):Void
 {
-	QuestTitleEndPieces._visible = a_visible;
-	QuestTitleText._visible = a_visible;
-	QuestTitleEndPieces.gotoAndStop(a_endPiecesFrame);
-
-	if (a_endPiecesFrame)
+	if (a_show)
 	{
+		QuestTitleEndPieces._alpha = 60;
+		QuestTitleEndPieces.gotoAndStop(a_endPiecesFrame);
 		QuestTitleText.text = a_title.toUpperCase();
 	}
 	else
 	{
+		QuestTitleEndPieces._alpha = 0;
 		QuestTitleText.text = " ";
 	}
 }

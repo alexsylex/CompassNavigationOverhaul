@@ -65,8 +65,8 @@ namespace HCN::extended
 	{
 		float relativeAngle = ProcessRelativeAngle(a_markerRef);
 
-		std::string questName{ a_quest->GetName() };
-		
+		std::string questName = (a_quest->GetType() == RE::QUEST_DATA::Type::kMiscellaneous) ? "$MISCELLANEOUS" : a_quest->GetName();
+				
 		static REL::Relocation<void (RE::TESQuest::*)(RE::BSString&, std::int32_t)> GetQuestDescription{ REL::ID(24549) };
 
 		static std::vector<std::pair<RE::TESQuest*, std::uint16_t>> questStageShown;
@@ -76,11 +76,6 @@ namespace HCN::extended
 			if (playerObjective.objective->ownerQuest == a_quest)
 			{
 				RE::BSString objectiveText = playerObjective.GetDisplayTextWithReplacedTags();
-
-				if (a_quest->GetType() == RE::QUEST_DATA::Type::kMiscellaneous) 
-				{
-					questName += objectiveText;
-				}
 
 				auto questStage = std::make_pair(a_quest, a_quest->currentStage);
 
