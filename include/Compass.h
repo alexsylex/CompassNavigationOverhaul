@@ -43,41 +43,72 @@ namespace HCN::extended
 
 		struct FocusedMarker
 		{
-			// Quest
-			std::string questName;
-
+			std::int32_t id; 
 			float relativeAngle = 0.0F;
+			float timeShown = 0.0F;
+			bool markedForDelete = false;
+		};
 
+		struct FocusedLocationMarker : FocusedMarker
+		{
+			std::string locationName;
+		};
+
+		struct FocusedQuestMarker : FocusedMarker
+		{
+			const RE::TESQuest* quest;
 			RE::QUEST_DATA::Type questType = RE::QUEST_DATA::Type::kNone;
-			//std::string questCharacterName;
+			std::string questName;
+			std::string questObjective;
+			std::string questLocation;
+			std::string questCharacterName;
+		};
 
-			
-			float playerCameraAngle = 0.0F;
-			float compassAngle = 0.0F;
-			float headingAngle = 0.0F;
+		template<typename Key, typename MappedValue>
+		struct Map : std::unordered_map<Key, MappedValue>
+		{
+			using parent = std::unordered_map<Key, MappedValue>;
 
-			// Location
-			std::string location;
+			MappedValue* GetAt(Key a_key)
+			{
+				if (!parent::contains(a_key))
+				{
+					parent::emplace(std::make_pair(a_key, MappedValue()));
+				}
+
+				MappedValue& mappedValue = parent::at(a_key);
+				return &mappedValue;
+			}
+
+			parent::size_type EraseElementsMarkedForDelete()
+			{
+				return std::erase_if(*this, [](const auto& a_pair) -> bool
+				{
+					const auto& [key, mappedValue] = a_pair;
+
+					return mappedValue.markedForDelete;
+				});
+			}
 		};
 
 		static constexpr inline std::string_view path = "_level0.HUDMovieBaseInstance.CompassShoutMeterHolder.Compass";
 
-		static Compass* InitSingleton(const GFxDisplayObject& a_compass)
+		static Compass* InitSingleton(const GFxDisplayObject& a_originalCompass)
 		{
 			if (!singleton) 
 			{
 				// First time
-				singleton = new Compass(a_compass);
+				singleton = new Compass(a_originalCompass);
 			}
 
 			return singleton;
 		}
 
-		static Compass* UpdateSingleton(const GFxDisplayObject& a_compass)
+		static Compass* UpdateSingleton(const GFxDisplayObject& a_replaceCompass)
 		{
 			if (singleton) 
 			{
-				singleton->SetupMod(a_compass);
+				singleton->SetupMod(a_replaceCompass);
 			}
 
 			return singleton;
@@ -86,39 +117,44 @@ namespace HCN::extended
 		static Compass* GetSingleton() { return singleton; }
 
 		float ProcessRelativeAngle(RE::TESObjectREFR* a_markerRef);
-		bool ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef);
-		bool ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef);
-		bool ProcessEnemyMarker(RE::Character* a_enemy);
+		bool ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef, std::int32_t a_markerId);
+		bool ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef, std::int32_t a_markerId);
+		bool ProcessEnemyMarker(RE::Character* a_enemy, std::int32_t a_markerId);
 		void SetMarkersExtraInfo();
 
 	private:
 
-		Compass(const GFxDisplayObject& a_compass) 
-		:	GFxDisplayObject{ a_compass },
+		Compass(const GFxDisplayObject& a_originalCompass) 
+		:	GFxDisplayObject{ a_originalCompass },
 			_x{ GetMember("_x").GetNumber() },
 			_y{ GetMember("_y").GetNumber() },
-			hadTemperatureMeter{ !GetMember("CompassTemperatureHolderInstance").IsUndefined() }
+			hasTemperatureMeter{ HasMember("CompassTemperatureHolderInstance") }
 		{ }
 
-		void SetupMod(const GFxDisplayObject& a_compass)
+		void SetupMod(const GFxDisplayObject& a_replaceCompass)
 		{
-			if (a_compass.HasMember("Compass"))
+			if (a_replaceCompass.HasMember("Compass"))
 			{
-				*static_cast<GFxDisplayObject*>(this) = a_compass;
+				*static_cast<GFxDisplayObject*>(this) = a_replaceCompass;
 
-				Invoke("Compass", _x, _y, hadTemperatureMeter);
+				Invoke("Compass", _x, _y, hasTemperatureMeter);
 			}
 		}
 
-		void SetQuestInfo(const std::string& a_questTitle, RE::QUEST_DATA::Type a_questType);
+		void SetQuestInfo(RE::QUEST_DATA::Type a_questType, const std::string& a_questName, const std::string& a_questObjective);
+
+		void ClearQuestInfos();
+
+		void SetLocationInfo(const std::string& a_locationName);
 
 		static inline Compass* singleton = nullptr;
 
 		double _x;
 		double _y;
-		bool hadTemperatureMeter;
+		bool hasTemperatureMeter;
 
 		float tolerance = 10.0F;
-		std::optional<FocusedMarker> focusedMarker;
+		Map<RE::BGSInstancedQuestObjective*, FocusedQuestMarker> focusedQuestMarkerMap;
+		Map<RE::ExtraMapMarker*, FocusedLocationMarker> focusedLocationMarkerMap;
 	};
 }

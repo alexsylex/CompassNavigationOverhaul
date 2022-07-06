@@ -57,8 +57,6 @@ namespace RE
 	{
 	public:
 
-
-
 		static HUDMarkerManager* GetSingleton()
 		{
 			REL::Relocation<HUDMarkerManager*> singleton{ REL::ID(519611) };

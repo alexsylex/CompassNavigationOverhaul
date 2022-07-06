@@ -17,7 +17,7 @@ namespace HCN
 			{
 				RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
 
-				compass->ProcessQuestMarker(a_quest, markerRef.get());
+				compass->ProcessQuestMarker(a_quest, markerRef.get(), a_markerId);
 			}
 
 			return true;
@@ -34,7 +34,7 @@ namespace HCN
 			if (auto compass = extended::Compass::GetSingleton())
 			{
 				RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
-				for (auto locationRef : a_hudMarkerManager->locationRefs) 
+				for (RE::RefHandle locationRef : a_hudMarkerManager->locationRefs) 
 				{
 					RE::TESObjectREFRPtr locationRefOut = RE::TESObjectREFR::LookupByHandle(locationRef);
 					if (locationRefOut == markerRef)
@@ -45,7 +45,7 @@ namespace HCN
 
 				if (markerRef) 
 				{
-					compass->ProcessLocationMarker(markerRef->extraList.GetByType<RE::ExtraMapMarker>(), markerRef.get());
+					compass->ProcessLocationMarker(markerRef->extraList.GetByType<RE::ExtraMapMarker>(), markerRef.get(), a_markerId);
 				}
 			}
 
@@ -66,7 +66,7 @@ namespace HCN
 
 				if (markerRef)
 				{
-					compass->ProcessEnemyMarker(markerRef->As<RE::Character>());
+					compass->ProcessEnemyMarker(markerRef->As<RE::Character>(), a_markerId);
 				}
 			}
 

@@ -4,14 +4,14 @@ var CompassTemperatureHolderInstance:MovieClip;
 var CompassMask_mc:MovieClip;
 var DirectionRect:MovieClip;
 var QuestTitle:MovieClip;
-var QuestDescription:MovieClip;
+var QuestObjective:MovieClip;
 
 // References
 var MarkerList:Array;
 var QuestTitleText:TextField;
 var QuestTitleEndPieces:MovieClip;
 var QuestDescriptionText:TextField;
-var QuestDescription
+var QuestObjectiveText:TextField;
 
 function Compass(a_x:Number, a_y:Number, a_hadTemperatureMeter:Boolean):Void
 {
@@ -31,19 +31,32 @@ function Compass(a_x:Number, a_y:Number, a_hadTemperatureMeter:Boolean):Void
 	_root.HUDMovieBaseInstance.CompassRect = DirectionRect;
 
 	MarkerList = _root.HUDMovieBaseInstance.CompassMarkerList;
+
+	QuestTitleText = QuestTitle.TitleText;
+	QuestTitleEndPieces = QuestTitle.EndPieces;
+
+	QuestObjectiveText = QuestObjective.RolloverText;
 }
 
-function SetQuestInfo(a_title:String, a_endPiecesFrame:Number, a_show:Boolean):Void
+function SetQuestInfo(a_questType:Number, a_questName:String, a_questObjective:String):Void
 {
-	if (a_show)
-	{
-		QuestTitleEndPieces._alpha = 60;
-		QuestTitleEndPieces.gotoAndStop(a_endPiecesFrame);
-		QuestTitleText.text = a_title.toUpperCase();
-	}
-	else
-	{
-		QuestTitleEndPieces._alpha = 0;
-		QuestTitleText.text = " ";
-	}
+	QuestTitle._alpha = 100;
+	QuestTitleEndPieces.gotoAndStop(a_questType);
+	QuestTitleText.text = a_questName.toUpperCase();
+	QuestObjective._alpha = 100;
+	QuestObjectiveText.text = a_questObjective;
+
+	var bracketsOpenFrame:Number = Math.round(a_questObjective.length * 2.25);
+	QuestObjective.gotoAndStop(bracketsOpenFrame);
+}
+
+function SetLocationInfo(a_locationName:String):Void
+{
+
+}
+
+function ClearQuestInfos():Void
+{
+	QuestTitle._alpha = 0;
+	QuestObjective._alpha = 0;
 }
