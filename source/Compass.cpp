@@ -5,6 +5,7 @@
 
 #include "RE/B/BGSInstancedQuestObjective.h"
 
+
 #include "utils/Logger.h"
 
 static constexpr float pi = std::numbers::pi_v<float>;
@@ -62,7 +63,7 @@ namespace HCN::extended
 		return relativeAngle;
 	}
 
-	bool Compass::ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef, std::int32_t a_markerId)
+	bool Compass::ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef, std::uint32_t a_markerGotoFrame, RE::NiPoint3* a_markerPos)
 	{
 		float relativeAngle = ProcessRelativeAngle(a_markerRef);
 		float relativeAngleDeg = util::RadiansToDeg(relativeAngle);
@@ -101,7 +102,13 @@ namespace HCN::extended
 
 			if (focusedQuestMarker) 
 			{
-				focusedQuestMarker->id = a_markerId;
+				if (a_markerPos)
+				{
+					logger::trace("");
+				}
+
+				focusedQuestMarker->index = hudMarkerManager->currentMarkerIndex - 1;
+				focusedQuestMarker->gotoFrame = a_markerGotoFrame;
 				focusedQuestMarker->relativeAngle = relativeAngle;
 				focusedQuestMarker->quest = a_quest;
 				focusedQuestMarker->questType = a_quest->GetType();
@@ -153,7 +160,7 @@ namespace HCN::extended
 		return true;
 	}
 
-	bool Compass::ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef, std::int32_t a_markerId)
+	bool Compass::ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef, std::uint32_t a_markerGotoFrame)
 	{
 		float relativeAngle = ProcessRelativeAngle(a_markerRef);
 		float relativeAngleDeg = util::RadiansToDeg(relativeAngle);
@@ -162,7 +169,8 @@ namespace HCN::extended
 		{
 			FocusedLocationMarker* focusedLocationMarker = focusedLocationMarkerMap.GetAt(a_mapMarker);
 
-			focusedLocationMarker->id = a_markerId;
+			focusedLocationMarker->index = hudMarkerManager->currentMarkerIndex - 1;
+			focusedLocationMarker->gotoFrame = a_markerGotoFrame;
 			focusedLocationMarker->relativeAngle = relativeAngle;
 			focusedLocationMarker->locationName = a_mapMarker->mapData->locationName.GetFullName();
 
@@ -172,7 +180,7 @@ namespace HCN::extended
 		return true;
 	}
 
-	bool Compass::ProcessEnemyMarker(RE::Character* a_enemy, std::int32_t)
+	bool Compass::ProcessEnemyMarker(RE::Character* a_enemy, std::uint32_t)
 	{
 		float relativeAngle = ProcessRelativeAngle(a_enemy);
 		float relativeAngleDeg = util::RadiansToDeg(relativeAngle);
@@ -228,42 +236,46 @@ namespace HCN::extended
 			test->textField1.SetText((std::string{ "Relative angle: " } + std::to_string(util::RadiansToDeg(focusedQuestMarker->relativeAngle))).c_str());
 			//test->textField2.SetText((std::string{ "Heading angle: " } + std::to_string(util::RadiansToDeg(focusedMarker->headingAngle))).c_str());
 
-			SetQuestInfo(focusedQuestMarker->questType, focusedQuestMarker->questName, focusedQuestMarker->questObjective);
+			SetQuestInfo(focusedQuestMarker->questType, focusedQuestMarker->questName, focusedQuestMarker->questObjective, focusedQuestMarker->index);
 		}
 		else if (!focusedLocationMarkerMap.empty())
 		{
 			focusedQuestMarkerMap.clear();
 			ClearQuestInfos();
 
-			for (auto& [extraMapMarker, focusedLocationMarker] : focusedLocationMarkerMap) 
+			FocusedLocationMarker* focusedLocationMarker = nullptr;
+
+			for (auto& [extraMapMarker, locationMarker] : focusedLocationMarkerMap)
 			{
-				test->textField0.SetText(focusedLocationMarker.locationName.c_str());
-				test->textField1.SetText((std::string{ "Relative angle: " } + std::to_string(util::RadiansToDeg(focusedLocationMarker.relativeAngle))).c_str());
-				//test->textField2.SetText("");
+				if (!focusedLocationMarker) 
+				{
+					focusedLocationMarker = &locationMarker;
+				}
 
-				SetLocationInfo(focusedLocationMarker.locationName);
-
-				focusedLocationMarker.markedForDelete = true;
+				locationMarker.markedForDelete = true;
 			}
+
+			test->textField0.SetText(focusedLocationMarker->locationName.c_str());
+			test->textField1.SetText((std::string{ "Relative angle: " } + std::to_string(util::RadiansToDeg(focusedLocationMarker->relativeAngle))).c_str());
+			//test->textField2.SetText("");
+
+			SetLocationInfo(focusedLocationMarker->locationName, focusedLocationMarker->index);
 		}
 		else
 		{
 			focusedQuestMarkerMap.clear();
 			ClearQuestInfos();
 
+			focusedLocationMarkerMap.clear();
+
 			test->textField0.SetText("");
 			test->textField1.SetText("");
 		}
 	}
 
-	void Compass::SetQuestInfo(RE::QUEST_DATA::Type a_questType, const std::string& a_questName, const std::string& a_questObjective)
+	void Compass::SetQuestInfo(RE::QUEST_DATA::Type a_questType, const std::string& a_questName, const std::string& a_questObjective, std::uint32_t a_markerIndex)
 	{
-		Invoke("SetQuestInfo", a_questType, a_questName.c_str(), a_questObjective.c_str());
-	}
-
-	void Compass::SetLocationInfo(const std::string& a_locationName)
-	{
-		Invoke("SetLocation", a_locationName.c_str());
+		Invoke("SetQuestInfo", a_questType, a_questName.c_str(), a_questObjective.c_str(), a_markerIndex);
 	}
 
 	void Compass::ClearQuestInfos()
@@ -271,4 +283,8 @@ namespace HCN::extended
 		Invoke("ClearQuestInfos");
 	}
 
+	void Compass::SetLocationInfo(const std::string& a_locationName, std::uint32_t a_markerIndex)
+	{
+		Invoke("SetLocationInfo", a_locationName.c_str(), a_markerIndex);
+	}
 }

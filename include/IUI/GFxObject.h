@@ -71,9 +71,15 @@ public:
 		bool invokeOk = RE::GFxValue::Invoke(a_functionName.data(), a_result,
 			sizeof...(Args) ? &gfxArgs[0] : nullptr, sizeof...(Args));
 
-		if (invokeOk) {
+		if (invokeOk) 
+		{
 			GetMovieView()->Advance(0.0F);
+		} 
+		else 
+		{
+			throw("Could not invoke function");
 		}
+
 
 		return invokeOk;
 	}

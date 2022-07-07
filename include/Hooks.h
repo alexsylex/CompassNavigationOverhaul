@@ -56,17 +56,17 @@ namespace HCN
 	};
 
 	bool ProcessQuestHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
-						  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId,
+						  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame,
 						  RE::TESQuest*& a_quest);
 
 	bool ProcessLocationHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
-							 RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId);
+							 RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame);
 
 	bool ProcessEnemyHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
-						  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId);
+						  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame);
 
 	bool ProcessPlayerSetHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
-							  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId);
+							  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame);
 
 	bool SetCompassMarkersHook(RE::GFxValue::ObjectInterface* a_objectInterface, void* a_data, 
 							   RE::GFxValue* a_result, const char* a_name, const RE::GFxValue* a_args, 

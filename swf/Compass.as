@@ -38,8 +38,12 @@ function Compass(a_x:Number, a_y:Number, a_hadTemperatureMeter:Boolean):Void
 	QuestObjectiveText = QuestObjective.RolloverText;
 }
 
-function SetQuestInfo(a_questType:Number, a_questName:String, a_questObjective:String):Void
+function SetQuestInfo(a_questType:Number, a_questName:String, a_questObjective:String, a_markerIndex:Number):Void
 {
+	var marker = MarkerList[a_markerIndex];
+	marker.movie._xscale = 170;
+	marker.movie._yscale = 170;
+
 	QuestTitle._alpha = 100;
 	QuestTitleEndPieces.gotoAndStop(a_questType);
 	QuestTitleText.text = a_questName.toUpperCase();
@@ -50,9 +54,11 @@ function SetQuestInfo(a_questType:Number, a_questName:String, a_questObjective:S
 	QuestObjective.gotoAndStop(bracketsOpenFrame);
 }
 
-function SetLocationInfo(a_locationName:String):Void
+function SetLocationInfo(a_locationName:String, a_markerIndex:Number):Void
 {
-
+	var marker:MovieClip = MarkerList[a_markerIndex];
+	marker.movie._xscale = 170;
+	marker.movie._yscale = 170;
 }
 
 function ClearQuestInfos():Void

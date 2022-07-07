@@ -3,6 +3,8 @@
 #include "IUI/GFxArray.h"
 #include "IUI/GFxDisplayObject.h"
 
+#include "RE/H/HUDMarkerManager.h"
+
 namespace HCN
 {
 	class Test : GFxDisplayObject
@@ -43,7 +45,8 @@ namespace HCN::extended
 
 		struct FocusedMarker
 		{
-			std::int32_t id; 
+			std::uint32_t index;
+			std::uint32_t gotoFrame; 
 			float relativeAngle = 0.0F;
 			float timeShown = 0.0F;
 			bool markedForDelete = false;
@@ -117,9 +120,13 @@ namespace HCN::extended
 		static Compass* GetSingleton() { return singleton; }
 
 		float ProcessRelativeAngle(RE::TESObjectREFR* a_markerRef);
-		bool ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef, std::int32_t a_markerId);
-		bool ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef, std::int32_t a_markerId);
-		bool ProcessEnemyMarker(RE::Character* a_enemy, std::int32_t a_markerId);
+
+		bool ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef, std::uint32_t a_markerGotoFrame, RE::NiPoint3* a_markerPos);
+
+		bool ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef, std::uint32_t a_markerGotoFrame);
+
+		bool ProcessEnemyMarker(RE::Character* a_enemy, std::uint32_t a_markerGotoFrame);
+
 		void SetMarkersExtraInfo();
 
 	private:
@@ -141,11 +148,11 @@ namespace HCN::extended
 			}
 		}
 
-		void SetQuestInfo(RE::QUEST_DATA::Type a_questType, const std::string& a_questName, const std::string& a_questObjective);
+		void SetQuestInfo(RE::QUEST_DATA::Type a_questType, const std::string& a_questName, const std::string& a_questObjective, std::uint32_t a_markerGotoFrame);
 
 		void ClearQuestInfos();
 
-		void SetLocationInfo(const std::string& a_locationName);
+		void SetLocationInfo(const std::string& a_locationName, std::uint32_t a_markerGotoFrame);
 
 		static inline Compass* singleton = nullptr;
 
@@ -154,7 +161,10 @@ namespace HCN::extended
 		bool hasTemperatureMeter;
 
 		float tolerance = 10.0F;
+
 		Map<RE::BGSInstancedQuestObjective*, FocusedQuestMarker> focusedQuestMarkerMap;
 		Map<RE::ExtraMapMarker*, FocusedLocationMarker> focusedLocationMarkerMap;
+
+		RE::HUDMarkerManager* hudMarkerManager = RE::HUDMarkerManager::GetSingleton();
 	};
 }

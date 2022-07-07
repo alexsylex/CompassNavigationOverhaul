@@ -9,15 +9,15 @@
 namespace HCN
 {
 	bool ProcessQuestHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
-						  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId, RE::TESQuest*& a_quest)
+						  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame, RE::TESQuest*& a_quest)
 	{
-		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerId))
+		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame))
 		{
 			if (auto compass = extended::Compass::GetSingleton())
 			{
 				RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
 
-				compass->ProcessQuestMarker(a_quest, markerRef.get(), a_markerId);
+				compass->ProcessQuestMarker(a_quest, markerRef.get(), a_markerGotoFrame, a_pos);
 			}
 
 			return true;
@@ -27,9 +27,9 @@ namespace HCN
 	}
 
 	bool ProcessLocationHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
-							 RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId)
+							 RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame)
 	{
-		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerId)) 
+		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
 		{
 			if (auto compass = extended::Compass::GetSingleton())
 			{
@@ -43,9 +43,9 @@ namespace HCN
 					}
 				}
 
-				if (markerRef) 
+				if (markerRef)
 				{
-					compass->ProcessLocationMarker(markerRef->extraList.GetByType<RE::ExtraMapMarker>(), markerRef.get(), a_markerId);
+					compass->ProcessLocationMarker(markerRef->extraList.GetByType<RE::ExtraMapMarker>(), markerRef.get(), a_markerGotoFrame);
 				}
 			}
 
@@ -56,9 +56,9 @@ namespace HCN
 	}
 
 	bool ProcessEnemyHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
-						  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId)
+						  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame)
 	{
-		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerId)) 
+		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
 		{
 			if (auto compass = extended::Compass::GetSingleton())
 			{
@@ -66,7 +66,7 @@ namespace HCN
 
 				if (markerRef)
 				{
-					compass->ProcessEnemyMarker(markerRef->As<RE::Character>(), a_markerId);
+					compass->ProcessEnemyMarker(markerRef->As<RE::Character>(), a_markerGotoFrame);
 				}
 			}
 
@@ -77,9 +77,9 @@ namespace HCN
 	}
 
 	bool ProcessPlayerSetHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
-							  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::int32_t a_markerId)
+							  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame)
 	{
-		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerId)) 
+		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
 		{
 			RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
 
@@ -96,11 +96,14 @@ namespace HCN
 							   RE::GFxValue* a_result, const char* a_name, const RE::GFxValue* a_args,
 							   std::uint32_t a_numArgs, bool a_isDObj)
 	{
+		bool retVal = a_objectInterface->Invoke(a_data, a_result, a_name, a_args, a_numArgs, a_isDObj);
+
 		if (auto compass = extended::Compass::GetSingleton()) 
 		{
+			compass->GetMovieView()->Advance(0.0F);
 			compass->SetMarkersExtraInfo();
 		}
 
-		return a_objectInterface->Invoke(a_data, a_result, a_name, a_args, a_numArgs, a_isDObj);
+		return retVal;
 	}
 }
