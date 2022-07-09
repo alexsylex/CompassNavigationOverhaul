@@ -5,81 +5,85 @@
 
 #include "RE/B/BGSInstancedQuestObjective.h"
 
-
 #include "utils/Logger.h"
 
 static constexpr float pi = std::numbers::pi_v<float>;
 
-namespace HCN::extended
+namespace util
 {
-	namespace util
+	static void CropAngleRange(float& a_angle)
 	{
-		static void CropAngleRange(float& a_angle)
-		{
-			if (a_angle <= 2 * pi) 
-			{
-				if (a_angle < 0.0F) 
-				{
-					a_angle = std::fmodf(a_angle, 2 * pi) + 2 * pi;
-				}
-			} 
-			else 
-			{
-				a_angle = std::fmodf(a_angle, 2 * pi);
+		if (a_angle <= 2 * pi) {
+			if (a_angle < 0.0F) {
+				a_angle = std::fmodf(a_angle, 2 * pi) + 2 * pi;
 			}
-		};
-
-		static float RadiansToDeg(float a_angle)
-		{
-			return a_angle * 180.0F / pi; 
+		} else {
+			a_angle = std::fmodf(a_angle, 2 * pi);
 		}
+	};
+
+	static float RadiansToDegrees(float a_angle)
+	{
+		return a_angle * 180.0F / pi;
 	}
 
-	float Compass::ProcessRelativeAngle(RE::TESObjectREFR* a_markerRef)
+	static float GetAngleBetween(RE::PlayerCamera* a_playerCamera, RE::TESObjectREFR* a_markerRef)
 	{
 		RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
+		RE::NiPoint3 playerPos = player->GetPosition();
 
 		RE::NiPoint3 markerPos = a_markerRef->GetLookingAtLocation();
 
-		float playerCameraAngle = RE::PlayerCamera::GetSingleton()->yaw;
+		float playerCameraYawAngle = a_playerCamera->yaw;
 
-		float compassAngle = playerCameraAngle;
+		float compassAngle = playerCameraYawAngle;
 
-		if (RE::TESObjectCELL* parentCell = player->GetParentCell())
-		{
+		if (RE::TESObjectCELL* parentCell = player->GetParentCell()) {
 			compassAngle += parentCell->GetNorthRotation();
 		}
 
-		float headingAngle = player->GetPosition().GetHorizontalAngleTo(markerPos);
+		float headingAngle = playerPos.GetHorizontalAngleTo(markerPos);
 
-		util::CropAngleRange(playerCameraAngle);
-		util::CropAngleRange(compassAngle);
-		util::CropAngleRange(headingAngle);
+		CropAngleRange(playerCameraYawAngle);
+		CropAngleRange(compassAngle);
+		CropAngleRange(headingAngle);
 
-		float relativeAngle = headingAngle - playerCameraAngle;
+		float angle = headingAngle - playerCameraYawAngle;
 
-		util::CropAngleRange(relativeAngle);
+		CropAngleRange(angle);
 
-		return relativeAngle;
+		return angle;
 	}
 
-	bool Compass::ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef, std::uint32_t a_markerGotoFrame, RE::NiPoint3* a_markerPos)
+	static float GetDistanceBetween(RE::PlayerCharacter* a_player, RE::TESObjectREFR* a_markerRef)
 	{
-		float relativeAngle = ProcessRelativeAngle(a_markerRef);
-		float relativeAngleDeg = util::RadiansToDeg(relativeAngle);
+		RE::NiPoint3 playerPos = a_player->GetPosition();
+		RE::NiPoint3 markerPos = a_markerRef->GetPosition();
+		//GetLookingAtLocation();
+		return playerPos.GetDistance(markerPos);
+	}
+}
 
-		if (relativeAngleDeg < tolerance || relativeAngleDeg > (360.0F - tolerance))
+namespace extended
+{
+	bool Compass::ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef, 
+									 std::uint32_t a_markerGotoFrame, RE::NiPoint3* a_markerPos)
+	{
+		float angleToPlayerCameraRads = util::GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_markerRef);
+		float angleToPlayerCamera = util::RadiansToDegrees(angleToPlayerCameraRads);
+
+		if (angleToPlayerCamera < filterAngle || angleToPlayerCamera > (360.0F - filterAngle))
 		{
-			FocusedQuestMarker* focusedQuestMarker = nullptr;		
+			FocusedQuestMarker* focusedQuestMarker = nullptr;
 
-			for (RE::BGSInstancedQuestObjective& playerObjective : RE::PlayerCharacter::GetSingleton()->objectives) 
+			for (RE::BGSInstancedQuestObjective& questObjective : RE::PlayerCharacter::GetSingleton()->objectives) 
 			{
-				if (playerObjective.objective->ownerQuest == a_quest &&
-					playerObjective.instanceState == RE::QUEST_OBJECTIVE_STATE::kDisplayed)
+				if (questObjective.objective->ownerQuest == a_quest &&
+					questObjective.instanceState == RE::QUEST_OBJECTIVE_STATE::kDisplayed)
 				{
-					focusedQuestMarker = focusedQuestMarkerMap.GetAt(&playerObjective);
+					focusedQuestMarker = focusedQuestMarkerMap.GetAt(&questObjective);
 
-					focusedQuestMarker->questObjective = playerObjective.GetDisplayTextWithReplacedTags();
+					focusedQuestMarker->questObjective = questObjective.GetDisplayTextWithReplacedTags();
 
 #if DEBUG_QUEST_DESCRIPTION
 					static std::vector<std::pair<RE::TESQuest*, std::uint16_t>> questStageShown;
@@ -109,7 +113,8 @@ namespace HCN::extended
 
 				focusedQuestMarker->index = hudMarkerManager->currentMarkerIndex - 1;
 				focusedQuestMarker->gotoFrame = a_markerGotoFrame;
-				focusedQuestMarker->relativeAngle = relativeAngle;
+				focusedQuestMarker->distanceToPlayer = util::GetDistanceBetween(RE::PlayerCharacter::GetSingleton(), a_markerRef);
+				focusedQuestMarker->angleToPlayerCamera = angleToPlayerCamera;
 				focusedQuestMarker->quest = a_quest;
 				focusedQuestMarker->questType = a_quest->GetType();
 				focusedQuestMarker->questName = (a_quest->GetType() == RE::QUEST_DATA::Type::kMiscellaneous) ? "$MISCELLANEOUS" : a_quest->GetName();
@@ -160,18 +165,24 @@ namespace HCN::extended
 		return true;
 	}
 
-	bool Compass::ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef, std::uint32_t a_markerGotoFrame)
+	bool Compass::ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef,
+										std::uint32_t a_markerGotoFrame)
 	{
-		float relativeAngle = ProcessRelativeAngle(a_markerRef);
-		float relativeAngleDeg = util::RadiansToDeg(relativeAngle);
+		float angleToPlayerCameraRads = util::GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_markerRef);
+		float angleToPlayerCamera = util::RadiansToDegrees(angleToPlayerCameraRads);
 
-		if (relativeAngleDeg < tolerance || relativeAngleDeg > (360.0F - tolerance)) 
+		auto test = RE::GameSettingCollection::GetSingleton();
+
+		if (test) {}
+
+		if (angleToPlayerCamera < filterAngle || angleToPlayerCamera > (360.0F - filterAngle))
 		{
 			FocusedLocationMarker* focusedLocationMarker = focusedLocationMarkerMap.GetAt(a_mapMarker);
 
 			focusedLocationMarker->index = hudMarkerManager->currentMarkerIndex - 1;
 			focusedLocationMarker->gotoFrame = a_markerGotoFrame;
-			focusedLocationMarker->relativeAngle = relativeAngle;
+			focusedLocationMarker->distanceToPlayer = util::GetDistanceBetween(RE::PlayerCharacter::GetSingleton(), a_markerRef);
+			focusedLocationMarker->angleToPlayerCamera = angleToPlayerCamera;
 			focusedLocationMarker->locationName = a_mapMarker->mapData->locationName.GetFullName();
 
 			focusedLocationMarker->markedForDelete = false;
@@ -182,10 +193,10 @@ namespace HCN::extended
 
 	bool Compass::ProcessEnemyMarker(RE::Character* a_enemy, std::uint32_t)
 	{
-		float relativeAngle = ProcessRelativeAngle(a_enemy);
-		float relativeAngleDeg = util::RadiansToDeg(relativeAngle);
+		float angleToPlayerCameraRads = util::GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_enemy);
+		float angleToPlayerCamera = util::RadiansToDegrees(angleToPlayerCameraRads);
 
-		if (relativeAngleDeg < tolerance || relativeAngleDeg > (360.0F - tolerance))
+		if (angleToPlayerCamera < filterAngle || angleToPlayerCamera > (360.0F - filterAngle))
 		{
 			//if (!focusedMarker || focusedMarker->questType == RE::QUEST_DATA::Type::kNone) 
 			//{
@@ -233,8 +244,8 @@ namespace HCN::extended
 			focusedQuestMarker->timeShown += 1.0F / 60.0F;
 
 			test->textField0.SetText(focusedQuestMarker->questName.c_str());
-			test->textField1.SetText((std::string{ "Relative angle: " } + std::to_string(util::RadiansToDeg(focusedQuestMarker->relativeAngle))).c_str());
-			//test->textField2.SetText((std::string{ "Heading angle: " } + std::to_string(util::RadiansToDeg(focusedMarker->headingAngle))).c_str());
+			test->textField1.SetText((std::string{ "Relative angle: " } + std::to_string(focusedQuestMarker->angleToPlayerCamera)).c_str());
+			test->textField2.SetText((std::string{ "Distance: " } + std::to_string(static_cast<unsigned int>(focusedQuestMarker->distanceToPlayer * 0.01428F)) + " m").c_str());
 
 			SetQuestInfo(focusedQuestMarker->questType, focusedQuestMarker->questName, focusedQuestMarker->questObjective, focusedQuestMarker->index);
 		}
@@ -256,8 +267,8 @@ namespace HCN::extended
 			}
 
 			test->textField0.SetText(focusedLocationMarker->locationName.c_str());
-			test->textField1.SetText((std::string{ "Relative angle: " } + std::to_string(util::RadiansToDeg(focusedLocationMarker->relativeAngle))).c_str());
-			//test->textField2.SetText("");
+			test->textField1.SetText((std::string{ "Relative angle: " } + std::to_string(focusedLocationMarker->angleToPlayerCamera)).c_str());
+			test->textField2.SetText((std::string{ "Distance: " } + std::to_string(static_cast<unsigned int>(focusedLocationMarker->distanceToPlayer * 0.01428F)) + " m").c_str());
 
 			SetLocationInfo(focusedLocationMarker->locationName, focusedLocationMarker->index);
 		}
@@ -270,6 +281,7 @@ namespace HCN::extended
 
 			test->textField0.SetText("");
 			test->textField1.SetText("");
+			test->textField2.SetText("");
 		}
 	}
 

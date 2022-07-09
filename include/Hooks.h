@@ -7,7 +7,7 @@
 #include "RE/H/HUDMarkerManager.h"
 #include "RE/N/NiPoint3.h"
 
-namespace HCN
+namespace hooks
 {
 	class HUDMarkerManager
 	{
@@ -55,32 +55,32 @@ namespace HCN
 		static inline REL::Relocation<bool (*)(RE::Compass*)> SetMarkers{ SetMarkersId };
 	};
 
-	bool ProcessQuestHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
-						  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame,
-						  RE::TESQuest*& a_quest);
+	bool ProcessQuestMarker(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
+							RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame,
+							RE::TESQuest*& a_quest);
 
-	bool ProcessLocationHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
-							 RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame);
+	bool ProcessLocationMarker(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
+							   RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame);
 
-	bool ProcessEnemyHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
-						  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame);
+	bool ProcessEnemyMarker(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
+							RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame);
 
-	bool ProcessPlayerSetHook(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
-							  RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame);
+	bool ProcessPlayerSetMarker(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
+								RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame);
 
-	bool SetCompassMarkersHook(RE::GFxValue::ObjectInterface* a_objectInterface, void* a_data, 
-							   RE::GFxValue* a_result, const char* a_name, const RE::GFxValue* a_args, 
-							   std::uint32_t a_numArgs, bool a_isDObj);
+	bool SetCompassMarkers(RE::GFxValue::ObjectInterface* a_objectInterface, void* a_data, 
+						   RE::GFxValue* a_result, const char* a_name, const RE::GFxValue* a_args, 
+						   std::uint32_t a_numArgs, bool a_isDObj);
 
-	static inline void InstallHooks()
+	static inline void Install()
 	{
 		// HUDMarkerManager::ProcessQuestMarker
 		{
 			static std::uintptr_t hookedAddress = HUDMarkerManager::ProcessQuestMarker.address() + 0x114;
 
-			struct Hook : Xbyak::CodeGenerator
+			struct HookCodeGenerator : Xbyak::CodeGenerator
 			{
-				Hook()
+				HookCodeGenerator()
 				{
 					Xbyak::Label hookLabel;
 					Xbyak::Label retnLabel;
@@ -90,21 +90,21 @@ namespace HCN
 
 					jmp(ptr[rip + retnLabel]);
 
-					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessQuestHook));
+					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessQuestMarker));
 					L(retnLabel), dq(hookedAddress + 5);
 				}
 			};
 
-			utils::WriteBranchTrampoline<5>(hookedAddress, Hook());
+			utils::WriteBranchTrampoline<5>(hookedAddress, HookCodeGenerator());
 		}
 
 		// HUDMarkerManager::ProcessLocationMarkers
 		{
 			static std::uintptr_t hookedAddress = HUDMarkerManager::ProcessLocationMarkers.address() + 0x450;
 
-			struct Hook : Xbyak::CodeGenerator
+			struct HookCodeGenerator : Xbyak::CodeGenerator
 			{
-				Hook()
+				HookCodeGenerator()
 				{
 					Xbyak::Label hookLabel;
 					Xbyak::Label retnLabel;
@@ -113,21 +113,21 @@ namespace HCN
 
 					jmp(ptr[rip + retnLabel]);
 
-					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessLocationHook));
+					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessLocationMarker));
 					L(retnLabel), dq(hookedAddress + 5);
 				}
 			};
 
-			utils::WriteBranchTrampoline<5>(hookedAddress, Hook());
+			utils::WriteBranchTrampoline<5>(hookedAddress, HookCodeGenerator());
 		}
 
 		// HUDMenu::ProcessMessage (Enemies)
 		{
 			static std::uintptr_t hookedAddress = HUDMenu::ProcessMessage.address() + 0x15AB;
 
-			struct Hook : Xbyak::CodeGenerator
+			struct HookCodeGenerator : Xbyak::CodeGenerator
 			{
-				Hook()
+				HookCodeGenerator()
 				{
 					Xbyak::Label hookLabel;
 					Xbyak::Label retnLabel;
@@ -136,21 +136,21 @@ namespace HCN
 
 					jmp(ptr[rip + retnLabel]);
 
-					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessEnemyHook));
+					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessEnemyMarker));
 					L(retnLabel), dq(hookedAddress + 5);
 				}
 			};
 
-			utils::WriteBranchTrampoline<5>(hookedAddress, Hook());
+			utils::WriteBranchTrampoline<5>(hookedAddress, HookCodeGenerator());
 		}
 
 		// Compass::SetMarkers (Player-set marker)
 		{
 			static std::uintptr_t hookedAddress = Compass::SetMarkers.address() + 0x8D;
 
-			struct Hook : Xbyak::CodeGenerator
+			struct HookCodeGenerator : Xbyak::CodeGenerator
 			{
-				Hook()
+				HookCodeGenerator()
 				{
 					Xbyak::Label hookLabel;
 					Xbyak::Label retnLabel;
@@ -159,21 +159,21 @@ namespace HCN
 
 					jmp(ptr[rip + retnLabel]);
 
-					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessPlayerSetHook));
+					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessPlayerSetMarker));
 					L(retnLabel), dq(hookedAddress + 5);
 				}
 			};
 
-			utils::WriteBranchTrampoline<5>(hookedAddress, Hook());
+			utils::WriteBranchTrampoline<5>(hookedAddress, HookCodeGenerator());
 		}
 
 		// Compass::SetMarkers (Invoke AS2 "SetCompassMarkers")
 		{
 			static std::uintptr_t hookedAddress = Compass::SetMarkers.address() + 0x10F;
 
-			struct Hook : Xbyak::CodeGenerator
+			struct HookCodeGenerator : Xbyak::CodeGenerator
 			{
-				Hook()
+				HookCodeGenerator()
 				{
 					Xbyak::Label hookLabel;
 					Xbyak::Label retnLabel;
@@ -182,12 +182,12 @@ namespace HCN
 
 					jmp(ptr[rip + retnLabel]);
 
-					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&SetCompassMarkersHook));
+					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&SetCompassMarkers));
 					L(retnLabel), dq(hookedAddress + 5);
 				}
 			};
 
-			utils::WriteBranchTrampoline<5>(hookedAddress, Hook());
+			utils::WriteBranchTrampoline<5>(hookedAddress, HookCodeGenerator());
 		}
 	}
 }

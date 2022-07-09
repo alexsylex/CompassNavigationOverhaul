@@ -61,18 +61,22 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	SKSE::Init(a_skse);
 
 	INISettingCollection* iniSettingCollection = INISettingCollection::GetSingleton();
-	iniSettingCollection->AddSettings(
+	iniSettingCollection->AddSettings
+	(
 		MakeSetting("bEnableLog:Debug", false),
-		MakeSetting("uLogLevel:Debug", static_cast<std::uint32_t>(logger::level::err)));
+		MakeSetting("uLogLevel:Debug", static_cast<std::uint32_t>(logger::level::err))
+	);
 
 	std::string iniFileName = std::string(plugin.fileName) + ".ini";
-	if (!iniSettingCollection->ReadFromFile(iniFileName)) {
+
+	if (!iniSettingCollection->ReadFromFile(iniFileName))
+	{
 		logger::warn("Could not load {}", iniFileName);
 	}
 
 	bool enableLog = iniSettingCollection->GetSetting<bool>("bEnableLog:Debug");
 	auto loggerLevel = !enableLog ? logger::level::err :
-									  static_cast<logger::level>(iniSettingCollection->GetSetting<std::uint32_t>("uLogLevel:Debug"));
+									static_cast<logger::level>(iniSettingCollection->GetSetting<std::uint32_t>("uLogLevel:Debug"));
 	logger::set_level(loggerLevel, loggerLevel);
 
 	if (!SKSE::GetMessagingInterface()->RegisterListener("SKSE", SKSEMessageListener))
@@ -80,7 +84,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 		return false;
 	}
 
-	HCN::InstallHooks();
+	hooks::Install();
 
 	logger::set_level(logger::level::info, logger::level::info);
 	logger::info("Succesfully loaded!");

@@ -5,59 +5,57 @@
 
 #include "RE/H/HUDMarkerManager.h"
 
-namespace HCN
+class Test : GFxDisplayObject
 {
-	class Test : GFxDisplayObject
+public:
+	static constexpr inline std::string_view path = "_level0.Test";
+
+	static Test* InitSingleton(const GFxDisplayObject& a_compassShoutMeterHolder)
 	{
-	public:
-		static constexpr inline std::string_view path = "_level0.Test";
-
-		static Test* InitSingleton(const GFxDisplayObject& a_compassShoutMeterHolder)
-		{
-			if (!singleton) {
-				// First time
-				singleton = new Test(a_compassShoutMeterHolder);
-			}
-
-			return singleton;
+		if (!singleton) {
+			// First time
+			singleton = new Test(a_compassShoutMeterHolder);
 		}
 
-		static Test* GetSingleton() { return singleton; }
+		return singleton;
+	}
 
-		GFxDisplayObject textField0 = GetMember("TextField0");
-		GFxDisplayObject textField1 = GetMember("TextField1");
-		GFxDisplayObject textField2 = GetMember("TextField2");
+	static Test* GetSingleton() { return singleton; }
 
-	private:
-		Test(const GFxDisplayObject& a_test) :
-			GFxDisplayObject{ a_test }
-		{}
+	GFxDisplayObject textField0 = GetMember("TextField0");
+	GFxDisplayObject textField1 = GetMember("TextField1");
+	GFxDisplayObject textField2 = GetMember("TextField2");
 
-		static inline Test* singleton = nullptr;
-	};
-}
+private:
+	Test(const GFxDisplayObject& a_test) :
+		GFxDisplayObject{ a_test }
+	{}
 
-namespace HCN::extended
+	static inline Test* singleton = nullptr;
+};
+
+namespace extended
 {
 	class Compass : public GFxDisplayObject
 	{
 	public:
 
-		struct FocusedMarker
+		struct Marker
 		{
 			std::uint32_t index;
-			std::uint32_t gotoFrame; 
-			float relativeAngle = 0.0F;
+			std::uint32_t gotoFrame;
+			float distanceToPlayer;
+			float angleToPlayerCamera;
 			float timeShown = 0.0F;
 			bool markedForDelete = false;
 		};
 
-		struct FocusedLocationMarker : FocusedMarker
+		struct FocusedLocationMarker : Marker
 		{
 			std::string locationName;
 		};
 
-		struct FocusedQuestMarker : FocusedMarker
+		struct FocusedQuestMarker : Marker
 		{
 			const RE::TESQuest* quest;
 			RE::QUEST_DATA::Type questType = RE::QUEST_DATA::Type::kNone;
@@ -119,11 +117,11 @@ namespace HCN::extended
 
 		static Compass* GetSingleton() { return singleton; }
 
-		float ProcessRelativeAngle(RE::TESObjectREFR* a_markerRef);
+		bool ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef,
+								std::uint32_t a_markerGotoFrame, RE::NiPoint3* a_markerPos);
 
-		bool ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef, std::uint32_t a_markerGotoFrame, RE::NiPoint3* a_markerPos);
-
-		bool ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef, std::uint32_t a_markerGotoFrame);
+		bool ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef,
+								   std::uint32_t a_markerGotoFrame);
 
 		bool ProcessEnemyMarker(RE::Character* a_enemy, std::uint32_t a_markerGotoFrame);
 
@@ -148,7 +146,8 @@ namespace HCN::extended
 			}
 		}
 
-		void SetQuestInfo(RE::QUEST_DATA::Type a_questType, const std::string& a_questName, const std::string& a_questObjective, std::uint32_t a_markerGotoFrame);
+		void SetQuestInfo(RE::QUEST_DATA::Type a_questType, const std::string& a_questName, 
+						  const std::string& a_questObjective, std::uint32_t a_markerGotoFrame);
 
 		void ClearQuestInfos();
 
@@ -160,7 +159,7 @@ namespace HCN::extended
 		double _y;
 		bool hasTemperatureMeter;
 
-		float tolerance = 10.0F;
+		float filterAngle = 10.0F;
 
 		Map<RE::BGSInstancedQuestObjective*, FocusedQuestMarker> focusedQuestMarkerMap;
 		Map<RE::ExtraMapMarker*, FocusedLocationMarker> focusedLocationMarkerMap;
