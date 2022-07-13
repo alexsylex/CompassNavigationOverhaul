@@ -18,6 +18,7 @@
     <class path="." />
     <class path="..\..\Build-deps\CLIK" />
     <class path="..\..\Build-deps\Common" />
+    <class path="..\..\Build-deps\GreenSock-AS2" />
   </classpaths>
   <!-- Build options -->
   <build>

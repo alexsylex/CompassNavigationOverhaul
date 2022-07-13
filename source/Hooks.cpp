@@ -18,7 +18,7 @@ namespace hooks
 			{
 				RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
 
-				compass->ProcessQuestMarker(a_quest, markerRef.get(), a_markerGotoFrame, a_pos);
+				compass->ProcessQuestMarker(a_quest, markerRef.get(), a_markerGotoFrame);
 			}
 
 			return true;

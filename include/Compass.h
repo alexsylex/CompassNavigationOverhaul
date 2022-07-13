@@ -40,30 +40,44 @@ namespace extended
 	{
 	public:
 
-		struct Marker
+		struct FocusedMarker
 		{
 			std::uint32_t index;
 			std::uint32_t gotoFrame;
 			float distanceToPlayer;
 			float angleToPlayerCamera;
-			float timeShown = 0.0F;
 			bool markedForDelete = false;
 		};
 
-		struct FocusedLocationMarker : Marker
+		struct FocusedQuestMarker : FocusedMarker
 		{
-			std::string locationName;
-		};
+			FocusedQuestMarker(std::uint32_t a_index, std::uint32_t a_gotoFrame, RE::TESObjectREFR* a_markerRef, float a_angleToPlayerCamera,
+							   const RE::TESQuest* a_quest, const RE::BGSInstancedQuestObjective* a_instancedObjective);
 
-		struct FocusedQuestMarker : Marker
-		{
 			const RE::TESQuest* quest;
-			RE::QUEST_DATA::Type questType = RE::QUEST_DATA::Type::kNone;
-			std::string questName;
-			std::string questObjective;
+			const RE::BGSInstancedQuestObjective* instancedObjective;
+
+			// cache
+			RE::QUEST_DATA::Type questType = quest->GetType();
+			std::string questName = (questType == RE::QUEST_DATA::Type::kMiscellaneous) ? "$MISCELLANEOUS" : quest->GetName();
+			std::string questDescription = quest->GetCurrentDescriptionWithReplacedTags().c_str();
+			std::string questObjective = instancedObjective->GetDisplayTextWithReplacedTags().c_str();
 			std::string questLocation;
 			std::string questCharacterName;
 		};
+
+		struct FocusedLocationMarker : FocusedMarker
+		{
+			FocusedLocationMarker(std::uint32_t a_index, std::uint32_t a_gotoFrame, RE::TESObjectREFR* a_markerRef, float a_angleToPlayerCamera,
+								  const RE::MapMarkerData* a_data);
+
+			const RE::MapMarkerData* data;
+
+			// cache
+			std::string locationName = data->locationName.GetFullName();
+		};
+
+		using FocusedMarkerVariant = std::variant<std::monostate, FocusedLocationMarker, FocusedQuestMarker>;
 
 		template<typename Key, typename MappedValue>
 		struct Map : std::unordered_map<Key, MappedValue>
@@ -94,12 +108,14 @@ namespace extended
 
 		static constexpr inline std::string_view path = "_level0.HUDMovieBaseInstance.CompassShoutMeterHolder.Compass";
 
+		static constexpr inline std::size_t maxNumberOfMarkers = std::extent<decltype(RE::HUDMarkerManager::scaleformMarkerData)>::value;
+
 		static Compass* InitSingleton(const GFxDisplayObject& a_originalCompass)
 		{
-			if (!singleton) 
+			if (!singleton)
 			{
-				// First time
-				singleton = new Compass(a_originalCompass);
+				static Compass singletonInstance{ a_originalCompass };
+				singleton = &singletonInstance;
 			}
 
 			return singleton;
@@ -118,7 +134,7 @@ namespace extended
 		static Compass* GetSingleton() { return singleton; }
 
 		bool ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef,
-								std::uint32_t a_markerGotoFrame, RE::NiPoint3* a_markerPos);
+								std::uint32_t a_markerGotoFrame);
 
 		bool ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef,
 								   std::uint32_t a_markerGotoFrame);
@@ -146,12 +162,16 @@ namespace extended
 			}
 		}
 
+		FocusedMarkerVariant* GetBestFocusedMarker();
+
 		void SetQuestInfo(RE::QUEST_DATA::Type a_questType, const std::string& a_questName, 
-						  const std::string& a_questObjective, std::uint32_t a_markerGotoFrame);
+						  const std::string& a_questObjective, float a_distance);
 
 		void ClearQuestInfos();
 
-		void SetLocationInfo(const std::string& a_locationName, std::uint32_t a_markerGotoFrame);
+		void SetLocationInfo(const std::string& a_locationName, float a_distance);
+
+		void Update(std::uint32_t a_markerIndex);
 
 		static inline Compass* singleton = nullptr;
 
@@ -159,10 +179,11 @@ namespace extended
 		double _y;
 		bool hasTemperatureMeter;
 
-		float filterAngle = 10.0F;
+		static constexpr inline float focusMarkerAngle = 20.0F;
+		float timeFocusingMarker = 0.0F;
 
-		Map<RE::BGSInstancedQuestObjective*, FocusedQuestMarker> focusedQuestMarkerMap;
-		Map<RE::ExtraMapMarker*, FocusedLocationMarker> focusedLocationMarkerMap;
+		std::array<FocusedMarkerVariant, maxNumberOfMarkers> focusedMarkers;
+		std::size_t focusedMarkersCount = 0;
 
 		RE::HUDMarkerManager* hudMarkerManager = RE::HUDMarkerManager::GetSingleton();
 	};
