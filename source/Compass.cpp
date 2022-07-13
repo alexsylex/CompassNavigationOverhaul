@@ -192,26 +192,34 @@ namespace extended
 
 	Compass::FocusedMarkerVariant* Compass::GetBestFocusedMarker()
 	{
-		FocusedMarkerVariant* bestFocusedMarkerVariant = nullptr;
 		float closestAngleToPlayerCamera = std::numeric_limits<float>::max();
+
+		FocusedMarkerVariant* bestFocusedMarker = nullptr;
 
 		for (int i = 0; i < focusedMarkersCount; i++) 
 		{
-			auto& focusedMarkerVariant = focusedMarkers[i];
-			if (auto focusedQuestMarker = std::get_if<FocusedQuestMarker>(&focusedMarkerVariant)) {
-				if (focusedQuestMarker->angleToPlayerCamera < closestAngleToPlayerCamera) {
-					bestFocusedMarkerVariant = &focusedMarkerVariant;
-					closestAngleToPlayerCamera = focusedQuestMarker->angleToPlayerCamera;
+			FocusedMarkerVariant* focusedMarker = &focusedMarkers[i];
+			if (auto focusedQuestMarker = std::get_if<FocusedQuestMarker>(focusedMarker))
+			{
+				float angle = focusedQuestMarker->angleToPlayerCamera;
+
+				if (angle < closestAngleToPlayerCamera)
+				{
+					bestFocusedMarker = focusedMarker;
+					closestAngleToPlayerCamera = angle;
 				}
-			} else if (auto focusedLocationMarker = std::get_if<FocusedLocationMarker>(&focusedMarkerVariant)) {
-				if (focusedLocationMarker->angleToPlayerCamera < closestAngleToPlayerCamera) {
-					bestFocusedMarkerVariant = &focusedMarkerVariant;
+			}
+			else if (auto focusedLocationMarker = std::get_if<FocusedLocationMarker>(focusedMarker))
+			{
+				if (focusedLocationMarker->angleToPlayerCamera < closestAngleToPlayerCamera)
+				{
+					bestFocusedMarker = focusedMarker;
 					closestAngleToPlayerCamera = focusedLocationMarker->angleToPlayerCamera;
 				}
 			}
 		}
 
-		return bestFocusedMarkerVariant;
+		return bestFocusedMarker;
 	}
 
 	void Compass::SetMarkersExtraInfo()

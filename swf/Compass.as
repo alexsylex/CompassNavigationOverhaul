@@ -20,9 +20,10 @@ var QuestDescriptionText:TextField;
 var QuestObjectiveText:TextField;
 
 var focusedMarkerTween:TweenLite;
-var distanceTween: TweenLite;
-var objectiveTween: TweenLite;
+var distanceTween:TweenLite;
+var objectiveTween:TweenLite;
 
+var markerIndex:Number;
 
 //
 //var focusedMarker:FocusedMarker;
@@ -79,15 +80,24 @@ function SetLocationInfo(a_locationName:String, a_distance:Number):Void
 
 function Update(a_markerIndex:Number):Void
 {
-	var focusedMarker:MovieClip = MarkerList[a_markerIndex].movie;
-
-	if (focusedMarkerTween == null)
+	var MarkerList_length:Number = MarkerList.length;
+	for (var i:Number = 0; i < MarkerList_length; i++)
 	{
-		focusedMarkerTween = TweenLite.to(focusedMarker, 0.5, {_xscale:130, _yscale:130, ease:Sine.easeIn});
+		if (i != a_markerIndex)
+		{
+			var marker:MovieClip = MarkerList[i].movie;
+			marker._xscale = marker._xscale / 1.2;
+			marker._yscale = marker._yscale / 1.2;
+		}
 	}
 
-	//focusedMarker._xscale = Math.max(focusedMarker._xscale, 130);
-	//focusedMarker._yscale = Math.max(focusedMarker._yscale, 130);
+	var focusedMarker:MovieClip = MarkerList[a_markerIndex].movie;
+
+	if (markerIndex != a_markerIndex)
+	{
+		focusedMarkerTween = TweenLite.to(focusedMarker, 0.5, {_xscale:130, _yscale:130, ease:Sine.easeIn});
+		markerIndex = a_markerIndex;
+	}
 
 	DistanceTextFieldInstance._alpha = Math.max(focusedMarker._alpha, 75);
 	DistanceTextFieldInstance._x = localToLocal(focusedMarker, this).x;
@@ -98,6 +108,14 @@ function Update(a_markerIndex:Number):Void
 
 function ClearQuestInfos():Void
 {
+	var MarkerList_length:Number = MarkerList.length;
+	for (var i:Number = 0; i < MarkerList_length; i++)
+	{
+		var marker:MovieClip = MarkerList[i].movie;
+		marker._xscale = marker._xscale / 1.2;
+		marker._yscale = marker._yscale / 1.2;
+	}
+
 	QuestTitle._alpha = 0;
 	QuestObjective._alpha = 0;
 	DistanceTextFieldInstance._alpha = 0;
@@ -105,6 +123,8 @@ function ClearQuestInfos():Void
 
 	focusedMarkerTween.kill();
 	focusedMarkerTween = null;
+
+	markerIndex = undefined;
 }
 
 function localToLocal(from:MovieClip, to:MovieClip):Object
