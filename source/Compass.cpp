@@ -6,10 +6,10 @@
 
 #include "utils/Logger.h"
 
-static constexpr float pi = std::numbers::pi_v<float>;
-
 namespace util
 {
+	static constexpr float pi = std::numbers::pi_v<float>;
+
 	static void CropAngleRange(float& a_angle)
 	{
 		if (a_angle <= 2 * pi) {
@@ -68,7 +68,7 @@ namespace extended
 	Compass::FocusedQuestMarker::FocusedQuestMarker(std::uint32_t a_index, std::uint32_t a_gotoFrame, RE::TESObjectREFR* a_markerRef,
 													float a_angleToPlayerCamera, const RE::TESQuest* a_quest,
 													const RE::BGSInstancedQuestObjective* a_instancedObjective) :
-		FocusedMarker{ a_index, a_gotoFrame, util::GetDistanceBetween(RE::PlayerCharacter::GetSingleton(), a_markerRef), a_angleToPlayerCamera },
+		FocusedMarker{ a_markerRef, a_index, a_gotoFrame, util::GetDistanceBetween(RE::PlayerCharacter::GetSingleton(), a_markerRef), a_angleToPlayerCamera },
 		quest{ a_quest }, instancedObjective{ a_instancedObjective }
 	{
 		// A quest marker can reference to a character or a location
@@ -111,39 +111,56 @@ namespace extended
 		float angleToPlayerCameraRads = util::GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_markerRef);
 		float angleToPlayerCamera = util::RadiansToDegrees(angleToPlayerCameraRads);
 
-		if (angleToPlayerCamera > 180.0F) 
-		{
-			angleToPlayerCamera = 360.0F - angleToPlayerCamera; 
-		}
+		if (angleToPlayerCamera > 180.0F) angleToPlayerCamera = 360.0F - angleToPlayerCamera; 
 
-		if (angleToPlayerCamera < focusMarkerAngle)
+		bool isFocusedMarker = focusedMarker && a_markerRef == focusedMarker->ref;
+
+		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
 		{
 			for (RE::BGSInstancedQuestObjective& questObjective : RE::PlayerCharacter::GetSingleton()->objectives) 
 			{
 				if (questObjective.objective->ownerQuest == a_quest &&
 					questObjective.instanceState == RE::QUEST_OBJECTIVE_STATE::kDisplayed)
 				{
-					focusedMarkers[focusedMarkersCount]  = FocusedQuestMarker
-					{
+					auto focusedQuestMarker = std::make_shared<FocusedQuestMarker>
+					(
 						hudMarkerManager->currentMarkerIndex - 1,
 						a_markerGotoFrame,
 						a_markerRef,
 						angleToPlayerCamera,
 						a_quest,
 						&questObjective
-					};
-					focusedMarkersCount++;
+					);
+
+					potentiallyFocusedMarkers.insert_or_assign(a_markerRef, std::static_pointer_cast<FocusedMarker>(focusedQuestMarker));
+
 					break;
 				}
 			}
-		}			
+		}
+		
+		if (potentiallyFocusedMarkers.contains(a_markerRef))
+		{
+			if (isFocusedMarker)
+			{
+				if (angleToPlayerCamera > keepFocusedAngle) 
+				{
+					potentiallyFocusedMarkers.erase(a_markerRef);
+					focusedMarker = nullptr;
+				}
+			}
+			else if (angleToPlayerCamera > potentiallyFocusedAngle)
+			{
+				potentiallyFocusedMarkers.erase(a_markerRef);
+			}
+		}
 
 		return true;
 	}
 
 	Compass::FocusedLocationMarker::FocusedLocationMarker(std::uint32_t a_index, std::uint32_t a_gotoFrame, RE::TESObjectREFR* a_markerRef,
 														  float a_angleToPlayerCamera, const RE::MapMarkerData* a_data) 
-	:	FocusedMarker{ a_index, a_gotoFrame, util::GetDistanceBetween(RE::PlayerCharacter::GetSingleton(), a_markerRef), a_angleToPlayerCamera },
+	:	FocusedMarker{ a_markerRef, a_index, a_gotoFrame, util::GetDistanceBetween(RE::PlayerCharacter::GetSingleton(), a_markerRef), a_angleToPlayerCamera },
 		data{ a_data }
 	{ }
 
@@ -153,22 +170,38 @@ namespace extended
 		float angleToPlayerCameraRads = util::GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_markerRef);
 		float angleToPlayerCamera = util::RadiansToDegrees(angleToPlayerCameraRads);
 
-		if (angleToPlayerCamera > 180.0F) 
-		{
-			angleToPlayerCamera = 360.0F - angleToPlayerCamera; 
-		}
+		if (angleToPlayerCamera > 180.0F) angleToPlayerCamera = 360.0F - angleToPlayerCamera;
 
-		if (angleToPlayerCamera < focusMarkerAngle)
+		bool isFocusedMarker = focusedMarker && a_markerRef == focusedMarker->ref;
+
+		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
 		{
-			focusedMarkers[focusedMarkersCount] = FocusedLocationMarker
-			{
+			auto focusedLocationMarker = std::make_shared<FocusedLocationMarker>
+			(
 				hudMarkerManager->currentMarkerIndex - 1,
 				a_markerGotoFrame,
 				a_markerRef,
 				angleToPlayerCamera,
 				a_mapMarker->mapData
-			};
-			focusedMarkersCount++;
+			);
+
+			potentiallyFocusedMarkers.insert_or_assign(a_markerRef, std::static_pointer_cast<FocusedMarker>(focusedLocationMarker));
+		} 
+		
+		if (potentiallyFocusedMarkers.contains(a_markerRef))
+		{
+			if (isFocusedMarker)
+			{
+				if (angleToPlayerCamera > keepFocusedAngle)
+				{
+					potentiallyFocusedMarkers.erase(a_markerRef);
+					focusedMarker = nullptr;
+				}
+			}
+			else if (angleToPlayerCamera > potentiallyFocusedAngle)
+			{
+				potentiallyFocusedMarkers.erase(a_markerRef);
+			}
 		}
 
 		return true;
@@ -179,7 +212,7 @@ namespace extended
 		float angleToPlayerCameraRads = util::GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_enemy);
 		float angleToPlayerCamera = util::RadiansToDegrees(angleToPlayerCameraRads);
 
-		if (angleToPlayerCamera < focusMarkerAngle || angleToPlayerCamera > (360.0F - focusMarkerAngle))
+		if (angleToPlayerCamera < potentiallyFocusedAngle)
 		{
 			//if (!focusedMarker || focusedMarker->questType == RE::QUEST_DATA::Type::kNone) 
 			//{
@@ -190,32 +223,18 @@ namespace extended
 		return true;
 	}
 
-	Compass::FocusedMarkerVariant* Compass::GetBestFocusedMarker()
+	std::shared_ptr<Compass::FocusedMarker> Compass::GetBestFocusedMarker()
 	{
 		float closestAngleToPlayerCamera = std::numeric_limits<float>::max();
 
-		FocusedMarkerVariant* bestFocusedMarker = nullptr;
+		std::shared_ptr<Compass::FocusedMarker> bestFocusedMarker = nullptr;
 
-		for (int i = 0; i < focusedMarkersCount; i++) 
+		for (const auto& [markerRef, potentiallyFocusedMarker] : potentiallyFocusedMarkers) 
 		{
-			FocusedMarkerVariant* focusedMarker = &focusedMarkers[i];
-			if (auto focusedQuestMarker = std::get_if<FocusedQuestMarker>(focusedMarker))
+			if (potentiallyFocusedMarker->angleToPlayerCamera < closestAngleToPlayerCamera)
 			{
-				float angle = focusedQuestMarker->angleToPlayerCamera;
-
-				if (angle < closestAngleToPlayerCamera)
-				{
-					bestFocusedMarker = focusedMarker;
-					closestAngleToPlayerCamera = angle;
-				}
-			}
-			else if (auto focusedLocationMarker = std::get_if<FocusedLocationMarker>(focusedMarker))
-			{
-				if (focusedLocationMarker->angleToPlayerCamera < closestAngleToPlayerCamera)
-				{
-					bestFocusedMarker = focusedMarker;
-					closestAngleToPlayerCamera = focusedLocationMarker->angleToPlayerCamera;
-				}
+				bestFocusedMarker = potentiallyFocusedMarker;
+				closestAngleToPlayerCamera = potentiallyFocusedMarker->angleToPlayerCamera;
 			}
 		}
 
@@ -226,36 +245,40 @@ namespace extended
 	{
 		auto test = Test::GetSingleton();
 
-		FocusedMarkerVariant* bestFocusedMarker = GetBestFocusedMarker();
-
-		if (bestFocusedMarker)
+		if (std::shared_ptr<FocusedMarker> newFocusedMarker = GetBestFocusedMarker()) 
 		{
-			if (auto bestFocusedQuestMarker = std::get_if<FocusedQuestMarker>(bestFocusedMarker)) 
+			focusedMarker = newFocusedMarker;
+
+			if (auto focusedQuestMarker = std::dynamic_pointer_cast<FocusedQuestMarker>(focusedMarker)) 
 			{
-				test->textField0.SetText(bestFocusedQuestMarker->questName.c_str());
+				test->textField0.SetText(focusedQuestMarker->questName.c_str());
 
-				SetQuestInfo(bestFocusedQuestMarker->questType, bestFocusedQuestMarker->questName,
-							 bestFocusedQuestMarker->questObjective, bestFocusedQuestMarker->distanceToPlayer * 0.01428F);
+				SetQuestInfo(focusedQuestMarker->questType, focusedQuestMarker->questName,
+					focusedQuestMarker->questObjective, focusedQuestMarker->distanceToPlayer * 0.01428F);
 
-				Update(bestFocusedQuestMarker->index);
-			}
-			else if (auto bestFocusedLocationMarker = std::get_if<FocusedLocationMarker>(bestFocusedMarker)) 
+				FocusMarker(focusedQuestMarker->gfxIndex);
+			} 
+			else if (auto focusedLocationMarker = std::dynamic_pointer_cast<FocusedLocationMarker>(focusedMarker)) 
 			{
 				test->textField0.SetText("");
 
-				SetLocationInfo(bestFocusedLocationMarker->locationName, bestFocusedLocationMarker->distanceToPlayer * 0.01428F);
+				SetLocationInfo(focusedLocationMarker->locationName, focusedLocationMarker->distanceToPlayer * 0.01428F);
 
-				Update(bestFocusedLocationMarker->index);
+				FocusMarker(focusedLocationMarker->gfxIndex);
 			}
-
-			focusedMarkersCount = 0;
 		}
 		else 
 		{
-			ClearQuestInfos();
+			UnfocusMarker();
 
 			test->textField0.SetText("");
 		}
+
+		test->textField1.SetText(std::string(std::string("Potentially focused markers: ") + std::to_string(potentiallyFocusedMarkers.size())).c_str());
+
+		Update();
+
+		//GetMovieView()->Advance(0.0F);
 	}
 
 	void Compass::SetQuestInfo(RE::QUEST_DATA::Type a_questType, const std::string& a_questName, 
@@ -264,18 +287,23 @@ namespace extended
 		Invoke("SetQuestInfo", a_questType, a_questName.c_str(), a_questObjective.c_str(), a_distance);
 	}
 
-	void Compass::ClearQuestInfos()
-	{
-		Invoke("ClearQuestInfos");
-	}
-
 	void Compass::SetLocationInfo(const std::string& a_locationName, float a_distance)
 	{
 		Invoke("SetLocationInfo", a_locationName.c_str(), a_distance);
 	}
 
-	void Compass::Update(std::uint32_t a_markerIndex)
+	void Compass::FocusMarker(std::uint32_t a_markerIndex)
 	{
-		Invoke("Update", a_markerIndex);
+		Invoke("FocusMarker", a_markerIndex);
+	}
+
+	void Compass::Update()
+	{
+		Invoke("Update");
+	}
+
+	void Compass::UnfocusMarker()
+	{
+		Invoke("UnfocusMarker");
 	}
 }

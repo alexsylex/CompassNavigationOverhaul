@@ -42,11 +42,19 @@ namespace extended
 
 		struct FocusedMarker
 		{
-			std::uint32_t index;
-			std::uint32_t gotoFrame;
+			FocusedMarker(const RE::TESObjectREFR* a_ref, std::uint32_t a_gfxIndex, std::uint32_t a_gfxGotoFrame,
+						  float a_distanceToPlayer, float a_angleToPlayerCamera) :
+				ref{ a_ref }, gfxIndex{ a_gfxIndex }, gfxGotoFrame{ a_gfxGotoFrame },
+				distanceToPlayer{ a_distanceToPlayer }, angleToPlayerCamera{ a_angleToPlayerCamera }
+			{ }
+
+			virtual ~FocusedMarker() = default;
+
+			const RE::TESObjectREFR* ref;
+			std::uint32_t gfxIndex;
+			std::uint32_t gfxGotoFrame;
 			float distanceToPlayer;
 			float angleToPlayerCamera;
-			bool markedForDelete = false;
 		};
 
 		struct FocusedQuestMarker : FocusedMarker
@@ -162,16 +170,20 @@ namespace extended
 			}
 		}
 
-		FocusedMarkerVariant* GetBestFocusedMarker();
+		//FocusedMarkerVariant* GetBestFocusedMarker();
+
+		std::shared_ptr<FocusedMarker> GetBestFocusedMarker();
 
 		void SetQuestInfo(RE::QUEST_DATA::Type a_questType, const std::string& a_questName, 
 						  const std::string& a_questObjective, float a_distance);
 
-		void ClearQuestInfos();
-
 		void SetLocationInfo(const std::string& a_locationName, float a_distance);
 
-		void Update(std::uint32_t a_markerIndex);
+		void FocusMarker(std::uint32_t a_markerIndex);
+
+		void Update();
+
+		void UnfocusMarker();
 
 		static inline Compass* singleton = nullptr;
 
@@ -179,11 +191,14 @@ namespace extended
 		double _y;
 		bool hasTemperatureMeter;
 
-		static constexpr inline float focusMarkerAngle = 20.0F;
-		float timeFocusingMarker = 0.0F;
+		static constexpr inline float potentiallyFocusedAngle = 10.0F;
+		static constexpr inline float keepFocusedAngle = 20.0F;
 
-		std::array<FocusedMarkerVariant, maxNumberOfMarkers> focusedMarkers;
-		std::size_t focusedMarkersCount = 0;
+		std::unordered_map<RE::TESObjectREFR*, std::shared_ptr<FocusedMarker>> potentiallyFocusedMarkers;
+		std::shared_ptr<FocusedMarker> focusedMarker;
+
+		//std::array<FocusedMarkerVariant, maxNumberOfMarkers> focusedMarkers;
+		//std::size_t focusedMarkersCount = 0;
 
 		RE::HUDMarkerManager* hudMarkerManager = RE::HUDMarkerManager::GetSingleton();
 	};

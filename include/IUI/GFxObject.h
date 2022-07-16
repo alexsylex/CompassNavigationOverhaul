@@ -68,19 +68,7 @@ public:
 	{
 		std::array<RE::GFxValue, sizeof...(Args)> gfxArgs{ std::forward<Args>(args)... };
 
-		bool invokeOk = RE::GFxValue::Invoke(a_functionName.data(), a_result,
-			sizeof...(Args) ? &gfxArgs[0] : nullptr, sizeof...(Args));
-
-		if (invokeOk) 
-		{
-			GetMovieView()->Advance(0.0F);
-		} 
-		else 
-		{
-			throw("Could not invoke function");
-		}
-
-
-		return invokeOk;
+		return RE::GFxValue::Invoke(a_functionName.data(), a_result,
+									sizeof...(Args) ? &gfxArgs[0] : nullptr, sizeof...(Args));
 	}
 };
