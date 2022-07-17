@@ -1,15 +1,17 @@
-﻿// Instances
+﻿import FocusedMarker;
+
+// Instances
 var CompassFrame:MovieClip;
 var CompassTemperatureHolderInstance:MovieClip;
 var CompassMask_mc:MovieClip;
 var DirectionRect:MovieClip;
+
+var FocusedMarkerInstance:FocusedMarker;
 var QuestTitle:MovieClip;
 var QuestObjective:MovieClip;
-var FocusedMarkerInfo:MovieClip;
 
 // References
 var MarkerList:Array;
-var FocusedMarker:MovieClip;
 var QuestTitleText:TextField;
 var QuestTitleEndPieces:MovieClip;
 var QuestObjectiveText:TextField;
@@ -43,8 +45,8 @@ function Compass(a_x:Number, a_y:Number, a_hadTemperatureMeter:Boolean):Void
 function SetQuestInfo(a_questType:Number, a_questName:String, a_questObjective:String,
 					  a_distance:Number):Void
 {
-	FocusedMarkerInfo.Distance.TextFieldInstance.text = String(Math.floor(a_distance)) + " m";
-	FocusedMarkerInfo.Objective.TextFieldInstance.text = a_questObjective;
+	FocusedMarkerInstance.Distance.TextFieldInstance.text = String(Math.floor(a_distance)) + " m";
+	FocusedMarkerInstance.Objective.TextFieldInstance.text = a_questObjective;
 
 	//QuestTitle._alpha = 100;
 	//QuestTitleEndPieces.gotoAndStop(a_questType);
@@ -58,50 +60,57 @@ function SetQuestInfo(a_questType:Number, a_questName:String, a_questObjective:S
 
 function SetLocationInfo(a_locationName:String, a_distance:Number):Void
 {
-	FocusedMarkerInfo.Distance.TextFieldInstance.text = String(Math.floor(a_distance)) + " m";
-	FocusedMarkerInfo.Objective.TextFieldInstance.text = a_locationName;
+	FocusedMarkerInstance.Distance.TextFieldInstance.text = String(Math.floor(a_distance)) + " m";
+	FocusedMarkerInstance.Objective.TextFieldInstance.text = a_locationName;
 }
 
 function FocusMarker(a_markerIndex:Number):Void
 {
-	if (focusedMarker == undefined)
-	{
-		FocusedMarkerInfo.gotoAndPlay("fadeIn");
-	}
-	focusedMarker = MarkerList[a_markerIndex].movie;
+	FocusedMarkerInstance.index = a_markerIndex;
+
+	FocusedMarkerInstance.movie = MarkerList[FocusedMarkerInstance.index].movie;
+	FocusedMarkerInstance.gotoAndPlay("FadeIn");
 }
 
-function Update():Void
+function Update(a_markerIndex:Number):Void
 {
-	var MarkerList_length:Number = MarkerList.length;
-	for (var i:Number = 0; i < MarkerList_length; i++)
+	if (FocusedMarkerInstance.index != a_markerIndex)
 	{
-		if (i != a_markerIndex)
-		{
-			var marker:MovieClip = MarkerList[i].movie;
-			marker._xscale /= 1.2;
-			marker._yscale /= 1.2;
-		}
+		FocusedMarkerInstance.index = a_markerIndex;
+		FocusedMarkerInstance.movie = MarkerList[FocusedMarkerInstance.index].movie;
 	}
 
-	if (focusedMarker != undefined)
-	{
-		FocusedMarkerInfo._alpha = Math.max(focusedMarker._alpha, 75);
-		FocusedMarkerInfo._x = localToLocal(focusedMarker, this).x;
-	}
+	//var MarkerList_length:Number = MarkerList.length;
+	//for (var i:Number = 0; i < MarkerList_length; i++)
+	//{
+		//var marker:MovieClip = MarkerList[i].movie;
+//
+		//if (i == FocusedMarkerInstance.index)
+		//{
+			//marker._xscale = Math.max(150, marker._xscale);
+			//marker._yscale = Math.max(150, marker._yscale);
+		//}
+		//else
+		//{
+			//marker._xscale /= 1.2;
+			//marker._yscale /= 1.2;
+		//}
+	//}
+
+	FocusedMarkerInstance._x = localToLocal(FocusedMarkerInstance.movie, this).x;
+	FocusedMarkerInstance._alpha = Math.max(FocusedMarkerInstance.movie._alpha, 75);
+
+	_level0.Test.TextField2.text = "Focused marker[" + String(FocusedMarkerInstance.index) + "]: " + FocusedMarkerInstance.movie;
 }
 
-function UnfocusMarker():Void
+function UnfocusMarker(a_markerIndex:Number):Void
 {
-	if (focusedMarker != undefined)
-	{
-		focusedMarker = undefined;
-		a_markerIndex = -1;
+	FocusedMarkerInstance.gotoAndPlay("FadeOut");
 
-		QuestTitle._alpha = 0;
-		QuestObjective._alpha = 0;
-		FocusedMarkerInfo.gotoAndPlay("fadeOut");
-	}
+	FocusedMarkerInstance.index = -1;
+
+	QuestTitle._alpha = 0;
+	QuestObjective._alpha = 0;
 }
 
 function localToLocal(from:MovieClip, to:MovieClip):Object

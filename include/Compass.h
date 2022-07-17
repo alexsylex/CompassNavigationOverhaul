@@ -55,6 +55,7 @@ namespace extended
 			std::uint32_t gfxGotoFrame;
 			float distanceToPlayer;
 			float angleToPlayerCamera;
+			bool keepAlive = true;
 		};
 
 		struct FocusedQuestMarker : FocusedMarker
@@ -170,20 +171,33 @@ namespace extended
 			}
 		}
 
-		//FocusedMarkerVariant* GetBestFocusedMarker();
+		std::shared_ptr<FocusedMarker> GetNextFocusedMarker();
 
-		std::shared_ptr<FocusedMarker> GetBestFocusedMarker();
+		void SetQuestInfo(RE::QUEST_DATA::Type a_questType, const std::string& a_questName,
+						  const std::string& a_questObjective, float a_distance)
+		{
+			Invoke("SetQuestInfo", a_questType, a_questName.c_str(), a_questObjective.c_str(), a_distance);
+		}
 
-		void SetQuestInfo(RE::QUEST_DATA::Type a_questType, const std::string& a_questName, 
-						  const std::string& a_questObjective, float a_distance);
+		void SetLocationInfo(const std::string& a_locationName, float a_distance)
+		{
+			Invoke("SetLocationInfo", a_locationName.c_str(), a_distance);
+		}
 
-		void SetLocationInfo(const std::string& a_locationName, float a_distance);
+		void FocusMarker(std::uint32_t a_markerIndex)
+		{
+			Invoke("FocusMarker", a_markerIndex);
+		}
 
-		void FocusMarker(std::uint32_t a_markerIndex);
+		void Update(std::uint32_t a_markerIndex)
+		{
+			Invoke("Update", a_markerIndex);
+		}
 
-		void Update();
-
-		void UnfocusMarker();
+		void UnfocusMarker(std::uint32_t a_markerIndex)
+		{
+			Invoke("UnfocusMarker", a_markerIndex);
+		}
 
 		static inline Compass* singleton = nullptr;
 
@@ -196,9 +210,6 @@ namespace extended
 
 		std::unordered_map<RE::TESObjectREFR*, std::shared_ptr<FocusedMarker>> potentiallyFocusedMarkers;
 		std::shared_ptr<FocusedMarker> focusedMarker;
-
-		//std::array<FocusedMarkerVariant, maxNumberOfMarkers> focusedMarkers;
-		//std::size_t focusedMarkersCount = 0;
 
 		RE::HUDMarkerManager* hudMarkerManager = RE::HUDMarkerManager::GetSingleton();
 	};

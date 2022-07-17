@@ -134,7 +134,7 @@ namespace extended
 
 					potentiallyFocusedMarkers.insert_or_assign(a_markerRef, std::static_pointer_cast<FocusedMarker>(focusedQuestMarker));
 
-					break;
+					//break;
 				}
 			}
 		}
@@ -146,7 +146,6 @@ namespace extended
 				if (angleToPlayerCamera > keepFocusedAngle) 
 				{
 					potentiallyFocusedMarkers.erase(a_markerRef);
-					focusedMarker = nullptr;
 				}
 			}
 			else if (angleToPlayerCamera > potentiallyFocusedAngle)
@@ -195,7 +194,6 @@ namespace extended
 				if (angleToPlayerCamera > keepFocusedAngle)
 				{
 					potentiallyFocusedMarkers.erase(a_markerRef);
-					focusedMarker = nullptr;
 				}
 			}
 			else if (angleToPlayerCamera > potentiallyFocusedAngle)
@@ -223,7 +221,7 @@ namespace extended
 		return true;
 	}
 
-	std::shared_ptr<Compass::FocusedMarker> Compass::GetBestFocusedMarker()
+	std::shared_ptr<Compass::FocusedMarker> Compass::GetNextFocusedMarker()
 	{
 		float closestAngleToPlayerCamera = std::numeric_limits<float>::max();
 
@@ -236,6 +234,8 @@ namespace extended
 				bestFocusedMarker = potentiallyFocusedMarker;
 				closestAngleToPlayerCamera = potentiallyFocusedMarker->angleToPlayerCamera;
 			}
+
+			potentiallyFocusedMarker->keepAlive = false;
 		}
 
 		return bestFocusedMarker;
@@ -245,65 +245,55 @@ namespace extended
 	{
 		auto test = Test::GetSingleton();
 
-		if (std::shared_ptr<FocusedMarker> newFocusedMarker = GetBestFocusedMarker()) 
+		std::shared_ptr<FocusedMarker> nextFocusedMarker = GetNextFocusedMarker();
+
+		bool focusChanged = ((focusedMarker && nextFocusedMarker && (focusedMarker->ref != nextFocusedMarker->ref)) ||
+							 (focusedMarker && !nextFocusedMarker) || (!focusedMarker && nextFocusedMarker));
+
+		if (focusedMarker && focusChanged)
 		{
-			focusedMarker = newFocusedMarker;
-
-			if (auto focusedQuestMarker = std::dynamic_pointer_cast<FocusedQuestMarker>(focusedMarker)) 
-			{
-				test->textField0.SetText(focusedQuestMarker->questName.c_str());
-
-				SetQuestInfo(focusedQuestMarker->questType, focusedQuestMarker->questName,
-					focusedQuestMarker->questObjective, focusedQuestMarker->distanceToPlayer * 0.01428F);
-
-				FocusMarker(focusedQuestMarker->gfxIndex);
-			} 
-			else if (auto focusedLocationMarker = std::dynamic_pointer_cast<FocusedLocationMarker>(focusedMarker)) 
-			{
-				test->textField0.SetText("");
-
-				SetLocationInfo(focusedLocationMarker->locationName, focusedLocationMarker->distanceToPlayer * 0.01428F);
-
-				FocusMarker(focusedLocationMarker->gfxIndex);
-			}
-		}
-		else 
-		{
-			UnfocusMarker();
+			UnfocusMarker(focusedMarker->gfxIndex);
 
 			test->textField0.SetText("");
 		}
 
+		focusedMarker = nextFocusedMarker;
+
+		if (focusedMarker)
+		{
+			focusedMarker->keepAlive = true;
+
+			if (auto focusedQuestMarker = std::dynamic_pointer_cast<FocusedQuestMarker>(focusedMarker)) 
+			{
+				SetQuestInfo(focusedQuestMarker->questType, focusedQuestMarker->questName,
+							 focusedQuestMarker->questObjective, focusedQuestMarker->distanceToPlayer * 0.01428F);
+
+				test->textField0.SetText(focusedQuestMarker->questName.c_str());
+			} 
+			else if (auto focusedLocationMarker = std::dynamic_pointer_cast<FocusedLocationMarker>(focusedMarker)) 
+			{
+				SetLocationInfo(focusedLocationMarker->locationName, focusedLocationMarker->distanceToPlayer * 0.01428F);
+
+				test->textField0.SetText("");
+			}
+
+			if (focusChanged)
+			{
+				FocusMarker(focusedMarker->gfxIndex);
+			}
+
+			Update(focusedMarker->gfxIndex);
+		}
+
+		std::erase_if(potentiallyFocusedMarkers, [](const auto& a_item) 
+		{
+			const auto& [markerRef, focusedMarker] = a_item;
+
+			return !focusedMarker->keepAlive;
+		});
+
 		test->textField1.SetText(std::string(std::string("Potentially focused markers: ") + std::to_string(potentiallyFocusedMarkers.size())).c_str());
 
-		Update();
-
 		//GetMovieView()->Advance(0.0F);
-	}
-
-	void Compass::SetQuestInfo(RE::QUEST_DATA::Type a_questType, const std::string& a_questName, 
-							   const std::string& a_questObjective, float a_distance)
-	{
-		Invoke("SetQuestInfo", a_questType, a_questName.c_str(), a_questObjective.c_str(), a_distance);
-	}
-
-	void Compass::SetLocationInfo(const std::string& a_locationName, float a_distance)
-	{
-		Invoke("SetLocationInfo", a_locationName.c_str(), a_distance);
-	}
-
-	void Compass::FocusMarker(std::uint32_t a_markerIndex)
-	{
-		Invoke("FocusMarker", a_markerIndex);
-	}
-
-	void Compass::Update()
-	{
-		Invoke("Update");
-	}
-
-	void Compass::UnfocusMarker()
-	{
-		Invoke("UnfocusMarker");
 	}
 }
