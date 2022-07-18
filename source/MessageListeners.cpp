@@ -3,6 +3,8 @@
 #include "IUI/API.h"
 
 #include "Compass.h"
+#include "QuestItemList.h"
+#include "Test.h"
 
 void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg);
 
@@ -50,10 +52,7 @@ void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg)
 
 				if (pathToOriginal == extended::Compass::path)
 				{
-					if (extended::Compass::InitSingleton(preReplaceMessage->originalDisplayObject))
-					{
-						logger::debug("Compass instance initialised for {}", extended::Compass::path);
-					}
+					extended::Compass::InitSingleton(preReplaceMessage->originalDisplayObject);
 				}
 			}
 			break;
@@ -68,15 +67,19 @@ void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg)
 				{
 					// We initialised the CompassShoutMeterHolder singleton in the pre-replace step,
 					// if not, there has been an error
-					if (extended::Compass::GetSingleton())
+					if (auto compass = extended::Compass::GetSingleton())
 					{
-						extended::Compass::UpdateSingleton(postPatchMessage->newDisplayObject);
+						compass->SetupMod(postPatchMessage->newDisplayObject);
 					}
 					else
 					{
 						logger::error("Compass instance counterpart not ready for {}", extended::Compass::path);
 						logger::flush();
 					}
+				}
+				else if (pathToNew == QuestItemList::path)
+				{
+					QuestItemList::InitSingleton(postPatchMessage->newDisplayObject);
 				}
 			}
 			break;

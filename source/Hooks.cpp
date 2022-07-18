@@ -4,7 +4,7 @@
 
 #include "IUI/API.h"
 
-#include "Compass.h"
+#include "HUDMarkerManager.h"
 
 namespace hooks
 {
@@ -14,11 +14,13 @@ namespace hooks
 	{
 		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame))
 		{
-			if (auto compass = extended::Compass::GetSingleton())
-			{
-				RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
+			RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
 
-				compass->ProcessQuestMarker(a_quest, markerRef.get(), a_markerGotoFrame);
+			auto hudMarkerManager = extended::HUDMarkerManager::GetSingleton();
+
+			if (hudMarkerManager->compass)
+			{
+				hudMarkerManager->ProcessQuestMarker(a_quest, markerRef.get(), a_markerGotoFrame);
 			}
 
 			return true;
@@ -32,21 +34,24 @@ namespace hooks
 	{
 		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
 		{
-			if (auto compass = extended::Compass::GetSingleton())
+			RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
+			for (RE::RefHandle locationRef : a_hudMarkerManager->locationRefs) 
 			{
-				RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
-				for (RE::RefHandle locationRef : a_hudMarkerManager->locationRefs) 
+				RE::TESObjectREFRPtr locationRefOut = RE::TESObjectREFR::LookupByHandle(locationRef);
+				if (locationRefOut == markerRef)
 				{
-					RE::TESObjectREFRPtr locationRefOut = RE::TESObjectREFR::LookupByHandle(locationRef);
-					if (locationRefOut == markerRef)
-					{
-						logger::info("Marker found");
-					}
+					logger::info("Marker found");
 				}
+			}
 
-				if (markerRef)
+			if (markerRef)
+			{
+				auto hudMarkerManager = extended::HUDMarkerManager::GetSingleton();
+
+				if (hudMarkerManager->compass)
 				{
-					compass->ProcessLocationMarker(markerRef->extraList.GetByType<RE::ExtraMapMarker>(), markerRef.get(), a_markerGotoFrame);
+					hudMarkerManager->ProcessLocationMarker(markerRef->extraList.GetByType<RE::ExtraMapMarker>(), 
+															markerRef.get(), a_markerGotoFrame);
 				}
 			}
 
@@ -61,13 +66,15 @@ namespace hooks
 	{
 		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
 		{
-			if (auto compass = extended::Compass::GetSingleton())
-			{
-				RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
+			RE::TESObjectREFRPtr markerRef = RE::TESObjectREFR::LookupByHandle(a_refHandle);
 
-				if (markerRef)
+			if (markerRef)
+			{
+				auto hudMarkerManager = extended::HUDMarkerManager::GetSingleton();
+
+				if (hudMarkerManager->compass)
 				{
-					compass->ProcessEnemyMarker(markerRef->As<RE::Character>(), a_markerGotoFrame);
+					hudMarkerManager->ProcessEnemyMarker(markerRef->As<RE::Character>(), a_markerGotoFrame);
 				}
 			}
 
@@ -99,10 +106,11 @@ namespace hooks
 	{
 		bool retVal = a_objectInterface->Invoke(a_data, a_result, a_name, a_args, a_numArgs, a_isDObj);
 
-		if (auto compass = extended::Compass::GetSingleton()) 
+		auto hudMarkerManager = extended::HUDMarkerManager::GetSingleton();
+
+		if (hudMarkerManager->compass)
 		{
-			compass->GetMovieView()->Advance(0.0F);
-			compass->SetMarkersExtraInfo();
+			hudMarkerManager->SetMarkersExtraInfo();
 		}
 
 		return retVal;

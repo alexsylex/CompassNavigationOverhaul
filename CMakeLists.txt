@@ -115,6 +115,7 @@ set(headers
 	include/RE/H/HUDMarkerManager.h
 	include/RE/N/NiPoint3.h
 	include/RE/T/TESQuest.h
+	include/utils/Angles.h
 	include/utils/GFxVisitors.h
 	include/utils/INISettingCollection.h
 	include/utils/Logger.h
@@ -122,10 +123,13 @@ set(headers
 	include/utils/Trampoline.h
 	include/utils/type_name.h
 	include/Compass.h
+	include/FocusedMarker.h
 	include/Hooks.h
+	include/HUDMarkerManager.h
 	include/pch.h
 	include/Plugin.h
-)
+	include/QuestItemList.h
+ "include/Test.h")
 
 set(sources
 	source/RE/G/GFxValue.cpp
@@ -135,7 +139,9 @@ set(sources
 	source/utils/INISettingCollection.cpp
 	source/utils/Logger.cpp
 	source/Compass.cpp
+	source/FocusedMarker.cpp
 	source/Hooks.cpp
+	source/HUDMarkerManager.cpp
 	source/main.cpp
 	source/MessageListeners.cpp
 	source/pch.cpp

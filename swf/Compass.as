@@ -1,6 +1,4 @@
-﻿import FocusedMarker;
-
-// Instances
+﻿// Instances
 var CompassFrame:MovieClip;
 var CompassTemperatureHolderInstance:MovieClip;
 var CompassMask_mc:MovieClip;
@@ -11,16 +9,13 @@ var QuestTitle:MovieClip;
 var QuestObjective:MovieClip;
 
 // References
-var MarkerList:Array;
-var QuestTitleText:TextField;
-var QuestTitleEndPieces:MovieClip;
-var QuestObjectiveText:TextField;
+var MarkerList:Array = _root.HUDMovieBaseInstance.CompassMarkerList;
+var QuestTitleText:TextField = QuestTitle.TitleText;
+var QuestTitleEndPieces:MovieClip = QuestTitle.EndPieces;
+var QuestObjectiveText:TextField = QuestObjective.RolloverText;
 
-function Compass(a_x:Number, a_y:Number, a_hadTemperatureMeter:Boolean):Void
+function Compass(a_hadTemperatureMeter:Boolean):Void
 {
-	_x = a_x;
-	_y = a_y;
-
 	if (a_hadTemperatureMeter)
 	{
 		_root.HUDMovieBaseInstance.TemperatureMeter_mc = CompassTemperatureHolderInstance;
@@ -32,14 +27,6 @@ function Compass(a_x:Number, a_y:Number, a_hadTemperatureMeter:Boolean):Void
 	}
 
 	_root.HUDMovieBaseInstance.CompassRect = DirectionRect;
-
-	// References
-	MarkerList = _root.HUDMovieBaseInstance.CompassMarkerList;
-
-	QuestTitleText = QuestTitle.TitleText;
-	QuestTitleEndPieces = QuestTitle.EndPieces;
-
-	QuestObjectiveText = QuestObjective.RolloverText;
 }
 
 function SetQuestInfo(a_questType:Number, a_questName:String, a_questObjective:String,
@@ -80,27 +67,27 @@ function Update(a_markerIndex:Number):Void
 		FocusedMarkerInstance.movie = MarkerList[FocusedMarkerInstance.index].movie;
 	}
 
-	//var MarkerList_length:Number = MarkerList.length;
-	//for (var i:Number = 0; i < MarkerList_length; i++)
-	//{
-		//var marker:MovieClip = MarkerList[i].movie;
-//
-		//if (i == FocusedMarkerInstance.index)
-		//{
-			//marker._xscale = Math.max(150, marker._xscale);
-			//marker._yscale = Math.max(150, marker._yscale);
-		//}
-		//else
-		//{
-			//marker._xscale /= 1.2;
-			//marker._yscale /= 1.2;
-		//}
-	//}
+	var MarkerList_length:Number = MarkerList.length;
+	for (var i:Number = 0; i < MarkerList_length; i++)
+	{
+		var marker:MovieClip = MarkerList[i].movie;
+
+		if (i == FocusedMarkerInstance.index)
+		{
+			marker._xscale = Math.min(130, marker._xscale * 1.15);
+			marker._yscale = Math.min(130, marker._yscale * 1.15);
+		}
+		else
+		{
+			marker._xscale /= 1.15;
+			marker._yscale /= 1.15;
+		}
+	}
 
 	FocusedMarkerInstance._x = localToLocal(FocusedMarkerInstance.movie, this).x;
 	FocusedMarkerInstance._alpha = Math.max(FocusedMarkerInstance.movie._alpha, 75);
 
-	_level0.Test.TextField2.text = "Focused marker[" + String(FocusedMarkerInstance.index) + "]: " + FocusedMarkerInstance.movie;
+	_level0.Test.TextField2.text = "Focused marker[" + FocusedMarkerInstance.index + "]"; // + FocusedMarkerInstance.movie._target;
 }
 
 function UnfocusMarker(a_markerIndex:Number):Void
