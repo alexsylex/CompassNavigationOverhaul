@@ -129,7 +129,8 @@ set(headers
 	include/pch.h
 	include/Plugin.h
 	include/QuestItemList.h
- "include/Test.h")
+	include/Test.h
+)
 
 set(sources
 	source/RE/G/GFxValue.cpp
@@ -138,7 +139,6 @@ set(sources
 	source/utils/GFxVisitors.cpp
 	source/utils/INISettingCollection.cpp
 	source/utils/Logger.cpp
-	source/Compass.cpp
 	source/FocusedMarker.cpp
 	source/Hooks.cpp
 	source/HUDMarkerManager.cpp

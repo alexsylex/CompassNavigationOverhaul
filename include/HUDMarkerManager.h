@@ -37,6 +37,8 @@ namespace extended
 
 		std::unordered_map<RE::TESObjectREFR*, std::shared_ptr<FocusedMarker>> potentiallyFocusedMarkers;
 		std::shared_ptr<FocusedMarker> focusedMarker;
+		std::shared_ptr<FocusedQuestMarker> focusedQuestMarker;
+		std::shared_ptr<FocusedLocationMarker> focusedLocationMarker;
 
 		RE::HUDMarkerManager* hudMarkerManager = RE::HUDMarkerManager::GetSingleton();
 

@@ -19,11 +19,32 @@ public:
 
 	static QuestItemList* GetSingleton() { return singleton; }
 
+	void SetQuestInfo(RE::QUEST_DATA::Type a_questType, const std::string& a_questName,
+					  const std::string& a_questObjective)
+	{
+		Invoke("SetQuestInfo", a_questType, a_questName.c_str(), a_questObjective.c_str());
+	}
+
+	void ShowQuestInfo()
+	{
+		Invoke("ShowQuestInfo");
+	}
+
+	void HideQuestInfo()
+	{
+		Invoke("HideQuestInfo");
+	}
+
 private:
 
 	QuestItemList(const GFxDisplayObject& a_questItemList) :
 		GFxDisplayObject{ a_questItemList }
-	{}
+	{
+		if (HasMember("QuestItemList"))
+		{
+			Invoke("QuestItemList");
+		}
+	}
 
 	static inline QuestItemList* singleton = nullptr;
 };

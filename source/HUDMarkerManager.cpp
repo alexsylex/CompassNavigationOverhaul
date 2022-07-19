@@ -19,7 +19,7 @@ namespace extended
 				if (questObjective.objective->ownerQuest == a_quest &&
 					questObjective.instanceState == RE::QUEST_OBJECTIVE_STATE::kDisplayed)
 				{
-					auto focusedQuestMarker = std::make_shared<FocusedQuestMarker>
+					auto potentiallyFocusedQuestMarker = std::make_shared<FocusedQuestMarker>
 					(
 						hudMarkerManager->currentMarkerIndex - 1,
 						a_markerGotoFrame,
@@ -29,7 +29,7 @@ namespace extended
 						&questObjective
 					);
 
-					potentiallyFocusedMarkers.insert_or_assign(a_markerRef, std::static_pointer_cast<FocusedMarker>(focusedQuestMarker));
+					potentiallyFocusedMarkers.insert_or_assign(a_markerRef, std::static_pointer_cast<FocusedMarker>(potentiallyFocusedQuestMarker));
 
 					//break;
 				}
@@ -64,7 +64,7 @@ namespace extended
 
 		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
 		{
-			auto focusedLocationMarker = std::make_shared<FocusedLocationMarker>
+			auto potentiallyocusedLocationMarker = std::make_shared<FocusedLocationMarker>
 			(
 				hudMarkerManager->currentMarkerIndex - 1,
 				a_markerGotoFrame,
@@ -73,7 +73,7 @@ namespace extended
 				a_mapMarker->mapData
 			);
 
-			potentiallyFocusedMarkers.insert_or_assign(a_markerRef, std::static_pointer_cast<FocusedMarker>(focusedLocationMarker));
+			potentiallyFocusedMarkers.insert_or_assign(a_markerRef, std::static_pointer_cast<FocusedMarker>(potentiallyocusedLocationMarker));
 		} 
 		
 		if (potentiallyFocusedMarkers.contains(a_markerRef))
@@ -126,9 +126,9 @@ namespace extended
 
 	void HUDMarkerManager::SetMarkersExtraInfo()
 	{
-		auto test = Test::GetSingleton();
+		//auto test = Test::GetSingleton();
 
-		test->textField1.SetText(std::string(std::string("Potentially focused markers: ") + std::to_string(potentiallyFocusedMarkers.size())).c_str());
+		//test->textField0.SetText(std::string(std::string("Potentially focused markers: ") + std::to_string(potentiallyFocusedMarkers.size())).c_str());
 
 		std::shared_ptr<FocusedMarker> nextFocusedMarker = GetNextFocusedMarker();
 
@@ -139,25 +139,37 @@ namespace extended
 		{
 			compass->UnfocusMarker(focusedMarker->gfxIndex);
 
-			test->textField0.SetText("");
+			if (focusedQuestMarker) 
+			{
+				questItemList->HideQuestInfo();
+			}
 		}
 
 		focusedMarker = nextFocusedMarker;
 
 		if (focusedMarker)
 		{
-			if (auto focusedQuestMarker = std::dynamic_pointer_cast<FocusedQuestMarker>(focusedMarker)) 
-			{
-				compass->Invoke("SetQuestInfo", focusedQuestMarker->questType, focusedQuestMarker->questName.c_str(),
-								focusedQuestMarker->questObjective.c_str(), focusedQuestMarker->distanceToPlayer * 0.01428F);
+			focusedQuestMarker = std::dynamic_pointer_cast<FocusedQuestMarker>(focusedMarker);
+			focusedLocationMarker = std::dynamic_pointer_cast<FocusedLocationMarker>(focusedMarker);
 
-				test->textField0.SetText(focusedQuestMarker->questName.c_str());
+			if (focusedQuestMarker)
+			{
+				compass->SetMarkerInfo(focusedQuestMarker->questObjective, focusedQuestMarker->distanceToPlayer * 0.01428F);
+
+				questItemList->SetQuestInfo(focusedQuestMarker->questType, focusedQuestMarker->questName, focusedQuestMarker->questObjective);
+
+				if (focusChanged)
+				{
+					questItemList->ShowQuestInfo();
+				}
 			} 
-			else if (auto focusedLocationMarker = std::dynamic_pointer_cast<FocusedLocationMarker>(focusedMarker)) 
+			else 
 			{
-				compass->Invoke("SetLocationInfo", focusedLocationMarker->locationName.c_str(), focusedLocationMarker->distanceToPlayer * 0.01428F);
+				if (focusedLocationMarker) 
+				{
+					compass->SetMarkerInfo(focusedLocationMarker->locationName, focusedLocationMarker->distanceToPlayer * 0.01428F);
+				}
 
-				test->textField0.SetText("");
 			}
 
 			if (focusChanged)
@@ -165,8 +177,15 @@ namespace extended
 				compass->FocusMarker(focusedMarker->gfxIndex);
 			}
 
-			compass->Update(focusedMarker->gfxIndex);
+			compass->UpdateMarker(focusedMarker->gfxIndex);
 		}
+		else 
+		{
+			focusedLocationMarker = nullptr;
+			focusedQuestMarker = nullptr;
+		}
+
+		compass->SetMarkersSize();
 
 		potentiallyFocusedMarkers.clear();
 	}

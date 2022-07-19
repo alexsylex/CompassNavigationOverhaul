@@ -29,26 +29,10 @@ function Compass(a_hadTemperatureMeter:Boolean):Void
 	_root.HUDMovieBaseInstance.CompassRect = DirectionRect;
 }
 
-function SetQuestInfo(a_questType:Number, a_questName:String, a_questObjective:String,
-					  a_distance:Number):Void
+function SetMarkerInfo(a_target:String, a_distance:Number):Void
 {
 	FocusedMarkerInstance.Distance.TextFieldInstance.text = String(Math.floor(a_distance)) + " m";
-	FocusedMarkerInstance.Objective.TextFieldInstance.text = a_questObjective;
-
-	//QuestTitle._alpha = 100;
-	//QuestTitleEndPieces.gotoAndStop(a_questType);
-	//QuestTitleText.text = a_questName.toUpperCase();
-	//QuestObjective._alpha = 100;
-	//QuestObjectiveText.text = a_questObjective;
-
-	//var bracketsOpenFrame:Number = Math.round(a_questObjective.length * 2.25);
-	//QuestObjective.gotoAndStop(bracketsOpenFrame);
-}
-
-function SetLocationInfo(a_locationName:String, a_distance:Number):Void
-{
-	FocusedMarkerInstance.Distance.TextFieldInstance.text = String(Math.floor(a_distance)) + " m";
-	FocusedMarkerInstance.Objective.TextFieldInstance.text = a_locationName;
+	FocusedMarkerInstance.Objective.TextFieldInstance.text = a_target;
 }
 
 function FocusMarker(a_markerIndex:Number):Void
@@ -59,7 +43,7 @@ function FocusMarker(a_markerIndex:Number):Void
 	FocusedMarkerInstance.gotoAndPlay("FadeIn");
 }
 
-function Update(a_markerIndex:Number):Void
+function UpdateMarker(a_markerIndex:Number):Void
 {
 	if (FocusedMarkerInstance.index != a_markerIndex)
 	{
@@ -67,6 +51,24 @@ function Update(a_markerIndex:Number):Void
 		FocusedMarkerInstance.movie = MarkerList[FocusedMarkerInstance.index].movie;
 	}
 
+	FocusedMarkerInstance._x = localToLocal(FocusedMarkerInstance.movie, this).x;
+	FocusedMarkerInstance._alpha = Math.max(FocusedMarkerInstance.movie._alpha, 75);
+
+	//_level0.Test.TextField2.text = "Focused marker[" + FocusedMarkerInstance.index + "]"; // + FocusedMarkerInstance.movie._target;
+}
+
+function UnfocusMarker(a_markerIndex:Number):Void
+{
+	FocusedMarkerInstance.gotoAndPlay("FadeOut");
+
+	FocusedMarkerInstance.index = -1;
+
+	QuestTitle._alpha = 0;
+	QuestObjective._alpha = 0;
+}
+
+function SetMarkersSize():Void
+{
 	var MarkerList_length:Number = MarkerList.length;
 	for (var i:Number = 0; i < MarkerList_length; i++)
 	{
@@ -79,25 +81,10 @@ function Update(a_markerIndex:Number):Void
 		}
 		else
 		{
-			marker._xscale /= 1.15;
-			marker._yscale /= 1.15;
+			marker._xscale = Math.min(120, marker._xscale / 1.15);
+			marker._yscale = Math.min(120, marker._yscale / 1.15);
 		}
 	}
-
-	FocusedMarkerInstance._x = localToLocal(FocusedMarkerInstance.movie, this).x;
-	FocusedMarkerInstance._alpha = Math.max(FocusedMarkerInstance.movie._alpha, 75);
-
-	_level0.Test.TextField2.text = "Focused marker[" + FocusedMarkerInstance.index + "]"; // + FocusedMarkerInstance.movie._target;
-}
-
-function UnfocusMarker(a_markerIndex:Number):Void
-{
-	FocusedMarkerInstance.gotoAndPlay("FadeOut");
-
-	FocusedMarkerInstance.index = -1;
-
-	QuestTitle._alpha = 0;
-	QuestObjective._alpha = 0;
 }
 
 function localToLocal(from:MovieClip, to:MovieClip):Object

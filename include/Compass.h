@@ -29,6 +29,11 @@ namespace extended
 			}
 		}
 
+		void SetMarkerInfo(const std::string& a_target, float a_distance)
+		{
+			Invoke("SetMarkerInfo", a_target.c_str(), a_distance);
+		}
+
 		void FocusMarker(std::uint32_t a_markerIndex)
 		{
 			Invoke("FocusMarker", a_markerIndex);
@@ -39,9 +44,14 @@ namespace extended
 			Invoke("UnfocusMarker", a_markerIndex);
 		}
 
-		void Update(std::uint32_t a_markerIndex)
+		void UpdateMarker(std::uint32_t a_markerIndex)
 		{
-			Invoke("Update", a_markerIndex);
+			Invoke("UpdateMarker", a_markerIndex);
+		}
+
+		void SetMarkersSize()
+		{
+			Invoke("SetMarkersSize");
 		}
 
 	private:
