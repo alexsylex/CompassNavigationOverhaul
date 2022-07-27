@@ -1,14 +1,11 @@
 #pragma once
 
-#include "utils/Angles.h"
+#include "utils/Geometry.h"
 
 struct FocusedMarker
 {
-	FocusedMarker(const RE::TESObjectREFR* a_ref, std::uint32_t a_gfxIndex, std::uint32_t a_gfxGotoFrame,
-		float a_distanceToPlayer, float a_angleToPlayerCamera) :
-		ref{ a_ref },
-		gfxIndex{ a_gfxIndex }, gfxGotoFrame{ a_gfxGotoFrame },
-		distanceToPlayer{ a_distanceToPlayer }, angleToPlayerCamera{ a_angleToPlayerCamera }
+	FocusedMarker(const RE::TESObjectREFR* a_markerRef, std::uint32_t a_gfxIndex, std::uint32_t a_gfxGotoFrame, float a_angleToPlayerCamera) :
+		ref{ a_markerRef }, gfxIndex{ a_gfxIndex }, gfxGotoFrame{ a_gfxGotoFrame }, angleToPlayerCamera{ a_angleToPlayerCamera }
 	{}
 
 	virtual ~FocusedMarker() = default;
@@ -16,8 +13,9 @@ struct FocusedMarker
 	const RE::TESObjectREFR* ref;
 	std::uint32_t gfxIndex;
 	std::uint32_t gfxGotoFrame;
-	float distanceToPlayer;
+	float distanceToPlayer = util::GetDistanceBetween(RE::PlayerCharacter::GetSingleton(), ref);
 	float angleToPlayerCamera;
+	float heightDifference = util::GetHeightDifferenceBetween(RE::PlayerCharacter::GetSingleton(), ref);
 };
 
 struct FocusedQuestMarker : FocusedMarker

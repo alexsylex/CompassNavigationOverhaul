@@ -29,9 +29,9 @@ namespace extended
 			}
 		}
 
-		void SetMarkerInfo(const std::string& a_target, float a_distance)
+		void SetMarkerInfo(const std::string& a_target, float a_distance, float a_heightDifference)
 		{
-			Invoke("SetMarkerInfo", a_target.c_str(), a_distance);
+			Invoke("SetMarkerInfo", a_target.c_str(), a_distance, a_heightDifference);
 		}
 
 		void FocusMarker(std::uint32_t a_markerIndex)

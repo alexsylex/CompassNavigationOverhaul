@@ -32,8 +32,10 @@ namespace extended
 
 		void SetMarkersExtraInfo();
 
+		bool IsPlayerAllyOfFaction(const RE::TESFaction* a_faction);
+
 		static constexpr inline float potentiallyFocusedAngle = 10.0F;
-		static constexpr inline float keepFocusedAngle = 20.0F;
+		static constexpr inline float keepFocusedAngle = 35.0F;
 
 		std::unordered_map<RE::TESObjectREFR*, std::shared_ptr<FocusedMarker>> potentiallyFocusedMarkers;
 		std::shared_ptr<FocusedMarker> focusedMarker;
@@ -44,5 +46,11 @@ namespace extended
 
 		Compass* compass = extended::Compass::GetSingleton();
 		QuestItemList* questItemList = QuestItemList::GetSingleton();
+
+		const RE::TESFaction* imperialLegionFaction = RE::TESForm::LookupByID(0x0002BF9A)->As<RE::TESFaction>();
+		const RE::TESFaction* stormCloaksFaction = RE::TESForm::LookupByID(0x00028849)->As<RE::TESFaction>();
+		const RE::TESFaction* sonsOfSkyrimFaction = RE::TESForm::LookupByID(0x0002BF9B)->As<RE::TESFaction>();
+		const RE::TESFaction* dawnGuardFaction = RE::TESForm::LookupByID(0x02014217)->As<RE::TESFaction>();
+		const RE::TESFaction* vampireFaction = RE::TESForm::LookupByID(0x02003376)->As<RE::TESFaction>();
 	};
 }

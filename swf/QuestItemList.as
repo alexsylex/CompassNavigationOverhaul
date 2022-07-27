@@ -1,5 +1,12 @@
-﻿// Instances
-var QuestTitle:MovieClip;
+﻿var questItem:QuestItem;
+
+var All:Boolean;
+var Favor:Boolean;
+var DialogueMode:Boolean;
+var StealthMode:Boolean;
+var Swimming:Boolean;
+var HorseMode:Boolean;
+var WarHorseMode:Boolean;
 
 function QuestItemList():Void
 {
@@ -8,25 +15,35 @@ function QuestItemList():Void
 	_x = point.x;
 	_y = point.y;
 
-	QuestTitle.TitleTextField.autoSize = "right";
+	_level0.HUDMovieBaseInstance.HudElements.push(this);
+
+	All = true;
+	Favor = true;
+	DialogueMode = true;
+	StealthMode = true;
+	Swimming = true;
+	HorseMode = true;
+	WarHorseMode = true;
 }
 
-function SetQuestInfo(a_questType:Number, a_questName:String, a_questObjective:String):Void
+function AddQuest(a_questType:Number, a_questName:String, a_questObjective:String):Void
 {
-	QuestTitle.EndPiece.gotoAndStop(a_questType);
-	QuestTitle.TitleTextField.text = a_questName.toUpperCase();
-	QuestObjective.textField.text = a_questObjective;
+	questItem = attachMovie("QuestItem", "questItem", getNextHighestDepth());
 
-	var bracketOpenFrame:Number = Math.round(QuestTitle.TitleTextField._width / 2.5);
-	QuestTitle.Bracket.gotoAndStop(bracketOpenFrame);
+	questItem.SetQuestInfo(a_questType, a_questName, a_questObjective);
 }
 
-function ShowQuestInfo():Void
+function SetQuestSide(a_side:String):Void
 {
-	gotoAndPlay("FadeIn");
+	questItem.SetSide(a_side);
 }
 
-function HideQuestInfo():Void
+function ShowQuest():Void
 {
-	gotoAndPlay("FadeOut");
+	questItem.Show();
+}
+
+function RemoveQuest():Void
+{
+	questItem.Remove();
 }

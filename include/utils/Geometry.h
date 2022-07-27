@@ -27,7 +27,10 @@ namespace util
 		RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
 		RE::NiPoint3 playerPos = player->GetPosition();
 
-		RE::NiPoint3 markerPos = a_markerRef->GetLookingAtLocation();
+		// Skyrim used this instead, but less precise (don't know why)
+		//RE::NiPoint3 markerPos = a_markerRef->GetLookingAtLocation();
+
+		RE::NiPoint3 markerPos = a_markerRef->GetPosition();
 
 		float playerCameraYawAngle = a_playerCamera->yaw;
 
@@ -50,11 +53,17 @@ namespace util
 		return angle;
 	}
 
-	inline float GetDistanceBetween(RE::PlayerCharacter* a_player, RE::TESObjectREFR* a_markerRef)
+	inline float GetDistanceBetween(const RE::PlayerCharacter* a_player, const RE::TESObjectREFR* a_markerRef)
 	{
 		RE::NiPoint3 playerPos = a_player->GetPosition();
 		RE::NiPoint3 markerPos = a_markerRef->GetPosition();
-		//GetLookingAtLocation();
 		return playerPos.GetDistance(markerPos);
+	}
+
+	inline float GetHeightDifferenceBetween(const RE::PlayerCharacter* a_player, const RE::TESObjectREFR* a_markerRef)
+	{
+		RE::NiPoint3 playerPos = a_player->GetPosition();
+		RE::NiPoint3 markerPos = a_markerRef->GetPosition();
+		return markerPos.z - playerPos.z;
 	}
 }

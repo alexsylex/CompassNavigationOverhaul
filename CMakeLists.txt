@@ -110,12 +110,13 @@ set(headers
 	include/IUI/GFxDisplayObject.h
 	include/IUI/GFxObject.h
 	include/RE/B/BGSInstancedQuestObjective.h
+	include/RE/B/BSTimer.h
 	include/RE/C/Compass.h
 	include/RE/G/GFxValue.h
 	include/RE/H/HUDMarkerManager.h
 	include/RE/N/NiPoint3.h
 	include/RE/T/TESQuest.h
-	include/utils/Angles.h
+	include/utils/Geometry.h
 	include/utils/GFxVisitors.h
 	include/utils/INISettingCollection.h
 	include/utils/Logger.h

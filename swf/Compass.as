@@ -29,39 +29,38 @@ function Compass(a_hadTemperatureMeter:Boolean):Void
 	_root.HUDMovieBaseInstance.CompassRect = DirectionRect;
 }
 
-function SetMarkerInfo(a_target:String, a_distance:Number):Void
+function SetMarkerInfo(a_target:String, /*a_location:String, a_objective:String,*/ a_distance:Number, a_heightDifference:Number):Void
 {
-	FocusedMarkerInstance.Distance.TextFieldInstance.text = String(Math.floor(a_distance)) + " m";
-	FocusedMarkerInstance.Objective.TextFieldInstance.text = a_target;
+	FocusedMarkerInstance.SetDistanceAndHeightDifference(a_distance, a_heightDifference);
+	FocusedMarkerInstance.Target.TextFieldInstance.text = a_target;
 }
 
 function FocusMarker(a_markerIndex:Number):Void
 {
-	FocusedMarkerInstance.index = a_markerIndex;
+	FocusedMarkerInstance.Index = a_markerIndex;
 
-	FocusedMarkerInstance.movie = MarkerList[FocusedMarkerInstance.index].movie;
+	FocusedMarkerInstance.Movie = MarkerList[FocusedMarkerInstance.Index].movie;
 	FocusedMarkerInstance.gotoAndPlay("FadeIn");
+	UpdateMarker(FocusedMarkerInstance.Index);
 }
 
 function UpdateMarker(a_markerIndex:Number):Void
 {
-	if (FocusedMarkerInstance.index != a_markerIndex)
+	if (FocusedMarkerInstance.Index != a_markerIndex)
 	{
-		FocusedMarkerInstance.index = a_markerIndex;
-		FocusedMarkerInstance.movie = MarkerList[FocusedMarkerInstance.index].movie;
+		FocusedMarkerInstance.Index = a_markerIndex;
+		FocusedMarkerInstance.Movie = MarkerList[FocusedMarkerInstance.Index].movie;
 	}
 
-	FocusedMarkerInstance._x = localToLocal(FocusedMarkerInstance.movie, this).x;
-	FocusedMarkerInstance._alpha = Math.max(FocusedMarkerInstance.movie._alpha, 75);
-
-	//_level0.Test.TextField2.text = "Focused marker[" + FocusedMarkerInstance.index + "]"; // + FocusedMarkerInstance.movie._target;
+	FocusedMarkerInstance._x = localToLocal(FocusedMarkerInstance.Movie, this).x;
+	FocusedMarkerInstance._alpha = Math.max(FocusedMarkerInstance.Movie._alpha, 75);
 }
 
 function UnfocusMarker(a_markerIndex:Number):Void
 {
 	FocusedMarkerInstance.gotoAndPlay("FadeOut");
 
-	FocusedMarkerInstance.index = -1;
+	FocusedMarkerInstance.Index = -1;
 
 	QuestTitle._alpha = 0;
 	QuestObjective._alpha = 0;
@@ -74,10 +73,11 @@ function SetMarkersSize():Void
 	{
 		var marker:MovieClip = MarkerList[i].movie;
 
-		if (i == FocusedMarkerInstance.index)
+		if (i == FocusedMarkerInstance.Index)
 		{
 			marker._xscale = Math.min(130, marker._xscale * 1.15);
 			marker._yscale = Math.min(130, marker._yscale * 1.15);
+			//marker.swapDepths(_root.getNextHighestDepth());
 		}
 		else
 		{

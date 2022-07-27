@@ -1,5 +1,9 @@
 #include "HUDMarkerManager.h"
 
+#include "RE/B/BSTimer.h"
+
+#include "utils/Logger.h"
+
 namespace extended
 {
 	void HUDMarkerManager::ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef,
@@ -128,6 +132,10 @@ namespace extended
 	{
 		//auto test = Test::GetSingleton();
 
+		//float timeSinceLastFrame = RE::BSTimer::GetTimeManager()->realTimeDelta;
+
+		//test->textField0.SetText((std::to_string(timeSinceLastFrame) + " spf").c_str());
+
 		//test->textField0.SetText(std::string(std::string("Potentially focused markers: ") + std::to_string(potentiallyFocusedMarkers.size())).c_str());
 
 		std::shared_ptr<FocusedMarker> nextFocusedMarker = GetNextFocusedMarker();
@@ -141,7 +149,7 @@ namespace extended
 
 			if (focusedQuestMarker) 
 			{
-				questItemList->HideQuestInfo();
+				questItemList->RemoveQuest();
 			}
 		}
 
@@ -154,30 +162,41 @@ namespace extended
 
 			if (focusedQuestMarker)
 			{
-				compass->SetMarkerInfo(focusedQuestMarker->questObjective, focusedQuestMarker->distanceToPlayer * 0.01428F);
+				std::string& markerTarget = focusedQuestMarker->questLocation.empty() ? focusedQuestMarker->questCharacterName : focusedQuestMarker->questLocation;
 
-				questItemList->SetQuestInfo(focusedQuestMarker->questType, focusedQuestMarker->questName, focusedQuestMarker->questObjective);
+				compass->SetMarkerInfo(markerTarget, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
 
 				if (focusChanged)
 				{
-					questItemList->ShowQuestInfo();
+					questItemList->AddQuest(focusedQuestMarker->questType, focusedQuestMarker->questName, focusedQuestMarker->questObjective);
+
+					switch (focusedQuestMarker->questType)
+					{
+					case RE::QUEST_DATA::Type::kCivilWar:
+						(IsPlayerAllyOfFaction(sonsOfSkyrimFaction) || IsPlayerAllyOfFaction(stormCloaksFaction)) ? 
+							questItemList->SetQuestSide("StormCloaks") : questItemList->SetQuestSide("ImperialLegion");
+						break;
+					case RE::QUEST_DATA::Type::kDLC01_Vampire:
+						IsPlayerAllyOfFaction(vampireFaction) ? questItemList->SetQuestSide("Vampires") : questItemList->SetQuestSide("Dawnguard");
+						break;
+					}
+
+					questItemList->ShowQuest();
 				}
 			} 
-			else 
+			else if (focusedLocationMarker) 
 			{
-				if (focusedLocationMarker) 
-				{
-					compass->SetMarkerInfo(focusedLocationMarker->locationName, focusedLocationMarker->distanceToPlayer * 0.01428F);
-				}
-
+				compass->SetMarkerInfo(focusedLocationMarker->locationName, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
 			}
 
 			if (focusChanged)
 			{
 				compass->FocusMarker(focusedMarker->gfxIndex);
+			} 
+			else
+			{
+				compass->UpdateMarker(focusedMarker->gfxIndex);
 			}
-
-			compass->UpdateMarker(focusedMarker->gfxIndex);
 		}
 		else 
 		{
@@ -188,5 +207,29 @@ namespace extended
 		compass->SetMarkersSize();
 
 		potentiallyFocusedMarkers.clear();
+	}
+
+	bool HUDMarkerManager::IsPlayerAllyOfFaction(const RE::TESFaction* a_faction)
+	{
+		RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
+
+		if (player->IsInFaction(a_faction)) 
+		{
+			return true;
+		}
+
+		return player->VisitFactions([a_faction](RE::TESFaction* a_visitedFaction, [[maybe_unused]] std::int8_t a_rank) -> bool
+		{
+			for (RE::GROUP_REACTION* reactionToFaction : a_visitedFaction->reactions)
+			{
+				auto relatedFaction = reactionToFaction->form->As<RE::TESFaction>();
+				if (relatedFaction == a_faction && reactionToFaction->fightReaction >= RE::FIGHT_REACTION::kAlly)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		});
 	}
 }

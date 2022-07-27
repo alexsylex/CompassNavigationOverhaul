@@ -11,7 +11,8 @@ public:
 
 	static void InitSingleton(const GFxDisplayObject& a_questItemList)
 	{
-		if (!singleton) {
+		if (!singleton)
+		{
 			static QuestItemList singletonInstance{ a_questItemList };
 			singleton = &singletonInstance;
 		}
@@ -19,20 +20,25 @@ public:
 
 	static QuestItemList* GetSingleton() { return singleton; }
 
-	void SetQuestInfo(RE::QUEST_DATA::Type a_questType, const std::string& a_questName,
+	void AddQuest(RE::QUEST_DATA::Type a_questType, const std::string& a_questName,
 					  const std::string& a_questObjective)
 	{
-		Invoke("SetQuestInfo", a_questType, a_questName.c_str(), a_questObjective.c_str());
+		Invoke("AddQuest", a_questType, a_questName.c_str(), a_questObjective.c_str());
 	}
 
-	void ShowQuestInfo()
+	void SetQuestSide(const std::string& a_sideName)
 	{
-		Invoke("ShowQuestInfo");
+		Invoke("SetQuestSide", a_sideName.c_str());
 	}
 
-	void HideQuestInfo()
+	void ShowQuest()
 	{
-		Invoke("HideQuestInfo");
+		Invoke("ShowQuest");
+	}
+
+	void RemoveQuest()
+	{
+		Invoke("RemoveQuest");
 	}
 
 private:
