@@ -28,11 +28,14 @@ namespace extended
 
 		void ProcessEnemyMarker(RE::Character* a_enemy, std::uint32_t a_markerGotoFrame);
 
+		void ProcessPlayerSetMarker(RE::TESObjectREFR* a_markerRef, std::uint32_t a_markerGotoFrame);
+
 		std::shared_ptr<FocusedMarker> GetNextFocusedMarker();
 
 		void SetMarkersExtraInfo();
 
 		bool IsPlayerAllyOfFaction(const RE::TESFaction* a_faction);
+		bool IsPlayerOpponentOfFaction(const RE::TESFaction* a_faction);
 
 		static constexpr inline float potentiallyFocusedAngle = 10.0F;
 		static constexpr inline float keepFocusedAngle = 35.0F;

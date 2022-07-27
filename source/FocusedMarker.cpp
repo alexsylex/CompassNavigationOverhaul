@@ -1,6 +1,6 @@
 #include "FocusedMarker.h"
 
-FocusedQuestMarker::FocusedQuestMarker(std::uint32_t a_index, std::uint32_t a_gotoFrame, RE::TESObjectREFR* a_markerRef,
+FocusedQuestMarker::FocusedQuestMarker(RE::TESObjectREFR* a_markerRef, std::uint32_t a_index, std::uint32_t a_gotoFrame,
 									   float a_angleToPlayerCamera, const RE::TESQuest* a_quest,
 	const RE::BGSInstancedQuestObjective* a_instancedObjective) :
 	FocusedMarker{ a_markerRef, a_index, a_gotoFrame, a_angleToPlayerCamera },
@@ -41,7 +41,7 @@ FocusedQuestMarker::FocusedQuestMarker(std::uint32_t a_index, std::uint32_t a_go
 	}
 }
 
-FocusedLocationMarker::FocusedLocationMarker(std::uint32_t a_index, std::uint32_t a_gotoFrame, RE::TESObjectREFR* a_markerRef,
+FocusedLocationMarker::FocusedLocationMarker(RE::TESObjectREFR* a_markerRef, std::uint32_t a_index, std::uint32_t a_gotoFrame,
 											 float a_angleToPlayerCamera, const RE::MapMarkerData* a_data) :
 	FocusedMarker{ a_markerRef, a_index, a_gotoFrame, a_angleToPlayerCamera },
 	data{ a_data }

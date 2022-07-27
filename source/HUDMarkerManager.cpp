@@ -25,9 +25,9 @@ namespace extended
 				{
 					auto potentiallyFocusedQuestMarker = std::make_shared<FocusedQuestMarker>
 					(
+						a_markerRef,
 						hudMarkerManager->currentMarkerIndex - 1,
 						a_markerGotoFrame,
-						a_markerRef,
 						angleToPlayerCamera,
 						a_quest,
 						&questObjective
@@ -68,16 +68,16 @@ namespace extended
 
 		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
 		{
-			auto potentiallyocusedLocationMarker = std::make_shared<FocusedLocationMarker>
+			auto potentiallyFocusedLocationMarker = std::make_shared<FocusedLocationMarker>
 			(
+				a_markerRef,
 				hudMarkerManager->currentMarkerIndex - 1,
 				a_markerGotoFrame,
-				a_markerRef,
 				angleToPlayerCamera,
 				a_mapMarker->mapData
 			);
 
-			potentiallyFocusedMarkers.insert_or_assign(a_markerRef, std::static_pointer_cast<FocusedMarker>(potentiallyocusedLocationMarker));
+			potentiallyFocusedMarkers.insert_or_assign(a_markerRef, std::static_pointer_cast<FocusedMarker>(potentiallyFocusedLocationMarker));
 		} 
 		
 		if (potentiallyFocusedMarkers.contains(a_markerRef))
@@ -107,6 +107,45 @@ namespace extended
 			//{
 			//	focusedMarker = FocusedMarker{ .questName = a_enemy->GetName(), .relativeAngle = relativeAngle };
 			//}
+		}
+	}
+
+	void HUDMarkerManager::ProcessPlayerSetMarker(RE::TESObjectREFR* a_markerRef, std::uint32_t a_markerGotoFrame)
+	{
+		float angleToPlayerCameraRads = util::GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_markerRef);
+		float angleToPlayerCamera = util::RadiansToDegrees(angleToPlayerCameraRads);
+
+		if (angleToPlayerCamera > 180.0F)
+			angleToPlayerCamera = 360.0F - angleToPlayerCamera;
+
+		bool isFocusedMarker = focusedMarker && a_markerRef == focusedMarker->ref;
+
+		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
+		{
+			auto potentiallyFocusedMarker = std::make_shared<FocusedMarker>
+			(
+				a_markerRef,
+				hudMarkerManager->currentMarkerIndex - 1,
+				a_markerGotoFrame,
+				angleToPlayerCamera
+			);
+
+			potentiallyFocusedMarkers.insert_or_assign(a_markerRef, potentiallyFocusedMarker);
+		}
+
+		if (potentiallyFocusedMarkers.contains(a_markerRef))
+		{
+			if (isFocusedMarker)
+			{
+				if (angleToPlayerCamera > keepFocusedAngle)
+				{
+					potentiallyFocusedMarkers.erase(a_markerRef);
+				}
+			}
+			else if (angleToPlayerCamera > potentiallyFocusedAngle)
+			{
+				potentiallyFocusedMarkers.erase(a_markerRef);
+			}
 		}
 	}
 
@@ -162,7 +201,10 @@ namespace extended
 
 			if (focusedQuestMarker)
 			{
-				std::string& markerTarget = focusedQuestMarker->questLocation.empty() ? focusedQuestMarker->questCharacterName : focusedQuestMarker->questLocation;
+				std::string& markerTarget = focusedQuestMarker->questObjective;
+
+				// TODO: Give the user an option to chose between the objective and the location/character name
+				// focusedQuestMarker->questLocation.empty() ? focusedQuestMarker->questCharacterName : focusedQuestMarker->questLocation;
 
 				compass->SetMarkerInfo(markerTarget, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
 
@@ -173,11 +215,28 @@ namespace extended
 					switch (focusedQuestMarker->questType)
 					{
 					case RE::QUEST_DATA::Type::kCivilWar:
-						(IsPlayerAllyOfFaction(sonsOfSkyrimFaction) || IsPlayerAllyOfFaction(stormCloaksFaction)) ? 
-							questItemList->SetQuestSide("StormCloaks") : questItemList->SetQuestSide("ImperialLegion");
+						if (IsPlayerAllyOfFaction(sonsOfSkyrimFaction) || 
+							IsPlayerAllyOfFaction(stormCloaksFaction) ||
+							IsPlayerOpponentOfFaction(imperialLegionFaction))
+						{
+							questItemList->SetQuestSide("StormCloaks");
+						}
+						else
+						{
+							questItemList->SetQuestSide("ImperialLegion");
+						}
 						break;
 					case RE::QUEST_DATA::Type::kDLC01_Vampire:
-						IsPlayerAllyOfFaction(vampireFaction) ? questItemList->SetQuestSide("Vampires") : questItemList->SetQuestSide("Dawnguard");
+						if (RE::PlayerCharacter::GetSingleton()->HasKeywordString("Vampire") || 
+							IsPlayerAllyOfFaction(vampireFaction) ||
+							IsPlayerOpponentOfFaction(dawnGuardFaction)) 
+						{
+							questItemList->SetQuestSide("Vampires");
+						}
+						else
+						{
+							questItemList->SetQuestSide("Dawnguard");
+						}
 						break;
 					}
 
@@ -188,6 +247,11 @@ namespace extended
 			{
 				compass->SetMarkerInfo(focusedLocationMarker->locationName, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
 			}
+			else
+			{
+				compass->SetMarkerInfo("", focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
+			}
+
 
 			if (focusChanged)
 			{
@@ -220,10 +284,39 @@ namespace extended
 
 		return player->VisitFactions([a_faction](RE::TESFaction* a_visitedFaction, [[maybe_unused]] std::int8_t a_rank) -> bool
 		{
+			if (a_visitedFaction == a_faction && a_rank > 0)
+			{
+				return true;
+			}
+
 			for (RE::GROUP_REACTION* reactionToFaction : a_visitedFaction->reactions)
 			{
 				auto relatedFaction = reactionToFaction->form->As<RE::TESFaction>();
 				if (relatedFaction == a_faction && reactionToFaction->fightReaction >= RE::FIGHT_REACTION::kAlly)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		});
+	}
+
+	bool HUDMarkerManager::IsPlayerOpponentOfFaction(const RE::TESFaction* a_faction)
+	{
+		RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
+
+		return player->VisitFactions([a_faction](RE::TESFaction* a_visitedFaction, [[maybe_unused]] std::int8_t a_rank) -> bool
+		{
+			if (a_visitedFaction == a_faction && a_rank < 0)
+			{
+				return true;
+			}
+
+			for (RE::GROUP_REACTION* reactionToFaction : a_visitedFaction->reactions)
+			{
+				auto relatedFaction = reactionToFaction->form->As<RE::TESFaction>();
+				if (relatedFaction == a_faction && reactionToFaction->fightReaction == RE::FIGHT_REACTION::kEnemy)
 				{
 					return true;
 				}

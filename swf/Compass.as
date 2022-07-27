@@ -77,7 +77,6 @@ function SetMarkersSize():Void
 		{
 			marker._xscale = Math.min(130, marker._xscale * 1.15);
 			marker._yscale = Math.min(130, marker._yscale * 1.15);
-			//marker.swapDepths(_root.getNextHighestDepth());
 		}
 		else
 		{

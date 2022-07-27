@@ -20,7 +20,7 @@ struct FocusedMarker
 
 struct FocusedQuestMarker : FocusedMarker
 {
-	FocusedQuestMarker(std::uint32_t a_index, std::uint32_t a_gotoFrame, RE::TESObjectREFR* a_markerRef, float a_angleToPlayerCamera,
+	FocusedQuestMarker(RE::TESObjectREFR* a_markerRef, std::uint32_t a_index, std::uint32_t a_gotoFrame, float a_angleToPlayerCamera,
 		const RE::TESQuest* a_quest, const RE::BGSInstancedQuestObjective* a_instancedObjective);
 
 	const RE::TESQuest* quest;
@@ -37,7 +37,7 @@ struct FocusedQuestMarker : FocusedMarker
 
 struct FocusedLocationMarker : FocusedMarker
 {
-	FocusedLocationMarker(std::uint32_t a_index, std::uint32_t a_gotoFrame, RE::TESObjectREFR* a_markerRef, float a_angleToPlayerCamera,
+	FocusedLocationMarker(RE::TESObjectREFR* a_markerRef, std::uint32_t a_index, std::uint32_t a_gotoFrame, float a_angleToPlayerCamera,
 		const RE::MapMarkerData* a_data);
 
 	const RE::MapMarkerData* data;

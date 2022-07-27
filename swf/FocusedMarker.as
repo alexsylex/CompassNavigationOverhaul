@@ -11,7 +11,6 @@ class FocusedMarker extends MovieClip
 	public function FocusedMarker()
 	{
 		Distance.TextFieldInstance.autoSize = "center";
-		//Distance.TextFieldInstance.border = true;
 		Index = -1;
 	}
 
