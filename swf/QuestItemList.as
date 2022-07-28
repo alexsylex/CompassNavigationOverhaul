@@ -1,4 +1,5 @@
 ﻿var questItem:QuestItem;
+var entries:Array;
 
 var All:Boolean;
 var Favor:Boolean;
@@ -10,6 +11,8 @@ var WarHorseMode:Boolean;
 
 function QuestItemList():Void
 {
+	entries = new Array();
+
 	var point:Object = { x:10, y:90 };
 	globalToLocal(point);
 	_x = point.x;
@@ -26,9 +29,19 @@ function QuestItemList():Void
 	WarHorseMode = true;
 }
 
+function Test(a_questData:Object):Void
+{
+	//_level0.Test.TextField0.text = String(a_questData.type) + " " + a_questData.name + " " + a_questData.objective;
+	_level0.Test.TextField0.text = entries.length;
+}
+
 function AddQuest(a_questType:Number, a_questName:String, a_questObjective:String):Void
 {
 	questItem = attachMovie("QuestItem", "questItem", getNextHighestDepth());
+
+	questItem._y = (questItem._height + 5) * entries.length;
+
+	entries.push(questItem);
 
 	questItem.SetQuestInfo(a_questType, a_questName, a_questObjective);
 }
@@ -46,4 +59,15 @@ function ShowQuest():Void
 function RemoveQuest():Void
 {
 	questItem.Remove();
+}
+
+function RemoveAllQuests():Void
+{
+	for (var i:Number = 0; i < entries.length; i++)
+	{
+		questItem = entries[i];
+		questItem.Remove();
+	}
+
+	entries.splice(0, entries.length);
 }

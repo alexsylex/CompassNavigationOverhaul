@@ -20,36 +20,45 @@ namespace extended
 			return &singleton;
 		}
 
-		void ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef,
+		void ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_marker,
 								std::uint32_t a_markerGotoFrame);
 
-		void ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef,
+		void ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_marker,
 								   std::uint32_t a_markerGotoFrame);
 
 		void ProcessEnemyMarker(RE::Character* a_enemy, std::uint32_t a_markerGotoFrame);
 
-		void ProcessPlayerSetMarker(RE::TESObjectREFR* a_markerRef, std::uint32_t a_markerGotoFrame);
-
-		std::shared_ptr<FocusedMarker> GetNextFocusedMarker();
+		void ProcessPlayerSetMarker(RE::TESObjectREFR* a_marker, std::uint32_t a_markerGotoFrame);
 
 		void SetMarkersExtraInfo();
 
-		bool IsPlayerAllyOfFaction(const RE::TESFaction* a_faction);
-		bool IsPlayerOpponentOfFaction(const RE::TESFaction* a_faction);
+	private:
+
+		void RemoveFromPotentiallyFocusedIfOutOfAngle(RE::TESObjectREFR* a_marker, float a_angleToPlayerCamera,
+													  bool a_isFocusedMarker);
+
+		std::shared_ptr<FocusedMarker> GetNextFocusedMarker();
+
+		float GetAngleBetween(const RE::PlayerCamera* a_playerCamera, const RE::TESObjectREFR* a_marker) const;
+
+		bool IsPlayerAllyOfFaction(const RE::TESFaction* a_faction) const;
+
+		bool IsPlayerOpponentOfFaction(const RE::TESFaction* a_faction) const;
+
+		std::string GetSideInQuest(RE::QUEST_DATA::Type a_questType) const;
 
 		static constexpr inline float potentiallyFocusedAngle = 10.0F;
 		static constexpr inline float keepFocusedAngle = 35.0F;
 
 		std::unordered_map<RE::TESObjectREFR*, std::shared_ptr<FocusedMarker>> potentiallyFocusedMarkers;
-		std::shared_ptr<FocusedMarker> focusedMarker;
-		std::shared_ptr<FocusedQuestMarker> focusedQuestMarker;
-		std::shared_ptr<FocusedLocationMarker> focusedLocationMarker;
 
+		std::shared_ptr<FocusedMarker> focusedMarker;
+
+		// cached
 		RE::HUDMarkerManager* hudMarkerManager = RE::HUDMarkerManager::GetSingleton();
 
-		Compass* compass = extended::Compass::GetSingleton();
-		QuestItemList* questItemList = QuestItemList::GetSingleton();
-
+		// Factions to lookup
+		// Reference: Creation Kit -> Skyrim.esm, Dawnguard.esm
 		const RE::TESFaction* imperialLegionFaction = RE::TESForm::LookupByID(0x0002BF9A)->As<RE::TESFaction>();
 		const RE::TESFaction* stormCloaksFaction = RE::TESForm::LookupByID(0x00028849)->As<RE::TESFaction>();
 		const RE::TESFaction* sonsOfSkyrimFaction = RE::TESForm::LookupByID(0x0002BF9B)->As<RE::TESFaction>();

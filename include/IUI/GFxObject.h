@@ -7,6 +7,17 @@ class GFxObject : public RE::GFxValue
 {
 public:
 
+	template <typename... Args>
+	static GFxObject CreateIn(RE::GFxMovieView* a_movieView, Args&&... args)
+	{
+		std::array<RE::GFxValue, sizeof...(Args)> gfxArgs{ std::forward<Args>(args)... };
+
+		GFxObject object;
+		a_movieView->CreateObject(&object, nullptr, sizeof...(Args) ? &gfxArgs[0] : nullptr, sizeof...(Args));
+
+		return object;
+	}
+
 	GFxObject() = default;
 
 	GFxObject(RE::GFxMovieView* a_movieView, const std::string_view& a_pathToObject)

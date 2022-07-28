@@ -54,6 +54,14 @@ function UpdateMarker(a_markerIndex:Number):Void
 
 	FocusedMarkerInstance._x = localToLocal(FocusedMarkerInstance.Movie, this).x;
 	FocusedMarkerInstance._alpha = Math.max(FocusedMarkerInstance.Movie._alpha, 75);
+	if (_root.HUDMovieBaseInstance.EnemyHealth_mc.BracketsInstance._alpha)
+	{
+		FocusedMarkerInstance.Target.TextFieldInstance._alpha = 0;
+	}
+	else
+	{
+		FocusedMarkerInstance.Target.TextFieldInstance._alpha = 100;
+	}
 }
 
 function UnfocusMarker(a_markerIndex:Number):Void

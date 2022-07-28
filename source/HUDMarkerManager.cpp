@@ -6,15 +6,12 @@
 
 namespace extended
 {
-	void HUDMarkerManager::ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_markerRef,
+	void HUDMarkerManager::ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_marker,
 											  std::uint32_t a_markerGotoFrame)
 	{
-		float angleToPlayerCameraRads = util::GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_markerRef);
-		float angleToPlayerCamera = util::RadiansToDegrees(angleToPlayerCameraRads);
+		float angleToPlayerCamera = GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_marker);
 
-		if (angleToPlayerCamera > 180.0F) angleToPlayerCamera = 360.0F - angleToPlayerCamera; 
-
-		bool isFocusedMarker = focusedMarker && a_markerRef == focusedMarker->ref;
+		bool isFocusedMarker = focusedMarker && a_marker == focusedMarker->ref;
 
 		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
 		{
@@ -23,128 +20,200 @@ namespace extended
 				if (questObjective.objective->ownerQuest == a_quest &&
 					questObjective.instanceState == RE::QUEST_OBJECTIVE_STATE::kDisplayed)
 				{
-					auto potentiallyFocusedQuestMarker = std::make_shared<FocusedQuestMarker>
+					if (!potentiallyFocusedMarkers.contains(a_marker))
+					{
+						auto potentiallyFocusedMarker = std::make_shared<FocusedMarker>(a_marker, angleToPlayerCamera);
+
+						potentiallyFocusedMarkers.emplace(a_marker, potentiallyFocusedMarker);
+					}
+
+					auto questData = std::make_shared<FocusedMarker::QuestData>
 					(
-						a_markerRef,
 						hudMarkerManager->currentMarkerIndex - 1,
 						a_markerGotoFrame,
-						angleToPlayerCamera,
+						a_marker,
 						a_quest,
 						&questObjective
 					);
 
-					potentiallyFocusedMarkers.insert_or_assign(a_markerRef, std::static_pointer_cast<FocusedMarker>(potentiallyFocusedQuestMarker));
-
-					//break;
+					potentiallyFocusedMarkers.at(a_marker)->data.push_back(questData);
 				}
 			}
 		}
 		
-		if (potentiallyFocusedMarkers.contains(a_markerRef))
-		{
-			if (isFocusedMarker)
-			{
-				if (angleToPlayerCamera > keepFocusedAngle) 
-				{
-					potentiallyFocusedMarkers.erase(a_markerRef);
-				}
-			}
-			else if (angleToPlayerCamera > potentiallyFocusedAngle)
-			{
-				potentiallyFocusedMarkers.erase(a_markerRef);
-			}
-		}
+		RemoveFromPotentiallyFocusedIfOutOfAngle(a_marker, angleToPlayerCamera, isFocusedMarker);
 	}
 
-	void HUDMarkerManager::ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_markerRef,
-												 std::uint32_t a_markerGotoFrame)
+	void HUDMarkerManager::ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_marker,
+		[[maybe_unused]] std::uint32_t a_markerGotoFrame)
 	{
-		float angleToPlayerCameraRads = util::GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_markerRef);
-		float angleToPlayerCamera = util::RadiansToDegrees(angleToPlayerCameraRads);
+		float angleToPlayerCamera = GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_marker);
 
-		if (angleToPlayerCamera > 180.0F) angleToPlayerCamera = 360.0F - angleToPlayerCamera;
-
-		bool isFocusedMarker = focusedMarker && a_markerRef == focusedMarker->ref;
+		bool isFocusedMarker = focusedMarker && a_marker == focusedMarker->ref;
 
 		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
 		{
-			auto potentiallyFocusedLocationMarker = std::make_shared<FocusedLocationMarker>
+			auto potentiallyFocusedMarker = std::make_shared<FocusedMarker>(a_marker, angleToPlayerCamera);
+
+			potentiallyFocusedMarkers.emplace(a_marker, potentiallyFocusedMarker);
+
+			auto locationData = std::make_shared<FocusedMarker::LocationData>
 			(
-				a_markerRef,
 				hudMarkerManager->currentMarkerIndex - 1,
 				a_markerGotoFrame,
-				angleToPlayerCamera,
 				a_mapMarker->mapData
 			);
 
-			potentiallyFocusedMarkers.insert_or_assign(a_markerRef, std::static_pointer_cast<FocusedMarker>(potentiallyFocusedLocationMarker));
+			potentiallyFocusedMarkers.at(a_marker)->data.push_back(locationData);
 		} 
 		
-		if (potentiallyFocusedMarkers.contains(a_markerRef))
-		{
-			if (isFocusedMarker)
-			{
-				if (angleToPlayerCamera > keepFocusedAngle)
-				{
-					potentiallyFocusedMarkers.erase(a_markerRef);
-				}
-			}
-			else if (angleToPlayerCamera > potentiallyFocusedAngle)
-			{
-				potentiallyFocusedMarkers.erase(a_markerRef);
-			}
-		}
+		RemoveFromPotentiallyFocusedIfOutOfAngle(a_marker, angleToPlayerCamera, isFocusedMarker);
 	}
 
-	void HUDMarkerManager::ProcessEnemyMarker(RE::Character* a_enemy, [[maybe_unused]] std::uint32_t a_markerGotoFrame)
+	void HUDMarkerManager::ProcessEnemyMarker(RE::Character* a_enemy, std::uint32_t a_markerGotoFrame)
 	{
-		float angleToPlayerCameraRads = util::GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_enemy);
-		float angleToPlayerCamera = util::RadiansToDegrees(angleToPlayerCameraRads);
+		float angleToPlayerCamera = GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_enemy);
 
-		if (angleToPlayerCamera < potentiallyFocusedAngle)
-		{
-			//if (!focusedMarker || focusedMarker->questType == RE::QUEST_DATA::Type::kNone) 
-			//{
-			//	focusedMarker = FocusedMarker{ .questName = a_enemy->GetName(), .relativeAngle = relativeAngle };
-			//}
-		}
-	}
-
-	void HUDMarkerManager::ProcessPlayerSetMarker(RE::TESObjectREFR* a_markerRef, std::uint32_t a_markerGotoFrame)
-	{
-		float angleToPlayerCameraRads = util::GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_markerRef);
-		float angleToPlayerCamera = util::RadiansToDegrees(angleToPlayerCameraRads);
-
-		if (angleToPlayerCamera > 180.0F)
-			angleToPlayerCamera = 360.0F - angleToPlayerCamera;
-
-		bool isFocusedMarker = focusedMarker && a_markerRef == focusedMarker->ref;
+		bool isFocusedMarker = focusedMarker && a_enemy == focusedMarker->ref;
 
 		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
 		{
-			auto potentiallyFocusedMarker = std::make_shared<FocusedMarker>
+			auto potentiallyFocusedMarker = std::make_shared<FocusedMarker>(a_enemy, angleToPlayerCamera);
+
+			potentiallyFocusedMarkers.emplace(a_enemy, potentiallyFocusedMarker);
+
+			auto enemyData = std::make_shared<FocusedMarker::EnemyData>
 			(
-				a_markerRef,
 				hudMarkerManager->currentMarkerIndex - 1,
 				a_markerGotoFrame,
-				angleToPlayerCamera
+				a_enemy
 			);
 
-			potentiallyFocusedMarkers.insert_or_assign(a_markerRef, potentiallyFocusedMarker);
+			potentiallyFocusedMarkers.at(a_enemy)->data.push_back(enemyData);
 		}
 
-		if (potentiallyFocusedMarkers.contains(a_markerRef))
+		RemoveFromPotentiallyFocusedIfOutOfAngle(a_enemy, angleToPlayerCamera, isFocusedMarker);
+	}
+
+	void HUDMarkerManager::ProcessPlayerSetMarker(RE::TESObjectREFR* a_marker, std::uint32_t a_markerGotoFrame)
+	{
+		float angleToPlayerCamera = GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_marker);
+
+		bool isFocusedMarker = focusedMarker && a_marker == focusedMarker->ref;
+
+		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
 		{
-			if (isFocusedMarker)
+			auto potentiallyFocusedMarker = std::make_shared<FocusedMarker>(a_marker, angleToPlayerCamera);
+
+			potentiallyFocusedMarkers.emplace(a_marker, potentiallyFocusedMarker);
+
+			auto playerSetData = std::make_shared<FocusedMarker::PlayerSetData>
+			(
+				hudMarkerManager->currentMarkerIndex - 1,
+				a_markerGotoFrame
+			);
+
+			potentiallyFocusedMarkers.at(a_marker)->data.push_back(playerSetData);
+		}
+
+		RemoveFromPotentiallyFocusedIfOutOfAngle(a_marker, angleToPlayerCamera, isFocusedMarker);
+	}
+
+	void HUDMarkerManager::SetMarkersExtraInfo()
+	{
+		// May be used for timed logic
+		//float timeSinceLastFrame = RE::BSTimer::GetTimeManager()->realTimeDelta;
+		
+		//auto test = Test::GetSingleton();
+		//test->textField0.SetText((std::to_string(timeSinceLastFrame) + " spf").c_str());
+		//test->textField0.SetText(std::string(std::string("Potentially focused markers: ") + std::to_string(potentiallyFocusedMarkers.size())).c_str());
+
+		Compass* compass = Compass::GetSingleton();
+		QuestItemList* questItemList = QuestItemList::GetSingleton();
+
+		questItemList->Invoke("Test");
+
+		std::shared_ptr<FocusedMarker> nextFocusedMarker = GetNextFocusedMarker();
+
+		bool focusChanged = ((focusedMarker && nextFocusedMarker && (focusedMarker->ref != nextFocusedMarker->ref)) ||
+							 (focusedMarker && !nextFocusedMarker) || (!focusedMarker && nextFocusedMarker));
+
+		if (focusedMarker && focusChanged)
+		{
+			compass->UnfocusMarker(focusedMarker->data.back()->gfxIndex);
+			questItemList->RemoveAllQuests();
+		}
+
+		focusedMarker = nextFocusedMarker;
+
+		if (focusedMarker && !focusedMarker->data.empty())
+		{
+			for (std::shared_ptr<FocusedMarker::Data> focusedMarkerData : focusedMarker->data)
 			{
-				if (angleToPlayerCamera > keepFocusedAngle)
+				if (auto questData = std::dynamic_pointer_cast<FocusedMarker::QuestData>(focusedMarkerData))
 				{
-					potentiallyFocusedMarkers.erase(a_markerRef);
+					// TODO: Give the user an option to chose between the objective and the location/character name
+					// questData->location.empty() ? questData->characterName : questData->location;
+
+					compass->SetMarkerInfo(questData->objective, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
+
+					if (focusChanged)
+					{
+						GFxObject questItemData = GFxObject::CreateIn(questItemList->GetMovieView());
+						questItemData.SetMember("type", questData->type);
+						questItemData.SetMember("name", questData->name.c_str());
+						questItemData.SetMember("objective", questData->objective.c_str());
+
+						questItemList->AddQuest(questData->type, questData->name, questData->objective);
+
+						questItemList->SetQuestSide(GetSideInQuest(questData->type));
+
+						questItemList->ShowQuest();
+					}
+				}
+				else if (auto locationData = std::dynamic_pointer_cast<FocusedMarker::LocationData>(focusedMarkerData))
+				{
+					compass->SetMarkerInfo(locationData->locationName, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
+				}
+				else if (auto enemyData = std::dynamic_pointer_cast<FocusedMarker::EnemyData>(focusedMarkerData))
+				{
+					compass->SetMarkerInfo(enemyData->enemyName, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
+				}
+				else if (auto playerSetData = std::dynamic_pointer_cast<FocusedMarker::PlayerSetData>(focusedMarkerData))
+				{
+					compass->SetMarkerInfo(playerSetData->locationName, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
+				}
+
+				if (focusChanged)
+				{
+					compass->FocusMarker(focusedMarkerData->gfxIndex);
+				} 
+				else
+				{
+					compass->UpdateMarker(focusedMarkerData->gfxIndex);
 				}
 			}
-			else if (angleToPlayerCamera > potentiallyFocusedAngle)
+		}
+
+		compass->SetMarkersSize();
+
+		potentiallyFocusedMarkers.clear();
+	}
+
+	void HUDMarkerManager::RemoveFromPotentiallyFocusedIfOutOfAngle(RE::TESObjectREFR* a_marker, float a_angleToPlayerCamera, bool a_isFocusedMarker)
+	{
+		if (potentiallyFocusedMarkers.contains(a_marker))
+		{
+			if (a_isFocusedMarker)
 			{
-				potentiallyFocusedMarkers.erase(a_markerRef);
+				if (a_angleToPlayerCamera > keepFocusedAngle)
+				{
+					potentiallyFocusedMarkers.erase(a_marker);
+				}
+			}
+			else if (a_angleToPlayerCamera > potentiallyFocusedAngle)
+			{
+				potentiallyFocusedMarkers.erase(a_marker);
 			}
 		}
 	}
@@ -167,113 +236,18 @@ namespace extended
 		return bestFocusedMarker;
 	}
 
-	void HUDMarkerManager::SetMarkersExtraInfo()
+	float HUDMarkerManager::GetAngleBetween(const RE::PlayerCamera* a_playerCamera, const RE::TESObjectREFR* a_marker) const
 	{
-		//auto test = Test::GetSingleton();
+		float angleToPlayerCameraInRadians = util::GetAngleBetween(a_playerCamera, a_marker);
+		float angleToPlayerCamera = util::RadiansToDegrees(angleToPlayerCameraInRadians);
 
-		//float timeSinceLastFrame = RE::BSTimer::GetTimeManager()->realTimeDelta;
+		if (angleToPlayerCamera > 180.0F)
+			angleToPlayerCamera = 360.0F - angleToPlayerCamera;
 
-		//test->textField0.SetText((std::to_string(timeSinceLastFrame) + " spf").c_str());
-
-		//test->textField0.SetText(std::string(std::string("Potentially focused markers: ") + std::to_string(potentiallyFocusedMarkers.size())).c_str());
-
-		std::shared_ptr<FocusedMarker> nextFocusedMarker = GetNextFocusedMarker();
-
-		bool focusChanged = ((focusedMarker && nextFocusedMarker && (focusedMarker->ref != nextFocusedMarker->ref)) ||
-							 (focusedMarker && !nextFocusedMarker) || (!focusedMarker && nextFocusedMarker));
-
-		if (focusedMarker && focusChanged)
-		{
-			compass->UnfocusMarker(focusedMarker->gfxIndex);
-
-			if (focusedQuestMarker) 
-			{
-				questItemList->RemoveQuest();
-			}
-		}
-
-		focusedMarker = nextFocusedMarker;
-
-		if (focusedMarker)
-		{
-			focusedQuestMarker = std::dynamic_pointer_cast<FocusedQuestMarker>(focusedMarker);
-			focusedLocationMarker = std::dynamic_pointer_cast<FocusedLocationMarker>(focusedMarker);
-
-			if (focusedQuestMarker)
-			{
-				std::string& markerTarget = focusedQuestMarker->questObjective;
-
-				// TODO: Give the user an option to chose between the objective and the location/character name
-				// focusedQuestMarker->questLocation.empty() ? focusedQuestMarker->questCharacterName : focusedQuestMarker->questLocation;
-
-				compass->SetMarkerInfo(markerTarget, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
-
-				if (focusChanged)
-				{
-					questItemList->AddQuest(focusedQuestMarker->questType, focusedQuestMarker->questName, focusedQuestMarker->questObjective);
-
-					switch (focusedQuestMarker->questType)
-					{
-					case RE::QUEST_DATA::Type::kCivilWar:
-						if (IsPlayerAllyOfFaction(sonsOfSkyrimFaction) || 
-							IsPlayerAllyOfFaction(stormCloaksFaction) ||
-							IsPlayerOpponentOfFaction(imperialLegionFaction))
-						{
-							questItemList->SetQuestSide("StormCloaks");
-						}
-						else
-						{
-							questItemList->SetQuestSide("ImperialLegion");
-						}
-						break;
-					case RE::QUEST_DATA::Type::kDLC01_Vampire:
-						if (RE::PlayerCharacter::GetSingleton()->HasKeywordString("Vampire") || 
-							IsPlayerAllyOfFaction(vampireFaction) ||
-							IsPlayerOpponentOfFaction(dawnGuardFaction)) 
-						{
-							questItemList->SetQuestSide("Vampires");
-						}
-						else
-						{
-							questItemList->SetQuestSide("Dawnguard");
-						}
-						break;
-					}
-
-					questItemList->ShowQuest();
-				}
-			} 
-			else if (focusedLocationMarker) 
-			{
-				compass->SetMarkerInfo(focusedLocationMarker->locationName, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
-			}
-			else
-			{
-				compass->SetMarkerInfo("", focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
-			}
-
-
-			if (focusChanged)
-			{
-				compass->FocusMarker(focusedMarker->gfxIndex);
-			} 
-			else
-			{
-				compass->UpdateMarker(focusedMarker->gfxIndex);
-			}
-		}
-		else 
-		{
-			focusedLocationMarker = nullptr;
-			focusedQuestMarker = nullptr;
-		}
-
-		compass->SetMarkersSize();
-
-		potentiallyFocusedMarkers.clear();
+		return angleToPlayerCamera;
 	}
 
-	bool HUDMarkerManager::IsPlayerAllyOfFaction(const RE::TESFaction* a_faction)
+	bool HUDMarkerManager::IsPlayerAllyOfFaction(const RE::TESFaction* a_faction) const
 	{
 		RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
 
@@ -282,7 +256,7 @@ namespace extended
 			return true;
 		}
 
-		return player->VisitFactions([a_faction](RE::TESFaction* a_visitedFaction, [[maybe_unused]] std::int8_t a_rank) -> bool
+		return player->VisitFactions([a_faction](RE::TESFaction* a_visitedFaction, std::int8_t a_rank) -> bool
 		{
 			if (a_visitedFaction == a_faction && a_rank > 0)
 			{
@@ -302,11 +276,11 @@ namespace extended
 		});
 	}
 
-	bool HUDMarkerManager::IsPlayerOpponentOfFaction(const RE::TESFaction* a_faction)
+	bool HUDMarkerManager::IsPlayerOpponentOfFaction(const RE::TESFaction* a_faction) const
 	{
 		RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
 
-		return player->VisitFactions([a_faction](RE::TESFaction* a_visitedFaction, [[maybe_unused]] std::int8_t a_rank) -> bool
+		return player->VisitFactions([a_faction](RE::TESFaction* a_visitedFaction, std::int8_t a_rank) -> bool
 		{
 			if (a_visitedFaction == a_faction && a_rank < 0)
 			{
@@ -324,5 +298,36 @@ namespace extended
 
 			return false;
 		});
+	}
+
+	std::string HUDMarkerManager::GetSideInQuest(RE::QUEST_DATA::Type a_questType) const
+	{
+		switch (a_questType)
+		{
+		case RE::QUEST_DATA::Type::kCivilWar:
+			if (IsPlayerAllyOfFaction(sonsOfSkyrimFaction) || 
+				IsPlayerAllyOfFaction(stormCloaksFaction) ||
+				IsPlayerOpponentOfFaction(imperialLegionFaction))
+			{
+				return "StormCloaks";
+			}
+			else
+			{
+				return "ImperialLegion";
+			}
+		case RE::QUEST_DATA::Type::kDLC01_Vampire:
+			if (RE::PlayerCharacter::GetSingleton()->HasKeywordString("Vampire") || 
+				IsPlayerAllyOfFaction(vampireFaction) ||
+				IsPlayerOpponentOfFaction(dawnGuardFaction))
+			{
+				return "Vampires";
+			}
+			else
+			{
+				return "Dawnguard";
+			}
+		}
+
+		return { };
 	}
 }

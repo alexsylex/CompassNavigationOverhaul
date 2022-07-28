@@ -22,7 +22,7 @@ namespace util
 		return a_angle * 180.0F / pi;
 	}
 
-	inline float GetAngleBetween(RE::PlayerCamera* a_playerCamera, RE::TESObjectREFR* a_markerRef)
+	inline float GetAngleBetween(const RE::PlayerCamera* a_playerCamera, const RE::TESObjectREFR* a_markerRef)
 	{
 		RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
 		RE::NiPoint3 playerPos = player->GetPosition();

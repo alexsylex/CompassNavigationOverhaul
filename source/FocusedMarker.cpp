@@ -1,26 +1,28 @@
 #include "FocusedMarker.h"
 
-FocusedQuestMarker::FocusedQuestMarker(RE::TESObjectREFR* a_markerRef, std::uint32_t a_index, std::uint32_t a_gotoFrame,
-									   float a_angleToPlayerCamera, const RE::TESQuest* a_quest,
-	const RE::BGSInstancedQuestObjective* a_instancedObjective) :
-	FocusedMarker{ a_markerRef, a_index, a_gotoFrame, a_angleToPlayerCamera },
-	quest{ a_quest }, instancedObjective{ a_instancedObjective }
+FocusedMarker::QuestData::QuestData(std::uint32_t a_gfxIndex, std::uint32_t a_gfxGotoFrame, RE::TESObjectREFR* a_marker,
+									const RE::TESQuest* a_quest, const RE::BGSInstancedQuestObjective* a_instancedObjective) :
+	Data{ a_gfxIndex, a_gfxGotoFrame }, quest{ a_quest }, instancedObjective{ a_instancedObjective }
 {
 	// A quest marker can reference to a character or a location
-	switch (a_markerRef->GetFormType())
+	switch (a_marker->GetFormType())
 	{
 	case RE::FormType::Reference:
 		{
-			if (auto questRef = a_markerRef->As<RE::TESObjectREFR>()) {
+			if (auto teleportDoor = a_marker->As<RE::TESObjectREFR>())
+			{
 				// If it is a teleport door, we can get the door at the other side
-				if (auto teleportLinkedDoor = questRef->extraList.GetTeleportLinkedDoor().get()) {
+				if (auto teleportLinkedDoor = teleportDoor->extraList.GetTeleportLinkedDoor().get())
+				{
 					// First, try interior cell
-					if (RE::TESObjectCELL* cell = teleportLinkedDoor->GetParentCell()) {
-						questLocation = cell->GetName();
+					if (RE::TESObjectCELL* cell = teleportLinkedDoor->GetParentCell())
+					{
+						locationName = cell->GetName();
 					}
 					// Exterior cell
-					else if (RE::TESWorldSpace* worldSpace = teleportLinkedDoor->GetWorldspace()) {
-						questLocation = worldSpace->GetName();
+					else if (RE::TESWorldSpace* worldSpace = teleportLinkedDoor->GetWorldspace())
+					{
+						locationName = worldSpace->GetName();
 					}
 				}
 			}
@@ -28,8 +30,9 @@ FocusedQuestMarker::FocusedQuestMarker(RE::TESObjectREFR* a_markerRef, std::uint
 		}
 	case RE::FormType::ActorCharacter:
 		{
-			if (auto questCharacter = a_markerRef->As<RE::Character>()) {
-				questCharacterName = questCharacter->GetName();
+			if (auto character = a_marker->As<RE::Character>())
+			{
+				characterName = character->GetName();
 			}
 			break;
 		}
@@ -40,9 +43,3 @@ FocusedQuestMarker::FocusedQuestMarker(RE::TESObjectREFR* a_markerRef, std::uint
 		}
 	}
 }
-
-FocusedLocationMarker::FocusedLocationMarker(RE::TESObjectREFR* a_markerRef, std::uint32_t a_index, std::uint32_t a_gotoFrame,
-											 float a_angleToPlayerCamera, const RE::MapMarkerData* a_data) :
-	FocusedMarker{ a_markerRef, a_index, a_gotoFrame, a_angleToPlayerCamera },
-	data{ a_data }
-{}

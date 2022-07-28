@@ -21,7 +21,7 @@ public:
 	static QuestItemList* GetSingleton() { return singleton; }
 
 	void AddQuest(RE::QUEST_DATA::Type a_questType, const std::string& a_questName,
-					  const std::string& a_questObjective)
+				  const std::string& a_questObjective)
 	{
 		Invoke("AddQuest", a_questType, a_questName.c_str(), a_questObjective.c_str());
 	}
@@ -41,6 +41,11 @@ public:
 		Invoke("RemoveQuest");
 	}
 
+	void RemoveAllQuests()
+	{
+		Invoke("RemoveAllQuests");
+	}
+
 private:
 
 	QuestItemList(const GFxDisplayObject& a_questItemList) :
@@ -53,4 +58,6 @@ private:
 	}
 
 	static inline QuestItemList* singleton = nullptr;
+
+	GFxArray questItemDataA;
 };
