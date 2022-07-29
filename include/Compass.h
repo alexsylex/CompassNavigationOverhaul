@@ -1,7 +1,7 @@
 #pragma once
 
-#include "IUI/GFxArray.h"
-#include "IUI/GFxDisplayObject.h"
+#include "utils/GFxArray.h"
+#include "utils/GFxDisplayObject.h"
 
 namespace extended
 {

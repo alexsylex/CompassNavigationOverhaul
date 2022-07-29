@@ -102,7 +102,7 @@ void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg)
 		{
 			if (auto finishLoadMessage = IUI::API::TranslateAs<IUI::API::FinishLoadMessage>(a_msg))
 			{
-				Test::InitSingleton(GFxDisplayObject{ finishLoadMessage->contextMovieView, Test::path });
+				Test::InitSingleton(GFxDisplayObject::GetFrom(finishLoadMessage->contextMovieView, Test::path));
 			}
 			break;
 		}

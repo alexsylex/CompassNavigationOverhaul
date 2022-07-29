@@ -19,16 +19,15 @@ struct FocusedMarker
 	struct QuestData : Data
 	{
 		QuestData(std::uint32_t a_gfxIndex, std::uint32_t a_gfxGotoFrame, RE::TESObjectREFR* a_markerRef,
-				  const RE::TESQuest* a_quest, const RE::BGSInstancedQuestObjective* a_instancedObjective);
+				  const RE::TESQuest* a_quest);
 
 		const RE::TESQuest* quest;
-		const RE::BGSInstancedQuestObjective* instancedObjective;
 
 		// cache
 		RE::QUEST_DATA::Type type = quest->GetType();
 		std::string name = (type == RE::QUEST_DATA::Type::kMiscellaneous) ? "$MISCELLANEOUS" : quest->GetName();
 		std::string description = quest->GetCurrentDescriptionWithReplacedTags().c_str();
-		std::string objective = instancedObjective->GetDisplayTextWithReplacedTags().c_str();
+		std::vector<std::string> objectives;
 		std::string locationName;
 		std::string characterName;
 	};

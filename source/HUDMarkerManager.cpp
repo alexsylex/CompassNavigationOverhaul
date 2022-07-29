@@ -15,28 +15,57 @@ namespace extended
 
 		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
 		{
+			std::shared_ptr<FocusedMarker> potentiallyFocusedMarker;
+			if (potentiallyFocusedMarkers.contains(a_marker))
+			{
+				potentiallyFocusedMarker = potentiallyFocusedMarkers.at(a_marker);
+			}
+			else
+			{
+				potentiallyFocusedMarker = std::make_shared<FocusedMarker>(a_marker, angleToPlayerCamera);
+
+				potentiallyFocusedMarkers.emplace(a_marker, potentiallyFocusedMarker);
+			}
+
+			auto dataIt = std::ranges::find_if(potentiallyFocusedMarker->data,
+				[a_quest](std::shared_ptr<FocusedMarker::Data> a_data) -> bool
+				{
+					auto questData = std::static_pointer_cast<FocusedMarker::QuestData>(a_data);
+
+					if (questData->type == RE::QUEST_DATA::Type::kMiscellaneous)
+					{
+						return a_quest->GetType() == RE::QUEST_DATA::Type::kMiscellaneous;
+					}
+					else
+					{
+						return std::static_pointer_cast<FocusedMarker::QuestData>(a_data)->quest == a_quest;
+					}
+				});
+
+			std::shared_ptr<FocusedMarker::QuestData> questData;
+			if (dataIt != potentiallyFocusedMarker->data.end())
+			{
+				questData = std::static_pointer_cast<FocusedMarker::QuestData>(*dataIt);
+			}
+			else
+			{
+				questData = std::make_shared<FocusedMarker::QuestData>
+				(
+					hudMarkerManager->currentMarkerIndex - 1,
+					a_markerGotoFrame,
+					a_marker,
+					a_quest
+				);
+
+				potentiallyFocusedMarker->data.push_back(questData);
+			}
+
 			for (RE::BGSInstancedQuestObjective& questObjective : RE::PlayerCharacter::GetSingleton()->objectives) 
 			{
 				if (questObjective.objective->ownerQuest == a_quest &&
 					questObjective.instanceState == RE::QUEST_OBJECTIVE_STATE::kDisplayed)
 				{
-					if (!potentiallyFocusedMarkers.contains(a_marker))
-					{
-						auto potentiallyFocusedMarker = std::make_shared<FocusedMarker>(a_marker, angleToPlayerCamera);
-
-						potentiallyFocusedMarkers.emplace(a_marker, potentiallyFocusedMarker);
-					}
-
-					auto questData = std::make_shared<FocusedMarker::QuestData>
-					(
-						hudMarkerManager->currentMarkerIndex - 1,
-						a_markerGotoFrame,
-						a_marker,
-						a_quest,
-						&questObjective
-					);
-
-					potentiallyFocusedMarkers.at(a_marker)->data.push_back(questData);
+					questData->objectives.push_back(questObjective.GetDisplayTextWithReplacedTags().c_str());
 				}
 			}
 		}
@@ -45,7 +74,7 @@ namespace extended
 	}
 
 	void HUDMarkerManager::ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_marker,
-		[[maybe_unused]] std::uint32_t a_markerGotoFrame)
+												 std::uint32_t a_markerGotoFrame)
 	{
 		float angleToPlayerCamera = GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_marker);
 
@@ -124,7 +153,7 @@ namespace extended
 		// May be used for timed logic
 		//float timeSinceLastFrame = RE::BSTimer::GetTimeManager()->realTimeDelta;
 		
-		//auto test = Test::GetSingleton();
+		auto test = Test::GetSingleton();
 		//test->textField0.SetText((std::to_string(timeSinceLastFrame) + " spf").c_str());
 		//test->textField0.SetText(std::string(std::string("Potentially focused markers: ") + std::to_string(potentiallyFocusedMarkers.size())).c_str());
 
@@ -152,19 +181,17 @@ namespace extended
 			{
 				if (auto questData = std::dynamic_pointer_cast<FocusedMarker::QuestData>(focusedMarkerData))
 				{
+					if (questData->type == RE::QUEST_DATA::Type::kMiscellaneous)
+					test->textField1.SetText((std::string(std::string("Miscellaneous markers: ") + std::to_string(questData->objectives.size())).c_str()));
+
 					// TODO: Give the user an option to chose between the objective and the location/character name
 					// questData->location.empty() ? questData->characterName : questData->location;
 
-					compass->SetMarkerInfo(questData->objective, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
+					compass->SetMarkerInfo(questData->objectives.back(), focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
 
 					if (focusChanged)
 					{
-						GFxObject questItemData = GFxObject::CreateIn(questItemList->GetMovieView());
-						questItemData.SetMember("type", questData->type);
-						questItemData.SetMember("name", questData->name.c_str());
-						questItemData.SetMember("objective", questData->objective.c_str());
-
-						questItemList->AddQuest(questData->type, questData->name, questData->objective);
+						questItemList->AddQuest(questData->type, questData->name, questData->objectives);
 
 						questItemList->SetQuestSide(GetSideInQuest(questData->type));
 

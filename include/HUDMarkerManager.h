@@ -50,7 +50,7 @@ namespace extended
 		static constexpr inline float potentiallyFocusedAngle = 10.0F;
 		static constexpr inline float keepFocusedAngle = 35.0F;
 
-		std::unordered_map<RE::TESObjectREFR*, std::shared_ptr<FocusedMarker>> potentiallyFocusedMarkers;
+		std::unordered_map<const RE::TESObjectREFR*, std::shared_ptr<FocusedMarker>> potentiallyFocusedMarkers;
 
 		std::shared_ptr<FocusedMarker> focusedMarker;
 

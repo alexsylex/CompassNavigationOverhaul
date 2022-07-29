@@ -1,8 +1,5 @@
 #pragma once
 
-#include "GFxArray.h"
-#include "GFxDisplayObject.h"
-
 namespace IUI::API
 {
 	struct Message
@@ -29,14 +26,14 @@ namespace IUI::API
 	{
 		static constexpr inline Type type = Type::kPreReplace;
 
-		GFxDisplayObject& originalDisplayObject;
+		RE::GFxValue& originalDisplayObject;
 	};
 
 	struct PostPatchMessage : Message
 	{
 		static constexpr inline Type type = Type::kPostPatch;
 
-		GFxDisplayObject& newDisplayObject;
+		RE::GFxValue& newDisplayObject;
 	};
 
 	struct AbortPatchMessage : Message

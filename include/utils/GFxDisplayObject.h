@@ -6,14 +6,6 @@ class GFxDisplayObject : public GFxObject
 {
 public:
 
-	GFxDisplayObject() = default;
-
-	GFxDisplayObject(RE::GFxMovieView* a_movieView, const std::string_view& a_pathToMovieClip)
-	: GFxObject{ a_movieView, a_pathToMovieClip }
-	{
-		assert(IsDisplayObject());
-	}
-
 	GFxDisplayObject(const RE::GFxValue& a_value)
 	: GFxObject{ a_value }
 	{
@@ -22,7 +14,7 @@ public:
 
 	GFxDisplayObject CreateEmptyMovieClip(const std::string_view& a_name, std::int32_t a_depth)
 	{
-		GFxDisplayObject mc;
+		RE::GFxValue mc;
 		RE::GFxValue::CreateEmptyMovieClip(&mc, a_name.data(), a_depth);
 		return mc;
 	}
@@ -34,9 +26,9 @@ public:
 
 	GFxDisplayObject AttachMovie(const std::string_view& a_className, const std::string_view& a_name, std::int32_t a_depth)
 	{
-		GFxDisplayObject mc;
+		RE::GFxValue mc;
 		RE::GFxValue::AttachMovie(&mc, a_className.data(), a_name.data(), a_depth);
-		mc.GetMovieView()->Advance(0.0F);
+		//mc.GetMovieView()->Advance(0.0F);
 		return mc;
 	}
 
@@ -79,8 +71,7 @@ public:
 
 	RE::GPointF LocalToGlobal()
 	{
-		GFxObject pt;
-		GetMovieView()->CreateObject(&pt);
+		GFxObject pt(GetMovieView());
 
 		assert(pt.IsObject());
 

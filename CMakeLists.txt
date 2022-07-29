@@ -106,9 +106,6 @@ find_package(spdlog REQUIRED CONFIG)
 
 set(headers
 	include/IUI/API.h
-	include/IUI/GFxArray.h
-	include/IUI/GFxDisplayObject.h
-	include/IUI/GFxObject.h
 	include/RE/B/BGSInstancedQuestObjective.h
 	include/RE/B/BSTimer.h
 	include/RE/C/Compass.h
@@ -117,6 +114,9 @@ set(headers
 	include/RE/N/NiPoint3.h
 	include/RE/T/TESQuest.h
 	include/utils/Geometry.h
+	include/utils/GFxArray.h
+	include/utils/GFxDisplayObject.h
+	include/utils/GFxObject.h
 	include/utils/GFxVisitors.h
 	include/utils/INISettingCollection.h
 	include/utils/Logger.h

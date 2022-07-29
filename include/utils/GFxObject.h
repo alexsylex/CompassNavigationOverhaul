@@ -7,22 +7,23 @@ class GFxObject : public RE::GFxValue
 {
 public:
 
-	template <typename... Args>
-	static GFxObject CreateIn(RE::GFxMovieView* a_movieView, Args&&... args)
+	static GFxObject GetFrom(RE::GFxMovieView* a_movieView, const std::string_view& a_pathToObject)
 	{
-		std::array<RE::GFxValue, sizeof...(Args)> gfxArgs{ std::forward<Args>(args)... };
+		RE::GFxValue object;
 
-		GFxObject object;
-		a_movieView->CreateObject(&object, nullptr, sizeof...(Args) ? &gfxArgs[0] : nullptr, sizeof...(Args));
+		a_movieView->GetVariable(&object, a_pathToObject.data());
+
+		assert(object.IsObject());
 
 		return object;
 	}
 
-	GFxObject() = default;
-
-	GFxObject(RE::GFxMovieView* a_movieView, const std::string_view& a_pathToObject)
+	template <typename... Args>
+	GFxObject(RE::GFxMovieView* a_movieView, const std::string_view& a_className, Args&&... args)
 	{
-		a_movieView->GetVariable(this, a_pathToObject.data());
+		std::array<RE::GFxValue, sizeof...(Args)> gfxArgs{ std::forward<Args>(args)... };
+
+		a_movieView->CreateObject(this, a_className.data(), sizeof...(Args) ? &gfxArgs[0] : nullptr, sizeof...(Args));
 
 		assert(GetMovieView() == a_movieView);
 		assert(IsObject());
@@ -45,20 +46,6 @@ public:
 		RE::GFxValue value;
 		RE::GFxValue::GetMember(a_memberName.data(), &value);
 		return value;
-	}
-
-	RE::GFxValue GetMember(int a_index) const
-	{
-		// TODO: Get member by index (instead of by name)
-		// _root.container: DisplayObject
-		// {
-		//		var instance67: DisplayObject
-		// }
-		// Anonymous movieclips are given name = instance + i
-
-		RE::GFxValue val = a_index;
-
-		return val;
 	}
 
 	bool SetMember(const std::string_view& a_memberName, const RE::GFxValue& a_value)

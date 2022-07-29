@@ -1,8 +1,8 @@
 #include "FocusedMarker.h"
 
 FocusedMarker::QuestData::QuestData(std::uint32_t a_gfxIndex, std::uint32_t a_gfxGotoFrame, RE::TESObjectREFR* a_marker,
-									const RE::TESQuest* a_quest, const RE::BGSInstancedQuestObjective* a_instancedObjective) :
-	Data{ a_gfxIndex, a_gfxGotoFrame }, quest{ a_quest }, instancedObjective{ a_instancedObjective }
+									const RE::TESQuest* a_quest) :
+	Data{ a_gfxIndex, a_gfxGotoFrame }, quest{ a_quest }
 {
 	// A quest marker can reference to a character or a location
 	switch (a_marker->GetFormType())

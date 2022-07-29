@@ -1,7 +1,7 @@
 #pragma once
 
-#include "IUI/GFxArray.h"
-#include "IUI/GFxDisplayObject.h"
+#include "utils/GFxArray.h"
+#include "utils/GFxDisplayObject.h"
 
 class QuestItemList : public GFxDisplayObject
 {
@@ -21,9 +21,11 @@ public:
 	static QuestItemList* GetSingleton() { return singleton; }
 
 	void AddQuest(RE::QUEST_DATA::Type a_questType, const std::string& a_questName,
-				  const std::string& a_questObjective)
+				  [[maybe_unused]]const std::vector<std::string>& a_questObjectives)
 	{
-		Invoke("AddQuest", a_questType, a_questName.c_str(), a_questObjective.c_str());
+		//GFxArray gfxObjectives;
+
+		Invoke("AddQuest", a_questType, a_questName.c_str()); //, a_questObjective.c_str());
 	}
 
 	void SetQuestSide(const std::string& a_sideName)
@@ -59,5 +61,5 @@ private:
 
 	static inline QuestItemList* singleton = nullptr;
 
-	GFxArray questItemDataA;
+	//GFxArray questItemDataA;
 };
