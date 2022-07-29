@@ -29,7 +29,7 @@ function Compass(a_hadTemperatureMeter:Boolean):Void
 	_root.HUDMovieBaseInstance.CompassRect = DirectionRect;
 }
 
-function SetMarkerInfo(a_target:String, /*a_location:String, a_objective:String,*/ a_distance:Number, a_heightDifference:Number):Void
+function SetMarkerInfo(a_target:String, a_distance:Number, a_heightDifference:Number):Void
 {
 	FocusedMarkerInstance.SetDistanceAndHeightDifference(a_distance, a_heightDifference);
 	FocusedMarkerInstance.Target.TextFieldInstance.text = a_target;

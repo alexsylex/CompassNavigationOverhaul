@@ -12,7 +12,8 @@ namespace extended
 
 		static void InitSingleton(const GFxDisplayObject& a_originalCompass)
 		{
-			if (!singleton) {
+			if (!singleton)
+			{
 				static Compass singletonInstance{ a_originalCompass };
 				singleton = &singletonInstance;
 			}
@@ -22,7 +23,8 @@ namespace extended
 
 		void SetupMod(const GFxDisplayObject& a_replaceCompass)
 		{
-			if (a_replaceCompass.HasMember("Compass")) {
+			if (a_replaceCompass.HasMember("Compass"))
+			{
 				*static_cast<GFxDisplayObject*>(this) = a_replaceCompass;
 
 				Invoke("Compass", hasTemperatureMeter);
@@ -55,6 +57,7 @@ namespace extended
 		}
 
 	private:
+
 		Compass(const GFxDisplayObject& a_originalCompass) :
 			GFxDisplayObject{ a_originalCompass },
 			hasTemperatureMeter{ HasMember("CompassTemperatureHolderInstance") }

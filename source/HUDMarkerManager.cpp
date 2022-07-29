@@ -32,13 +32,14 @@ namespace extended
 				{
 					auto questData = std::static_pointer_cast<FocusedMarker::QuestData>(a_data);
 
+					// Group miscellaneous quests
 					if (questData->type == RE::QUEST_DATA::Type::kMiscellaneous)
 					{
 						return a_quest->GetType() == RE::QUEST_DATA::Type::kMiscellaneous;
 					}
 					else
 					{
-						return std::static_pointer_cast<FocusedMarker::QuestData>(a_data)->quest == a_quest;
+						return questData->quest == a_quest;
 					}
 				});
 
@@ -152,15 +153,9 @@ namespace extended
 	{
 		// May be used for timed logic
 		//float timeSinceLastFrame = RE::BSTimer::GetTimeManager()->realTimeDelta;
-		
-		auto test = Test::GetSingleton();
-		//test->textField0.SetText((std::to_string(timeSinceLastFrame) + " spf").c_str());
-		//test->textField0.SetText(std::string(std::string("Potentially focused markers: ") + std::to_string(potentiallyFocusedMarkers.size())).c_str());
 
 		Compass* compass = Compass::GetSingleton();
 		QuestItemList* questItemList = QuestItemList::GetSingleton();
-
-		questItemList->Invoke("Test");
 
 		std::shared_ptr<FocusedMarker> nextFocusedMarker = GetNextFocusedMarker();
 
@@ -177,12 +172,13 @@ namespace extended
 
 		if (focusedMarker && !focusedMarker->data.empty())
 		{
+			bool canFocusPlayerSetMarker = true;
+
 			for (std::shared_ptr<FocusedMarker::Data> focusedMarkerData : focusedMarker->data)
 			{
 				if (auto questData = std::dynamic_pointer_cast<FocusedMarker::QuestData>(focusedMarkerData))
 				{
-					if (questData->type == RE::QUEST_DATA::Type::kMiscellaneous)
-					test->textField1.SetText((std::string(std::string("Miscellaneous markers: ") + std::to_string(questData->objectives.size())).c_str()));
+					canFocusPlayerSetMarker = false;
 
 					// TODO: Give the user an option to chose between the objective and the location/character name
 					// questData->location.empty() ? questData->characterName : questData->location;
@@ -208,7 +204,10 @@ namespace extended
 				}
 				else if (auto playerSetData = std::dynamic_pointer_cast<FocusedMarker::PlayerSetData>(focusedMarkerData))
 				{
-					compass->SetMarkerInfo(playerSetData->locationName, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
+					if (canFocusPlayerSetMarker)
+					{
+						compass->SetMarkerInfo(playerSetData->locationName, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
+					}
 				}
 
 				if (focusChanged)
