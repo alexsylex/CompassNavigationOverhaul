@@ -19,6 +19,17 @@ public:
 	}
 
 	template <typename... Args>
+	GFxObject(RE::GFxMovieView* a_movieView, Args&&... args)
+	{
+		std::array<RE::GFxValue, sizeof...(Args)> gfxArgs{ std::forward<Args>(args)... };
+
+		a_movieView->CreateObject(this, nullptr, sizeof...(Args) ? &gfxArgs[0] : nullptr, sizeof...(Args));
+
+		assert(GetMovieView() == a_movieView);
+		assert(IsObject());
+	}
+
+	template <typename... Args>
 	GFxObject(RE::GFxMovieView* a_movieView, const std::string_view& a_className, Args&&... args)
 	{
 		std::array<RE::GFxValue, sizeof...(Args)> gfxArgs{ std::forward<Args>(args)... };
@@ -58,6 +69,7 @@ public:
 	{
 		RE::GFxValue result;
 		Invoke(a_functionName, &result, args...);
+		GetMovieView()->Advance(0.0F);
 		return result;
 	}
 

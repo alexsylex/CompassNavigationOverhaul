@@ -28,7 +28,6 @@ public:
 	{
 		RE::GFxValue mc;
 		RE::GFxValue::AttachMovie(&mc, a_className.data(), a_name.data(), a_depth);
-		//mc.GetMovieView()->Advance(0.0F);
 		return mc;
 	}
 
@@ -47,9 +46,9 @@ public:
 		Invoke("swapDepths", a_depth);
 	}
 
-	void LoadMovie(const std::string_view& a_swfPath)
+	void LoadMovie(const std::string_view& a_swfRelativePath)
 	{
-		Invoke("loadMovie", a_swfPath.data());
+		Invoke("loadMovie", a_swfRelativePath.data());
 	}
 
 	void UnloadMovie()
@@ -59,13 +58,6 @@ public:
 
 	void RemoveMovieClip()
 	{
-		// MovieClip.removeMovieClip() does not remove a movie clip assigned
-		// to a negative depth value. Movie clips created in the authoring tool
-		// are assigned negative depth values by default. To remove a movie clip
-		// that is assigned to a negative depth value, first use the MovieClip.swapDepths()
-		// method to move the movie clip to a positive depth value.
-		// Reference: http://homepage.divms.uiowa.edu/~slonnegr/flash/ActionScript2Reference.pdf#page=917
-		SwapDepths(1);
 		Invoke("removeMovieClip");
 	}
 

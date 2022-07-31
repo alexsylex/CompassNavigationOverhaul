@@ -2,6 +2,8 @@
 
 #include "IUI/API.h"
 
+#include "utils/GFxLoggers.h"
+
 #include "Compass.h"
 #include "QuestItemList.h"
 #include "Test.h"
@@ -38,74 +40,102 @@ void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg)
 			return;
 		}
 
-		switch (a_msg->type) 
+		GFxMemberLogger<logger::level::debug> memberLogger;
+
+		switch (a_msg->type)
 		{
 		case IUI::API::Message::Type::kStartLoad:
-		{
-			break;
-		}
+			{
+				logger::info("Started loading patches");
+				break;
+			}
 		case IUI::API::Message::Type::kPreReplace:
-		{
-			if (auto preReplaceMessage = IUI::API::TranslateAs<IUI::API::PreReplaceMessage>(a_msg))
 			{
-				std::string pathToOriginal = preReplaceMessage->originalDisplayObject.ToString().c_str();
-
-				if (pathToOriginal == extended::Compass::path)
+				if (auto preReplaceMessage = IUI::API::TranslateAs<IUI::API::PreReplaceMessage>(a_msg))
 				{
-					extended::Compass::InitSingleton(preReplaceMessage->originalDisplayObject);
+					std::string pathToOriginal = preReplaceMessage->originalDisplayObject.ToString().c_str();
+
+					if (pathToOriginal == extended::Compass::path)
+					{
+						extended::Compass::InitSingleton(preReplaceMessage->originalDisplayObject);
+						auto compass = extended::Compass::GetSingleton();
+
+						logger::debug("");
+						logger::debug("Before patching");
+
+						memberLogger.LogMembersOf(*compass);
+
+						RE::GPointF coord = compass->LocalToGlobal();
+						logger::debug("{} is on ({}, {})", compass->ToString(), coord.x, coord.y);
+					}
 				}
+				break;
 			}
-			break;
-		}
 		case IUI::API::Message::Type::kPostPatch:
-		{
-			if (auto postPatchMessage = IUI::API::TranslateAs<IUI::API::PostPatchMessage>(a_msg))
 			{
-				std::string pathToNew = postPatchMessage->newDisplayObject.ToString().c_str();
+				if (auto postPatchMessage = IUI::API::TranslateAs<IUI::API::PostPatchMessage>(a_msg))
+				{
+					std::string pathToNew = postPatchMessage->newDisplayObject.ToString().c_str();
 
-				if (pathToNew == extended::Compass::path)
-				{
-					// We initialised the CompassShoutMeterHolder singleton in the pre-replace step,
-					// if not, there has been an error
-					if (auto compass = extended::Compass::GetSingleton())
+					if (pathToNew == extended::Compass::path)
 					{
-						compass->SetupMod(postPatchMessage->newDisplayObject);
+						// We initialised the CompassShoutMeterHolder singleton in the pre-replace step,
+						// if not, there has been an error
+						if (auto compass = extended::Compass::GetSingleton())
+						{
+							compass->SetupMod(postPatchMessage->newDisplayObject);
+
+							logger::debug("");
+							logger::debug("After patching");
+
+							memberLogger.LogMembersOf(*compass);
+
+							RE::GPointF coord = compass->LocalToGlobal();
+							logger::debug("{} is on ({}, {})", compass->ToString(), coord.x, coord.y);
+						}
+						else
+						{
+							logger::error("Compass instance counterpart not ready for {}", extended::Compass::path);
+						}
 					}
-					else
+					else if (pathToNew == QuestItemList::path)
 					{
-						logger::error("Compass instance counterpart not ready for {}", extended::Compass::path);
-						logger::flush();
+						QuestItemList::InitSingleton(postPatchMessage->newDisplayObject);
+						auto questItemList = QuestItemList::GetSingleton();
+
+						logger::debug("");
+						logger::debug("Post-patch members of");
+
+						memberLogger.LogMembersOf(*questItemList);
+
+						RE::GPointF coord = questItemList->LocalToGlobal();
+						logger::debug("{} is on ({}, {})", questItemList->ToString(), coord.x, coord.y);
 					}
 				}
-				else if (pathToNew == QuestItemList::path)
-				{
-					QuestItemList::InitSingleton(postPatchMessage->newDisplayObject);
-				}
+				break;
 			}
-			break;
-		}
 		case IUI::API::Message::Type::kAbortPatch:
-		{
-			if (auto abortPatchMessage = IUI::API::TranslateAs<IUI::API::AbortPatchMessage>(a_msg))
 			{
-				std::string pathToOriginal = abortPatchMessage->originalValue.ToString().c_str();
-
-				if (pathToOriginal == extended::Compass::path)
+				if (auto abortPatchMessage = IUI::API::TranslateAs<IUI::API::AbortPatchMessage>(a_msg))
 				{
-					logger::error("Aborted replacement of {}", extended::Compass::path);
-					logger::flush();
+					std::string pathToOriginal = abortPatchMessage->originalValue.ToString().c_str();
+
+					if (pathToOriginal == extended::Compass::path)
+					{
+						logger::error("Aborted replacement of {}", extended::Compass::path);
+					}
 				}
+				break;
 			}
-			break;
-		}
 		case IUI::API::Message::Type::kFinishLoad:
-		{
-			if (auto finishLoadMessage = IUI::API::TranslateAs<IUI::API::FinishLoadMessage>(a_msg))
 			{
-				Test::InitSingleton(GFxDisplayObject::GetFrom(finishLoadMessage->contextMovieView, Test::path));
+				if (auto finishLoadMessage = IUI::API::TranslateAs<IUI::API::FinishLoadMessage>(a_msg))
+				{
+					Test::InitSingleton(GFxDisplayObject::GetFrom(finishLoadMessage->contextMovieView, Test::path));
+				}
+				logger::info("Finished loading patches");
+				break;
 			}
-			break;
-		}
 		default:
 			break;
 		}

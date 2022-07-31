@@ -35,6 +35,31 @@ namespace SKSE::log
 	{
 		spdlog::default_logger()->flush();
 	}
+
+	template <class... Args>
+	void at_level(spdlog::level::level_enum a_level, fmt::format_string<Args...> a_fmt, Args&&... args)
+	{
+		switch (a_level) {
+		case level::trace:
+			trace<Args...>(a_fmt, std::forward<Args&&>(args)...);
+			break;
+		case level::debug:
+			debug<Args...>(a_fmt, std::forward<Args&&>(args)...);
+			break;
+		case level::info:
+			info<Args...>(a_fmt, std::forward<Args&&>(args)...);
+			break;
+		case level::warn:
+			warn<Args...>(a_fmt, std::forward<Args&&>(args)...);
+			break;
+		case level::err:
+			error<Args...>(a_fmt, std::forward<Args&&>(args)...);
+			break;
+		case level::critical:
+			critical<Args...>(a_fmt, std::forward<Args&&>(args)...);
+			break;
+		}
+	}
 }
 
 namespace GFxLogger

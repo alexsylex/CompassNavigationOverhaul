@@ -1,4 +1,6 @@
-﻿// Instances
+﻿import FocusedMarker;
+
+// Instances
 var CompassFrame:MovieClip;
 var CompassTemperatureHolderInstance:MovieClip;
 var CompassMask_mc:MovieClip;

@@ -116,8 +116,8 @@ set(headers
 	include/utils/Geometry.h
 	include/utils/GFxArray.h
 	include/utils/GFxDisplayObject.h
+	include/utils/GFxLoggers.h
 	include/utils/GFxObject.h
-	include/utils/GFxVisitors.h
 	include/utils/INISettingCollection.h
 	include/utils/Logger.h
 	include/utils/Setting.h
@@ -137,7 +137,6 @@ set(sources
 	source/RE/G/GFxValue.cpp
 	source/RE/N/NiPoint3.cpp
 	source/RE/T/TESQuest.cpp
-	source/utils/GFxVisitors.cpp
 	source/utils/INISettingCollection.cpp
 	source/utils/Logger.cpp
 	source/FocusedMarker.cpp
