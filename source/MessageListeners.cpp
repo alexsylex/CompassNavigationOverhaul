@@ -131,7 +131,11 @@ void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg)
 			{
 				if (auto finishLoadMessage = IUI::API::TranslateAs<IUI::API::FinishLoadMessage>(a_msg))
 				{
-					Test::InitSingleton(GFxDisplayObject::GetFrom(finishLoadMessage->contextMovieView, Test::path));
+					RE::GFxValue test;
+					if (finishLoadMessage->contextMovieView->GetVariable(&test, Test::path.data()))
+					{
+						Test::InitSingleton(test);
+					}
 				}
 				logger::info("Finished loading patches");
 				break;

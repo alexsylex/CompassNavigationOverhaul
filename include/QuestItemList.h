@@ -21,7 +21,7 @@ public:
 	static QuestItemList* GetSingleton() { return singleton; }
 
 	void AddQuest(RE::QUEST_DATA::Type a_questType, const std::string& a_questName,
-				  const std::vector<std::string>& a_questObjectives)
+				  const std::vector<std::string>& a_questObjectives, int a_questAgeIndex)
 	{
 		GFxArray gfxQuestObjectives{ GetMovieView() };
 
@@ -30,12 +30,17 @@ public:
 			gfxQuestObjectives.PushBack(questObjective.c_str());
 		}
 
-		Invoke("AddQuest", a_questType, a_questName.c_str(), gfxQuestObjectives);
+		Invoke("AddQuest", a_questType, a_questName.c_str(), gfxQuestObjectives, a_questAgeIndex);
 	}
 
 	void SetQuestSide(const std::string& a_sideName)
 	{
 		Invoke("SetQuestSide", a_sideName.c_str());
+	}
+
+	void Update()
+	{
+		Invoke("Update");
 	}
 
 	void ShowQuest()

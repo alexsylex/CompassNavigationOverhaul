@@ -30,6 +30,7 @@ struct FocusedMarker
 		std::vector<std::string> objectives;
 		std::string locationName;
 		std::string characterName;
+		int ageIndex = -1;
 	};
 
 	struct LocationData : Data

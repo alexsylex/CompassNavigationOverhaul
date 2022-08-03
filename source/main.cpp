@@ -4,7 +4,7 @@
 #include "utils/INISettingCollection.h"
 #include "utils/Logger.h"
 
-static constexpr Plugin plugin{ "Helpful Compass Navigation" };
+static constexpr Plugin plugin{ "CompassNavigationOverhaul" };
 
 void SKSEMessageListener(SKSE::MessagingInterface::Message* a_msg);
 

@@ -39,6 +39,8 @@ namespace extended
 
 		std::shared_ptr<FocusedMarker> GetNextFocusedMarker();
 
+		bool DidFocusChange(std::shared_ptr<FocusedMarker> a_nextFocusedMarker) const;
+
 		float GetAngleBetween(const RE::PlayerCamera* a_playerCamera, const RE::TESObjectREFR* a_marker) const;
 
 		bool IsPlayerAllyOfFaction(const RE::TESFaction* a_faction) const;

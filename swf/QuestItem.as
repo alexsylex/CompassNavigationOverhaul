@@ -5,10 +5,24 @@ class QuestItem extends MovieClip
 	var Title:MovieClip;
 	var ObjectiveItemList:Array;
 
+	//var Test:TextField;
+
 	// References
 	private var TitleTextField:TextField;
 
 	// Variables
+	public var ageIndex:Number;
+	public var mainQuestFrame:Number;
+	public var magesGuildQuestFrame:Number;
+	public var thievesGuildQuestFrame:Number;
+	public var darkBrotherhoodQuestFrame:Number;
+	public var companionQuestFrame:Number;
+	public var miscQuestFrame:Number;
+	public var daedricQuestFrame:Number;
+	public var favorQuestFrame:Number;
+	public var civilWarQuestFrame:Number;
+	public var dlc01QuestFrame:Number;
+	public var dlc02QuestFrame:Number;
 	private var bracketOpenLongestNameFrame:Number;
 
 	public function QuestItem()
@@ -18,11 +32,44 @@ class QuestItem extends MovieClip
 		TitleTextField = Title.TitleTextField;
 		TitleTextField.textAutoSize = "shrink";
 
+		Title.EndPiece.gotoAndStop("Main");
+		mainQuestFrame = Title.EndPiece._currentframe;
+
+		Title.EndPiece.gotoAndStop("MagesGuild");
+		magesGuildQuestFrame = Title.EndPiece._currentframe;
+
+		Title.EndPiece.gotoAndStop("ThievesGuild");
+		thievesGuildQuestFrame = Title.EndPiece._currentframe;
+
+		Title.EndPiece.gotoAndStop("DarkBrotherhood");
+		darkBrotherhoodQuestFrame = Title.EndPiece._currentframe;
+
+		Title.EndPiece.gotoAndStop("Companion");
+		companionQuestFrame = Title.EndPiece._currentframe;
+
+		Title.EndPiece.gotoAndStop("Misc");
+		miscQuestFrame = Title.EndPiece._currentframe;
+
+		Title.EndPiece.gotoAndStop("Daedric");
+		daedricQuestFrame = Title.EndPiece._currentframe;
+
+		Title.EndPiece.gotoAndStop("Favor");
+		favorQuestFrame = Title.EndPiece._currentframe;
+
+		Title.EndPiece.gotoAndStop("CivilWar");
+		civilWarQuestFrame = Title.EndPiece._currentframe;
+
+		Title.EndPiece.gotoAndStop("DLC01");
+		dlc01QuestFrame = Title.EndPiece._currentframe;
+
+		Title.EndPiece.gotoAndStop("DLC02");
+		dlc02QuestFrame = Title.EndPiece._currentframe;
+
 		Title.Bracket.gotoAndStop("longest name");
 		bracketOpenLongestNameFrame = Title.Bracket._currentframe;
 	}
 
-	public function SetQuestInfo(a_type:Number, a_title:String, a_objectives:Array):Void
+	public function SetQuestInfo(a_type:Number, a_title:String, a_objectives:Array, a_ageIndex:Number):Void
 	{
 		// Set end piece art
 		Title.EndPiece.gotoAndStop(a_type);
@@ -45,6 +92,8 @@ class QuestItem extends MovieClip
 
 			yOffset += 1.1 * objectiveItem._height;
 		}
+
+		ageIndex = a_ageIndex;
 	}
 
 	public function SetSide(a_side:String):Void

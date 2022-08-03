@@ -12,8 +12,8 @@ set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "")
 # ---- Project ----
 
 project(
-	HelpfulCompassNavigation
-	VERSION 1.0.0
+	CompassNavigationOverhaul
+	VERSION 0.1.0
 	LANGUAGES CXX
 )
 

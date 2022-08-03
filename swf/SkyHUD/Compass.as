@@ -5,6 +5,7 @@ var CompassFrame:MovieClip;
 var CompassTemperatureHolderInstance:MovieClip;
 var CompassMask_mc:MovieClip;
 var DirectionRect:MovieClip;
+var CompassFrameAlt:MovieClip;
 
 var FocusedMarkerInstance:FocusedMarker;
 
@@ -24,6 +25,10 @@ function Compass(a_hadTemperatureMeter:Boolean):Void
 	}
 
 	_root.HUDMovieBaseInstance.CompassRect = DirectionRect;
+	_root.HUDMovieBaseInstance.CompassFrame = CompassFrame;
+	_root.HUDMovieBaseInstance.CompassFrameAlt = CompassFrameAlt;
+	_root.HUDMovieBaseInstance.CompassCard = DirectionRect.CompassDirectionText;
+	_root.HUDMovieBaseInstance.CompassCardAlt = DirectionRect.CompassDirectionTextAlt;
 }
 
 function SetMarkerInfo(a_target:String, a_distance:Number, a_heightDifference:Number):Void
@@ -51,6 +56,7 @@ function UpdateMarker(a_markerIndex:Number):Void
 
 	FocusedMarkerInstance._x = localToLocal(FocusedMarkerInstance.Movie, this).x;
 	FocusedMarkerInstance._alpha = Math.max(FocusedMarkerInstance.Movie._alpha, 75);
+
 	if (_root.HUDMovieBaseInstance.EnemyHealth_mc.BracketsInstance._alpha)
 	{
 		FocusedMarkerInstance.Target.TextFieldInstance._alpha = 0;
@@ -87,13 +93,13 @@ function SetMarkersSize():Void
 
 		if (i == FocusedMarkerInstance.Index)
 		{
-			marker._xscale = Math.min(130, marker._xscale * 1.15);
-			marker._yscale = Math.min(130, marker._yscale * 1.15);
+			marker._xscale = Math.min(150, marker._xscale * 1.325);
+			marker._yscale = Math.min(150, marker._yscale * 1.325);
 		}
 		else
 		{
-			marker._xscale = Math.min(120, marker._xscale / 1.15);
-			marker._yscale = Math.min(120, marker._yscale / 1.15);
+			marker._xscale = Math.min(135, marker._xscale);
+			marker._yscale = Math.min(135, marker._yscale);
 		}
 	}
 }
