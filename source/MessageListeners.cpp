@@ -140,6 +140,18 @@ void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg)
 				logger::info("Finished loading patches");
 				break;
 			}
+		case IUI::API::Message::Type::kPostInitExtensions:
+			{
+				if (auto postInitExtMessage = IUI::API::TranslateAs<IUI::API::PostInitExtensionsMessage>(a_msg))
+				{
+					auto questItemList = QuestItemList::GetSingleton();
+
+					questItemList->AddToHudElements();
+
+					logger::debug("Extensions initialized");
+				}
+				break;
+			}
 		default:
 			break;
 		}

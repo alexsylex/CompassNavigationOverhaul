@@ -10,7 +10,8 @@ namespace IUI::API
 			kPreReplace,
 			kPostPatch,
 			kAbortPatch,
-			kFinishLoad
+			kFinishLoad,
+			kPostInitExtensions
 		};
 
 		RE::GFxMovieView* contextMovieView;
@@ -48,6 +49,11 @@ namespace IUI::API
 		static constexpr inline Type type = Type::kFinishLoad;
 
 		int loadedCount;
+	};
+
+	struct PostInitExtensionsMessage : Message
+	{
+		static constexpr inline Type type = Type::kPostInitExtensions;
 	};
 
 	template <typename T>

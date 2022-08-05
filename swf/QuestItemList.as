@@ -20,8 +20,6 @@ function QuestItemList():Void
 	_x = point.x;
 	_y = point.y;
 
-	_level0.HUDMovieBaseInstance.HudElements.push(this);
-
 	All = true;
 	Favor = true;
 	DialogueMode = true;
@@ -29,6 +27,11 @@ function QuestItemList():Void
 	Swimming = true;
 	HorseMode = true;
 	WarHorseMode = true;
+}
+
+function AddToHudElements():Void
+{
+	_level0.HUDMovieBaseInstance.HudElements.push(this);
 }
 
 function AddQuest(a_type:Number, a_title:String, a_objectives:Array, a_ageIndex:Number):Void

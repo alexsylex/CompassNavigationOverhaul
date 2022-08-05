@@ -20,6 +20,11 @@ public:
 
 	static QuestItemList* GetSingleton() { return singleton; }
 
+	void AddToHudElements()
+	{
+		Invoke("AddToHudElements");
+	}
+
 	void AddQuest(RE::QUEST_DATA::Type a_questType, const std::string& a_questName,
 				  const std::vector<std::string>& a_questObjectives, int a_questAgeIndex)
 	{
@@ -63,10 +68,7 @@ private:
 	QuestItemList(const GFxDisplayObject& a_questItemList) :
 		GFxDisplayObject{ a_questItemList }
 	{
-		if (HasMember("QuestItemList"))
-		{
-			Invoke("QuestItemList");
-		}
+		Invoke("QuestItemList");
 	}
 
 	static inline QuestItemList* singleton = nullptr;
