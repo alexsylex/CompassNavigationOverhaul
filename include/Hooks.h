@@ -55,17 +55,19 @@ namespace hooks
 		static inline REL::Relocation<bool (*)(RE::Compass*)> SetMarkers{ SetMarkersId };
 	};
 
-	bool ProcessQuestMarker(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
+	bool UpdateQuests(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 							RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame,
 							RE::TESQuest*& a_quest);
 
-	bool ProcessLocationMarker(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
+	RE::TESWorldSpace* AllowedToShowMapMarker(const RE::TESObjectREFR* a_marker);
+
+	bool UpdateLocations(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 							   RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame);
 
-	bool ProcessEnemyMarker(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
+	bool UpdateEnemies(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 							RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame);
 
-	bool ProcessPlayerSetMarker(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
+	bool UpdatePlayerSetMarker(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 								RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame);
 
 	bool SetCompassMarkers(RE::GFxValue::ObjectInterface* a_objectInterface, void* a_data, 
@@ -74,7 +76,7 @@ namespace hooks
 
 	static inline void Install()
 	{
-		// HUDMarkerManager::ProcessQuestMarker
+		// HUDMarkerManager::ProcessQuestMarker (call to HUDMarkerManager::AddMarker(...))
 		{
 			static std::uintptr_t hookedAddress = HUDMarkerManager::ProcessQuestMarker.address() + 0x114;
 
@@ -90,7 +92,7 @@ namespace hooks
 
 					jmp(ptr[rip + retnLabel]);
 
-					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessQuestMarker));
+					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&UpdateQuests));
 					L(retnLabel), dq(hookedAddress + 5);
 				}
 			};
@@ -98,7 +100,32 @@ namespace hooks
 			utils::WriteBranchTrampoline<5>(hookedAddress, HookCodeGenerator());
 		}
 
-		// HUDMarkerManager::ProcessLocationMarkers
+		// HUDMarkerManager::ProcessLocationMarkers (calls to TESObjectREFR::GetWorldspace())
+		{
+			static std::uintptr_t hookedAddress1 = HUDMarkerManager::ProcessLocationMarkers.address() + 0x139;
+			static std::uintptr_t hookedAddress2 = HUDMarkerManager::ProcessLocationMarkers.address() + 0x21C;
+
+			struct HookCodeGenerator : Xbyak::CodeGenerator
+			{
+				HookCodeGenerator(std::uintptr_t a_hookAddress)
+				{
+					Xbyak::Label hookLabel;
+					Xbyak::Label retnLabel;
+
+					call(ptr[rip + hookLabel]);
+
+					jmp(ptr[rip + retnLabel]);
+
+					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&AllowedToShowMapMarker));
+					L(retnLabel), dq(a_hookAddress + 5);
+				}
+			};
+
+			utils::WriteBranchTrampoline<5>(hookedAddress1, HookCodeGenerator(hookedAddress1));
+			utils::WriteBranchTrampoline<5>(hookedAddress2, HookCodeGenerator(hookedAddress2));
+		}
+
+		// HUDMarkerManager::ProcessLocationMarkers (call to HUDMarkerManager::AddMarker(...))
 		{
 			static std::uintptr_t hookedAddress = HUDMarkerManager::ProcessLocationMarkers.address() + 0x450;
 
@@ -113,7 +140,7 @@ namespace hooks
 
 					jmp(ptr[rip + retnLabel]);
 
-					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessLocationMarker));
+					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&UpdateLocations));
 					L(retnLabel), dq(hookedAddress + 5);
 				}
 			};
@@ -136,7 +163,7 @@ namespace hooks
 
 					jmp(ptr[rip + retnLabel]);
 
-					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessEnemyMarker));
+					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&UpdateEnemies));
 					L(retnLabel), dq(hookedAddress + 5);
 				}
 			};
@@ -159,7 +186,7 @@ namespace hooks
 
 					jmp(ptr[rip + retnLabel]);
 
-					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&ProcessPlayerSetMarker));
+					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&UpdatePlayerSetMarker));
 					L(retnLabel), dq(hookedAddress + 5);
 				}
 			};

@@ -130,6 +130,7 @@ set(headers
 	include/pch.h
 	include/Plugin.h
 	include/QuestItemList.h
+	include/Settings.h
 	include/Test.h
 )
 
@@ -145,6 +146,7 @@ set(sources
 	source/main.cpp
 	source/MessageListeners.cpp
 	source/pch.cpp
+	source/Settings.cpp
 )
 
 source_group(

@@ -1,14 +1,13 @@
 #include "Hooks.h"
+#include "Settings.h"
 
 #include "utils/Logger.h"
-
-#include "IUI/API.h"
 
 #include "HUDMarkerManager.h"
 
 namespace hooks
 {
-	bool ProcessQuestMarker(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
+	bool UpdateQuests(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 							RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame,
 							RE::TESQuest*& a_quest)
 	{
@@ -24,7 +23,26 @@ namespace hooks
 		return false;
 	}
 
-	bool ProcessLocationMarker(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
+	RE::TESWorldSpace* AllowedToShowMapMarker(const RE::TESObjectREFR* a_marker)
+	{
+		RE::TESWorldSpace* markerWorldspace = a_marker->GetWorldspace();
+		RE::TESWorldSpace* playerWorldspace = RE::PlayerCharacter::GetSingleton()->GetWorldspace();
+		if (markerWorldspace != playerWorldspace)
+		{
+			logger::trace("found!");
+		}
+
+		if (g_settings.display.showOtherWorldspaceMarkers)
+		{
+			return markerWorldspace->parentWorld == playerWorldspace ? playerWorldspace : markerWorldspace;
+		}
+		else 
+		{
+			return markerWorldspace;
+		}
+	}
+
+	bool UpdateLocations(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 							   RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame)
 	{
 		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
@@ -40,7 +58,7 @@ namespace hooks
 		return false;
 	}
 
-	bool ProcessEnemyMarker(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
+	bool UpdateEnemies(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 							RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame)
 	{
 		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
@@ -55,7 +73,7 @@ namespace hooks
 		return false;
 	}
 
-	bool ProcessPlayerSetMarker(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
+	bool UpdatePlayerSetMarker(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 								RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame)
 	{
 		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 

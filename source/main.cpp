@@ -1,7 +1,7 @@
 #include "Plugin.h"
 #include "Hooks.h"
+#include "Settings.h"
 
-#include "utils/INISettingCollection.h"
 #include "utils/Logger.h"
 
 static constexpr Plugin plugin{ "CompassNavigationOverhaul" };
@@ -17,7 +17,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface* a
 										(static_cast<std::uint8_t>(plugin.versionMinor) << 16) |
 										(static_cast<std::uint8_t>(plugin.versionPatch) << 8);
 
-	if (a_skse->IsEditor()) 
+	if (a_skse->IsEditor())
 	{
 		logger::critical("Loaded in editor, marking as incompatible");
 		return false;
@@ -60,24 +60,9 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 
 	SKSE::Init(a_skse);
 
-	INISettingCollection* iniSettingCollection = INISettingCollection::GetSingleton();
-	iniSettingCollection->AddSettings
-	(
-		MakeSetting("bEnableLog:Debug", false),
-		MakeSetting("uLogLevel:Debug", static_cast<std::uint32_t>(logger::level::err))
-	);
+	settings::Init(std::string(plugin.fileName) + ".ini");
 
-	std::string iniFileName = std::string(plugin.fileName) + ".ini";
-
-	if (!iniSettingCollection->ReadFromFile(iniFileName))
-	{
-		logger::warn("Could not load {}", iniFileName);
-	}
-
-	bool enableLog = iniSettingCollection->GetSetting<bool>("bEnableLog:Debug");
-	auto loggerLevel = !enableLog ? logger::level::err :
-									static_cast<logger::level>(iniSettingCollection->GetSetting<std::uint32_t>("uLogLevel:Debug"));
-	logger::set_level(loggerLevel, loggerLevel);
+	logger::set_level(g_settings.debug.logLevel, g_settings.debug.logLevel);
 
 	if (!SKSE::GetMessagingInterface()->RegisterListener("SKSE", SKSEMessageListener))
 	{
@@ -89,7 +74,7 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	logger::set_level(logger::level::info, logger::level::info);
 	logger::info("Succesfully loaded!");
 
-	logger::set_level(loggerLevel, loggerLevel);
+	logger::set_level(g_settings.debug.logLevel, g_settings.debug.logLevel);
 
 	return true;
 }

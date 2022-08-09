@@ -1,8 +1,12 @@
 #include "HUDMarkerManager.h"
 
+#include "Settings.h"
+
 #include "RE/B/BSTimer.h"
 
 #include "utils/Logger.h"
+
+#include "utils/GFxLoggers.h"
 
 namespace extended
 {
@@ -193,10 +197,19 @@ namespace extended
 				{
 					canFocusPlayerSetMarker = false;
 
-					// TODO: Give the user an option to chose between the objective and the location/character name
-					// questData->location.empty() ? questData->characterName : questData->location;
+					const std::string& targetText = [questData]()
+					{
+						if (g_settings.display.showObjectiveAsTarget)
+						{
+							return questData->objectives.back();
+						}
+						else
+						{
+							return questData->locationName.empty() ? questData->characterName : questData->locationName;
+						}
+					}();
 
-					compass->SetMarkerInfo(questData->objectives.back(), focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
+					compass->SetMarkerInfo(targetText, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
 
 					if (focusChanged)
 					{
@@ -290,7 +303,7 @@ namespace extended
 			}
 			else
 			{
-				for (focusedMarker->data)
+				//for (focusedMarker->data)
 			}
 		}
 
@@ -385,7 +398,7 @@ namespace extended
 			}
 			else
 			{
-				return "Dawnguard";
+				return "Dawnguard"; 
 			}
 		}
 
