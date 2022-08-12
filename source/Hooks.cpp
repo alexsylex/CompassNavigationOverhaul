@@ -11,11 +11,11 @@ namespace hooks
 							RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame,
 							RE::TESQuest*& a_quest)
 	{
-		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame))
+		if (HUDMarkerManager::AddMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame))
 		{
-			RE::TESObjectREFRPtr marker = RE::TESObjectREFR::LookupByHandle(a_refHandle);
+			RE::TESObjectREFR* marker = RE::TESObjectREFR::LookupByHandle(a_refHandle).get();
 
-			extended::HUDMarkerManager::GetSingleton()->ProcessQuestMarker(a_quest, marker.get(), a_markerGotoFrame);
+			extended::HUDMarkerManager::GetSingleton()->ProcessQuestMarker(a_quest, marker, a_markerGotoFrame);
 
 			return true;
 		}
@@ -26,17 +26,14 @@ namespace hooks
 	RE::TESWorldSpace* AllowedToShowMapMarker(const RE::TESObjectREFR* a_marker)
 	{
 		RE::TESWorldSpace* markerWorldspace = a_marker->GetWorldspace();
-		RE::TESWorldSpace* playerWorldspace = RE::PlayerCharacter::GetSingleton()->GetWorldspace();
-		if (markerWorldspace != playerWorldspace)
-		{
-			logger::trace("found!");
-		}
 
 		if (g_settings.display.showOtherWorldspaceMarkers)
 		{
+			RE::TESWorldSpace* playerWorldspace = RE::PlayerCharacter::GetSingleton()->GetWorldspace();
+
 			return markerWorldspace->parentWorld == playerWorldspace ? playerWorldspace : markerWorldspace;
 		}
-		else 
+		else
 		{
 			return markerWorldspace;
 		}
@@ -45,14 +42,26 @@ namespace hooks
 	bool UpdateLocations(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 							   RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame)
 	{
-		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
+		RE::TESObjectREFR* marker = RE::TESObjectREFR::LookupByHandle(a_refHandle).get();
+		RE::TESWorldSpace* markerWorldspace = marker->GetWorldspace();
+
+		RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
+		RE::TESWorldSpace* playerWorldspace = player->GetWorldspace();
+
+		RE::NiPoint3 markerRealPos = util::GetRealPosition(marker, markerWorldspace);
+		RE::NiPoint3 playerRealPos = util::GetRealPosition(player, playerWorldspace);
+
+		float sqDistanceToMarker = playerRealPos.GetSquaredDistance(markerRealPos);
+
+		if (sqDistanceToMarker < RE::HUDMarkerManager::GetSingleton()->sqRadiusToAddLocation)
 		{
-			RE::TESObjectREFRPtr marker = RE::TESObjectREFR::LookupByHandle(a_refHandle);
+			if (HUDMarkerManager::AddMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
+			{
+				extended::HUDMarkerManager::GetSingleton()->ProcessLocationMarker(marker->extraList.GetByType<RE::ExtraMapMarker>(),
+																					marker, a_markerGotoFrame);
 
-			extended::HUDMarkerManager::GetSingleton()->ProcessLocationMarker(marker->extraList.GetByType<RE::ExtraMapMarker>(),
-																			  marker.get(), a_markerGotoFrame);
-
-			return true;
+				return true;
+			}
 		}
 
 		return false;
@@ -61,9 +70,9 @@ namespace hooks
 	bool UpdateEnemies(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 							RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame)
 	{
-		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
+		if (HUDMarkerManager::AddMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
 		{
-			RE::TESObjectREFRPtr marker = RE::TESObjectREFR::LookupByHandle(a_refHandle);
+			RE::TESObjectREFR* marker = RE::TESObjectREFR::LookupByHandle(a_refHandle).get();
 
 			extended::HUDMarkerManager::GetSingleton()->ProcessEnemyMarker(marker->As<RE::Character>(), a_markerGotoFrame);
 
@@ -76,11 +85,11 @@ namespace hooks
 	bool UpdatePlayerSetMarker(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 								RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame)
 	{
-		if (HUDMarkerManager::UpdateHUDMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
+		if (HUDMarkerManager::AddMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
 		{
-			RE::TESObjectREFRPtr marker = RE::TESObjectREFR::LookupByHandle(a_refHandle);
+			RE::TESObjectREFR* marker = RE::TESObjectREFR::LookupByHandle(a_refHandle).get();
 
-			extended::HUDMarkerManager::GetSingleton()->ProcessPlayerSetMarker(marker.get(), a_markerGotoFrame);
+			extended::HUDMarkerManager::GetSingleton()->ProcessPlayerSetMarker(marker, a_markerGotoFrame);
 
 			return true;
 		}

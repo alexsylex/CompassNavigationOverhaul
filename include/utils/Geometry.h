@@ -53,17 +53,57 @@ namespace util
 		return angle;
 	}
 
-	inline float GetDistanceBetween(const RE::PlayerCharacter* a_player, const RE::TESObjectREFR* a_markerRef)
+	inline RE::NiPoint3 GetRealPosition(const RE::TESObjectREFR* a_ref, const RE::TESWorldSpace* a_worldspace)
 	{
-		RE::NiPoint3 playerPos = a_player->GetPosition();
-		RE::NiPoint3 markerPos = a_markerRef->GetPosition();
+		auto worldSpaceOffset = RE::NiPoint3{ a_worldspace->worldMapOffsetData.mapOffsetX,
+			a_worldspace->worldMapOffsetData.mapOffsetY,
+			a_worldspace->worldMapOffsetData.mapOffsetZ } *
+							a_worldspace->worldMapOffsetData.mapScale;
+
+		return a_ref->GetPosition() + worldSpaceOffset;
+	}
+
+	inline float GetDistanceBetween(const RE::PlayerCharacter* a_player, const RE::TESObjectREFR* a_marker)
+	{
+		const RE::TESWorldSpace* playerWorldspace = a_player->GetWorldspace();
+		const RE::TESWorldSpace* markerWorldspace = a_marker->GetWorldspace();
+
+		RE::NiPoint3 playerPos;
+		RE::NiPoint3 markerPos;
+
+		if (playerWorldspace == markerWorldspace)
+		{
+			playerPos = a_player->GetPosition();
+			markerPos = a_marker->GetPosition();
+		}
+		else
+		{
+			playerPos = GetRealPosition(a_player, playerWorldspace);
+			markerPos = GetRealPosition(a_marker, markerWorldspace);
+		}
+
 		return playerPos.GetDistance(markerPos);
 	}
 
-	inline float GetHeightDifferenceBetween(const RE::PlayerCharacter* a_player, const RE::TESObjectREFR* a_markerRef)
+	inline float GetHeightDifferenceBetween(const RE::PlayerCharacter* a_player, const RE::TESObjectREFR* a_marker)
 	{
-		RE::NiPoint3 playerPos = a_player->GetPosition();
-		RE::NiPoint3 markerPos = a_markerRef->GetPosition();
+		const RE::TESWorldSpace* playerWorldspace = a_player->GetWorldspace();
+		const RE::TESWorldSpace* markerWorldspace = a_marker->GetWorldspace();
+
+		RE::NiPoint3 playerPos;
+		RE::NiPoint3 markerPos;
+
+		if (playerWorldspace == markerWorldspace)
+		{
+			playerPos = a_player->GetPosition();
+			markerPos = a_marker->GetPosition();
+		}
+		else
+		{
+			playerPos = GetRealPosition(a_player, playerWorldspace);
+			markerPos = GetRealPosition(a_marker, markerWorldspace);
+		}
+
 		return markerPos.z - playerPos.z;
 	}
 }

@@ -12,23 +12,23 @@ namespace hooks
 	class HUDMarkerManager
 	{
 #if BUILD_SE
-		static constinit inline REL::ID ProcessQuestMarkerId{ 50826 };
-		static constinit inline REL::ID ProcessLocationMarkersId{ 50870 };
-		static constinit inline REL::ID UpdateHUDMarkerId{ 50851 };
+		static constinit inline REL::ID UpdateQuestsId{ 50826 };
+		static constinit inline REL::ID UpdateLocationsId{ 50870 };
+		static constinit inline REL::ID AddMarkerId{ 50851 };
 #else
-		static constinit inline REL::ID ProcessQuestMarkerId{ 0 };
-		static constinit inline REL::ID ProcessLocationMarkerId{ 0 };
-		static constinit inline REL::ID UpdateHUDMarkerId{ 0 };
+		static constinit inline REL::ID UpdateQuestsId{ 0 };
+		static constinit inline REL::ID UpdateLocationsId{ 0 };
+		static constinit inline REL::ID AddMarkerId{ 0 };
 #endif
 	public:
 
 		static inline REL::Relocation<bool (*)(const RE::HUDMarkerManager*, RE::TESQuest**,
-											   RE::BSTArray<RE::UnkValue>*)> ProcessQuestMarker{ ProcessQuestMarkerId };
+											   RE::BSTArray<RE::UnkValue>*)> UpdateQuests{ UpdateQuestsId };
 
-		static inline REL::Relocation<bool (*)(const RE::HUDMarkerManager*)> ProcessLocationMarkers{ ProcessLocationMarkersId };
+		static inline REL::Relocation<bool (*)(const RE::HUDMarkerManager*)> UpdateLocations{ UpdateLocationsId };
 
 		static inline REL::Relocation<bool (*)(const RE::HUDMarkerManager*, RE::HUDMarker::ScaleformData*,
-											   RE::NiPoint3*, const RE::RefHandle&, std::int32_t)> UpdateHUDMarker{ UpdateHUDMarkerId };
+											   RE::NiPoint3*, const RE::RefHandle&, std::int32_t)> AddMarker{ AddMarkerId };
 	};
 
 	class HUDMenu
@@ -78,7 +78,7 @@ namespace hooks
 	{
 		// HUDMarkerManager::ProcessQuestMarker (call to HUDMarkerManager::AddMarker(...))
 		{
-			static std::uintptr_t hookedAddress = HUDMarkerManager::ProcessQuestMarker.address() + 0x114;
+			static std::uintptr_t hookedAddress = HUDMarkerManager::UpdateQuests.address() + 0x114;
 
 			struct HookCodeGenerator : Xbyak::CodeGenerator
 			{
@@ -102,8 +102,8 @@ namespace hooks
 
 		// HUDMarkerManager::ProcessLocationMarkers (calls to TESObjectREFR::GetWorldspace())
 		{
-			static std::uintptr_t hookedAddress1 = HUDMarkerManager::ProcessLocationMarkers.address() + 0x139;
-			static std::uintptr_t hookedAddress2 = HUDMarkerManager::ProcessLocationMarkers.address() + 0x21C;
+			static std::uintptr_t hookedAddress1 = HUDMarkerManager::UpdateLocations.address() + 0x139;
+			static std::uintptr_t hookedAddress2 = HUDMarkerManager::UpdateLocations.address() + 0x21C;
 
 			struct HookCodeGenerator : Xbyak::CodeGenerator
 			{
@@ -127,7 +127,7 @@ namespace hooks
 
 		// HUDMarkerManager::ProcessLocationMarkers (call to HUDMarkerManager::AddMarker(...))
 		{
-			static std::uintptr_t hookedAddress = HUDMarkerManager::ProcessLocationMarkers.address() + 0x450;
+			static std::uintptr_t hookedAddress = HUDMarkerManager::UpdateLocations.address() + 0x450;
 
 			struct HookCodeGenerator : Xbyak::CodeGenerator
 			{
