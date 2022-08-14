@@ -1,11 +1,17 @@
 class FocusedMarker extends MovieClip
 {
+	// Instances
 	var HeightIndicatorInstance:MovieClip;
 	var Distance:MovieClip;
 	var Target:MovieClip;
+
+	// Variables
 	var Index:Number;
 	var Objective:String;
 	var Location:String;
+	var UseMetricUnits:Boolean;
+
+	// References
 	var Movie:MovieClip;
 
 	public function FocusedMarker()
@@ -16,13 +22,13 @@ class FocusedMarker extends MovieClip
 
 	public function SetDistanceAndHeightDifference(a_distance:Number, a_heightDifference:Number):Void
 	{
-		if (1) // Meters
+		if (UseMetricUnits) // Meters
 		{
 			Distance.TextFieldInstance.text = String(Math.floor(a_distance * 0.01428)) + " m";
 		}
 		else // Feet
 		{
-			Distance.TextFieldInstance.text = String(Math.floor(a_distance)) + " ft";
+			Distance.TextFieldInstance.text = String(Math.floor(a_distance * 0.046875)) + " ft ";
 		}
 
 		Distance.HeightIndicatorInstance._x = Distance.TextFieldInstance._x + Distance.TextFieldInstance._width +

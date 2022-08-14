@@ -18,7 +18,9 @@ namespace settings
 		struct Display
 		{
 			bool showObjectiveAsTarget;
-			bool showOtherWorldspaceMarkers;
+			bool showInteriorMarkers;
+			bool useMetricUnits;
+			bool showUndiscoveredLocationMarkers;
 		};
 
 		Debug debug;

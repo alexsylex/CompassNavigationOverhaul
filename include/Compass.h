@@ -31,6 +31,11 @@ namespace extended
 			}
 		}
 
+		void SetUnits(bool a_useMetric)
+		{
+			Invoke("SetUnits", a_useMetric);
+		}
+
 		void SetMarkerInfo(const std::string& a_target, float a_distance, float a_heightDifference)
 		{
 			Invoke("SetMarkerInfo", a_target.c_str(), a_distance, a_heightDifference);

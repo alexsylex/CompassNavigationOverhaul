@@ -16,7 +16,9 @@ namespace settings
 				.display
 				{
 					.showObjectiveAsTarget = true,
-					.showOtherWorldspaceMarkers = true
+					.showInteriorMarkers = true,
+					.useMetricUnits = false,
+					.showUndiscoveredLocationMarkers = true
 				}
 			}
 		{ }
@@ -40,7 +42,9 @@ namespace settings
 
 			// Display
 			MakeSetting("bShowObjectiveAsTarget:Display", g_defaultSettings.display.showObjectiveAsTarget),
-			MakeSetting("bShowOtherWorldspaceMarkers:Display", g_defaultSettings.display.showOtherWorldspaceMarkers)
+			MakeSetting("bShowInteriorMarkers:Display", g_defaultSettings.display.showInteriorMarkers),
+			MakeSetting("bUseMetricUnits:Display", g_defaultSettings.display.useMetricUnits),
+			MakeSetting("bShowUndiscoveredLocationMarkers:Display", g_defaultSettings.display.showUndiscoveredLocationMarkers)
 		);
 
 		if (!iniSettingCollection->ReadFromFile(a_iniFileName))
@@ -53,6 +57,8 @@ namespace settings
 
 		// Display
 		g_settings.display.showObjectiveAsTarget = iniSettingCollection->GetSetting<bool>("bShowObjectiveAsTarget:Display");
-		g_settings.display.showOtherWorldspaceMarkers = iniSettingCollection->GetSetting<bool>("bShowOtherWorldspaceMarkers:Display");
+		g_settings.display.showInteriorMarkers = iniSettingCollection->GetSetting<bool>("bShowInteriorMarkers:Display");
+		g_settings.display.useMetricUnits = iniSettingCollection->GetSetting<bool>("bUseMetricUnits:Display");
+		g_settings.display.showUndiscoveredLocationMarkers = iniSettingCollection->GetSetting<bool>("bShowUndiscoveredLocationMarkers:Display");
 	}
 }

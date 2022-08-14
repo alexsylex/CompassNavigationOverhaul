@@ -1,12 +1,13 @@
-#include "utils/Logger.h"
+#include "Settings.h"
 
 #include "IUI/API.h"
-
-#include "utils/GFxLoggers.h"
 
 #include "Compass.h"
 #include "QuestItemList.h"
 #include "Test.h"
+
+#include "utils/Logger.h"
+#include "utils/GFxLoggers.h"
 
 void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg);
 
@@ -84,6 +85,7 @@ void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg)
 						if (auto compass = extended::Compass::GetSingleton())
 						{
 							compass->SetupMod(postPatchMessage->newDisplayObject);
+							compass->SetUnits(g_settings.display.useMetricUnits);
 
 							logger::debug("");
 							logger::debug("After patching");

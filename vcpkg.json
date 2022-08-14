@@ -2,7 +2,7 @@
     "name": "compassnavigationoverhaul",
     "version-string": "1.0.0",
     "description": "",
-    "homepage": "https://github.com/alexsylex/HelpfulCompassNavigation",
+    "homepage": "https://github.com/alexsylex/CompassNavigationOverhaul",
     "license": "MIT",
     "dependencies": [
         "boost-atomic",

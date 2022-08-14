@@ -1,7 +1,6 @@
 #include "Hooks.h"
-#include "Settings.h"
 
-#include "utils/Logger.h"
+#include "Settings.h"
 
 #include "HUDMarkerManager.h"
 
@@ -27,7 +26,7 @@ namespace hooks
 	{
 		RE::TESWorldSpace* markerWorldspace = a_marker->GetWorldspace();
 
-		if (g_settings.display.showOtherWorldspaceMarkers)
+		if (g_settings.display.showInteriorMarkers)
 		{
 			RE::TESWorldSpace* playerWorldspace = RE::PlayerCharacter::GetSingleton()->GetWorldspace();
 
@@ -53,7 +52,8 @@ namespace hooks
 
 		float sqDistanceToMarker = playerRealPos.GetSquaredDistance(markerRealPos);
 
-		if (sqDistanceToMarker < RE::HUDMarkerManager::GetSingleton()->sqRadiusToAddLocation)
+		if (sqDistanceToMarker < RE::HUDMarkerManager::GetSingleton()->sqRadiusToAddLocation &&
+			(g_settings.display.showUndiscoveredLocationMarkers || false))
 		{
 			if (HUDMarkerManager::AddMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
 			{
