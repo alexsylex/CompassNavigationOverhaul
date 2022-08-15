@@ -401,7 +401,7 @@ namespace RE
 	void GFxValue::ObjectInterface::VisitMembers(void* a_data, ObjVisitor* a_visitor, bool a_isDObj) const
 	{
 		using func_t = decltype(&GFxValue::ObjectInterface::VisitMembers);
-		REL::Relocation<func_t> func{ RELOCATION_ID(80279, 0) };
+		REL::Relocation<func_t> func{ RELOCATION_ID(80279, 82302) };
 		return func(this, a_data, a_visitor, a_isDObj);
 	}
 
@@ -436,7 +436,7 @@ namespace RE
 	void GFxValue::ObjectInterface::VisitElements(void* a_data, ArrVisitor* a_visitor, std::uint32_t a_idx, const GFxValue& a_val) const
 	{
 		using func_t = decltype(&GFxValue::ObjectInterface::VisitElements);
-		REL::Relocation<func_t> func{ RELOCATION_ID(80278, 0) };
+		REL::Relocation<func_t> func{ RELOCATION_ID(80278, 82301) };
 		return func(this, a_data, a_visitor, a_idx, a_val);
 	}
 
@@ -478,7 +478,7 @@ namespace RE
 	bool GFxValue::ObjectInterface::CreateEmptyMovieClip(void* a_data, GFxValue* a_movieClip, const char* a_instanceName, std::int32_t a_depth)
 	{
 		using func_t = decltype(&GFxValue::ObjectInterface::CreateEmptyMovieClip);
-		REL::Relocation<func_t> func{ RELOCATION_ID(80201, 0) };
+		REL::Relocation<func_t> func{ RELOCATION_ID(80201, 82224) };
 		return func(this, a_data, a_movieClip, a_instanceName, a_depth);
 	}
 
@@ -499,7 +499,7 @@ namespace RE
 	bool GFxValue::ObjectInterface::GotoAndPlay(void* a_data, std::uint32_t a_frame, bool a_stop)
 	{
 		using func_t = bool (ObjectInterface::*)(void*, std::uint32_t, bool);
-		REL::Relocation<func_t> func{ RELOCATION_ID(80229, 0) };
+		REL::Relocation<func_t> func{ RELOCATION_ID(80229, 82252) };
 		return func(this, a_data, a_frame, a_stop);
 	}
 
@@ -511,7 +511,7 @@ namespace RE
 	void GFxValue::ObjectInterface::ToString(GString* a_pstr, const GFxValue& a_thisVal) const
 	{
 		using func_t = decltype(&GFxValue::ObjectInterface::ToString);
-		REL::Relocation<func_t> func{ RELOCATION_ID(80275, 0) };
+		REL::Relocation<func_t> func{ RELOCATION_ID(80275, 82298) };
 		return func(this, a_pstr, a_thisVal);
 	}
 
@@ -723,7 +723,7 @@ namespace RE
 	GString GFxValue::ToString() const
 	{
 		using func_t = GString* (GFxValue::*)(GString*) const;
-		REL::Relocation<func_t> func{ RELOCATION_ID(80274, 0) };
+		REL::Relocation<func_t> func{ RELOCATION_ID(80274, 82297) };
 
 		GString retVal;
 		func(this, &retVal);

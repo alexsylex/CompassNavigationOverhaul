@@ -20,8 +20,6 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 
 	logger::info("Loading {} {}...", plugin->GetName(), plugin->GetVersion());
 
-	std::this_thread::sleep_for(100ms);
-
 	SKSE::Init(a_skse);
 
 	settings::Init(std::string(plugin->GetName()) + ".ini");

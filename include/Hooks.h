@@ -11,9 +11,9 @@ namespace hooks
 {
 	class HUDMarkerManager
 	{
-		static constexpr REL::RelocationID UpdateQuestsId = RELOCATION_ID(50826, 0);
-		static constexpr REL::RelocationID UpdateLocationsId = RELOCATION_ID(50870, 0);
-		static constexpr REL::RelocationID AddMarkerId = RELOCATION_ID(50851, 0);
+		static constexpr REL::RelocationID UpdateQuestsId = RELOCATION_ID(50826, 51691);
+		static constexpr REL::RelocationID UpdateLocationsId = RELOCATION_ID(50870, 51744);
+		static constexpr REL::RelocationID AddMarkerId = RELOCATION_ID(50851, 51728);
 
 	public:
 
@@ -28,7 +28,7 @@ namespace hooks
 
 	class HUDMenu
 	{
-		static constexpr REL::RelocationID ProcessMessageId = RELOCATION_ID(50718, 0);
+		static constexpr REL::RelocationID ProcessMessageId = RELOCATION_ID(50718, 51612);
 
 	public:
 
@@ -37,11 +37,13 @@ namespace hooks
 
 	class Compass
 	{
-		static constexpr REL::RelocationID SetMarkersId = RELOCATION_ID(50775, 0);
+		static constexpr REL::RelocationID SetMarkersId = RELOCATION_ID(50775, 51670);
+		static constexpr REL::RelocationID UpdateId = RELOCATION_ID(50773, 51668);
 
 	public:
 
 		static inline REL::Relocation<bool (*)(RE::Compass*)> SetMarkers{ SetMarkersId };
+		static inline REL::Relocation<void (*)(RE::Compass*)> Update{ UpdateId };
 	};
 
 	bool UpdateQuests(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
@@ -65,9 +67,9 @@ namespace hooks
 
 	static inline void Install()
 	{
-		// HUDMarkerManager::ProcessQuestMarker (call to HUDMarkerManager::AddMarker(...))
+		// HUDMarkerManager::UpdateQuests (call to HUDMarkerManager::AddMarker(...))
 		{
-			static std::uintptr_t hookedAddress = HUDMarkerManager::UpdateQuests.address() + 0x114;
+			static std::uintptr_t hookedAddress = HUDMarkerManager::UpdateQuests.address() + (REL::Module::IsSE() ? 0x114 : 0x180);
 
 			struct HookCodeGenerator : Xbyak::CodeGenerator
 			{
@@ -76,7 +78,7 @@ namespace hooks
 					Xbyak::Label hookLabel;
 					Xbyak::Label retnLabel;
 
-					mov(ptr[rsp + 0x28], r14);	// r14 = TESQuest**
+					mov(ptr[rsp + 0x28], REL::Module::IsSE() ? r14 : rdi);	// SE: r14, AE: rdi = TESQuest**
 					call(ptr[rip + hookLabel]);
 
 					jmp(ptr[rip + retnLabel]);
@@ -89,10 +91,10 @@ namespace hooks
 			utils::WriteBranchTrampoline<5>(hookedAddress, HookCodeGenerator());
 		}
 
-		// HUDMarkerManager::ProcessLocationMarkers (calls to TESObjectREFR::GetWorldspace())
+		// HUDMarkerManager::UpdateLocations (call to TESObjectREFR::GetWorldspace())
 		{
-			static std::uintptr_t hookedAddress1 = HUDMarkerManager::UpdateLocations.address() + 0x139;
-			static std::uintptr_t hookedAddress2 = HUDMarkerManager::UpdateLocations.address() + 0x21C;
+			static std::uintptr_t hookedAddress1 = HUDMarkerManager::UpdateLocations.address() + (REL::Module::IsSE() ? 0x139 : 0x13C);
+			static std::uintptr_t hookedAddress2 = HUDMarkerManager::UpdateLocations.address() + (REL::Module::IsSE() ? 0x21C : 0x24B);
 
 			struct HookCodeGenerator : Xbyak::CodeGenerator
 			{
@@ -114,9 +116,9 @@ namespace hooks
 			utils::WriteBranchTrampoline<5>(hookedAddress2, HookCodeGenerator(hookedAddress2));
 		}
 
-		// HUDMarkerManager::ProcessLocationMarkers (call to HUDMarkerManager::AddMarker(...))
+		// HUDMarkerManager::UpdateLocations call to HUDMarkerManager::AddMarker(...) for locations
 		{
-			static std::uintptr_t hookedAddress = HUDMarkerManager::UpdateLocations.address() + 0x450;
+			static std::uintptr_t hookedAddress = HUDMarkerManager::UpdateLocations.address() + (REL::Module::IsSE() ? 0x450 : 0x473);
 
 			struct HookCodeGenerator : Xbyak::CodeGenerator
 			{
@@ -137,9 +139,9 @@ namespace hooks
 			utils::WriteBranchTrampoline<5>(hookedAddress, HookCodeGenerator());
 		}
 
-		// HUDMenu::ProcessMessage (Enemies)
+		// HUDMenu::ProcessMessage call to HUDMarkerManager::AddMarker(...) for enemies
 		{
-			static std::uintptr_t hookedAddress = HUDMenu::ProcessMessage.address() + 0x15AB;
+			static std::uintptr_t hookedAddress = HUDMenu::ProcessMessage.address() + (REL::Module::IsSE() ? 0x15AB : 0x1695);
 
 			struct HookCodeGenerator : Xbyak::CodeGenerator
 			{
@@ -160,13 +162,13 @@ namespace hooks
 			utils::WriteBranchTrampoline<5>(hookedAddress, HookCodeGenerator());
 		}
 
-		// Compass::SetMarkers (Player-set marker)
+		// Compass::SetMarkers call to HUDMarkerManager::AddMarker(...) for Player-set marker
 		{
 			static std::uintptr_t hookedAddress = Compass::SetMarkers.address() + 0x8D;
 
 			struct HookCodeGenerator : Xbyak::CodeGenerator
 			{
-				HookCodeGenerator()
+				HookCodeGenerator(std::uintptr_t a_hookAddress)
 				{
 					Xbyak::Label hookLabel;
 					Xbyak::Label retnLabel;
@@ -176,20 +178,28 @@ namespace hooks
 					jmp(ptr[rip + retnLabel]);
 
 					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&UpdatePlayerSetMarker));
-					L(retnLabel), dq(hookedAddress + 5);
+					L(retnLabel), dq(a_hookAddress + 5);
 				}
 			};
 
-			utils::WriteBranchTrampoline<5>(hookedAddress, HookCodeGenerator());
+			utils::WriteBranchTrampoline<5>(hookedAddress, HookCodeGenerator(hookedAddress));
+
+			// In AE Compass::SetMarkers is inlined in Compass::Update, hook both
+			if (REL::Module::IsAE()) 
+			{
+				static std::uintptr_t hookedAddressAE = Compass::Update.address() + 0xAE;
+
+				utils::WriteBranchTrampoline<5>(hookedAddressAE, HookCodeGenerator(hookedAddressAE));
+			}
 		}
 
-		// Compass::SetMarkers (Invoke AS2 "SetCompassMarkers")
+		// Compass::SetMarkers call to movie->Invoke("SetCompassMarkers", ...)
 		{
 			static std::uintptr_t hookedAddress = Compass::SetMarkers.address() + 0x10F;
 
 			struct HookCodeGenerator : Xbyak::CodeGenerator
 			{
-				HookCodeGenerator()
+				HookCodeGenerator(std::uintptr_t a_hookAddress)
 				{
 					Xbyak::Label hookLabel;
 					Xbyak::Label retnLabel;
@@ -199,11 +209,19 @@ namespace hooks
 					jmp(ptr[rip + retnLabel]);
 
 					L(hookLabel), dq(reinterpret_cast<std::uintptr_t>(&SetCompassMarkers));
-					L(retnLabel), dq(hookedAddress + 5);
+					L(retnLabel), dq(a_hookAddress + 5);
 				}
 			};
 
-			utils::WriteBranchTrampoline<5>(hookedAddress, HookCodeGenerator());
+			utils::WriteBranchTrampoline<5>(hookedAddress, HookCodeGenerator(hookedAddress));
+
+			// In AE Compass::SetMarkers is inlined in Compass::Update, hook both
+			if (REL::Module::IsAE()) 
+			{
+				static std::uintptr_t hookedAddressAE = Compass::Update.address() + 0x128;
+
+				utils::WriteBranchTrampoline<5>(hookedAddressAE, HookCodeGenerator(hookedAddressAE));
+			}
 		}
 	}
 }

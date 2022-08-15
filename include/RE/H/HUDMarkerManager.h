@@ -13,7 +13,7 @@ namespace RE
 		{
 			static FrameOffsets* GetSingleton()
 			{
-				REL::Relocation<FrameOffsets*> singleton{ RELOCATION_ID(519587, 0) };
+				REL::Relocation<FrameOffsets*> singleton{ RELOCATION_ID(519587, 406118) };
 				return singleton.get();
 			}
 
@@ -59,7 +59,7 @@ namespace RE
 
 		static HUDMarkerManager* GetSingleton()
 		{
-			REL::Relocation<HUDMarkerManager*> singleton{ RELOCATION_ID(519611, 0) };
+			REL::Relocation<HUDMarkerManager*> singleton{ RELOCATION_ID(519611, 406154) };
 			return singleton.get();
 		}
 
