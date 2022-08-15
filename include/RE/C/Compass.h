@@ -15,7 +15,7 @@ namespace RE
 		bool SetMarkers()
 		{
 			using func_t = decltype(&Compass::SetMarkers);
-			REL::Relocation<func_t> func{ REL::ID(50775) };
+			REL::Relocation<func_t> func{ RELOCATION_ID(50775, 0) };
 			return func(this);
 		}
 

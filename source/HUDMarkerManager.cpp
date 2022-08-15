@@ -4,9 +4,8 @@
 
 #include "RE/B/BSTimer.h"
 
-#include "utils/Logger.h"
-
-#include "utils/GFxLoggers.h"
+//#include "utils/Logger.h"
+//#include "utils/GFxLoggers.h"
 
 namespace extended
 {

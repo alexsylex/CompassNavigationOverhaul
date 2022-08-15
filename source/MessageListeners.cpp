@@ -16,7 +16,7 @@ void SKSEMessageListener(SKSE::MessagingInterface::Message* a_msg)
 	// If all plugins have been loaded
 	if (a_msg->type == SKSE::MessagingInterface::kPostLoad) 
 	{
-		if (SKSE::GetMessagingInterface()->RegisterListener("Infinity UI", InfinityUIMessageListener)) 
+		if (SKSE::GetMessagingInterface()->RegisterListener("InfinityUI", InfinityUIMessageListener)) 
 		{
 			logger::info("Successfully registered for Infinity UI messages!");
 		}
@@ -29,7 +29,7 @@ void SKSEMessageListener(SKSE::MessagingInterface::Message* a_msg)
 
 void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg)
 {
-	if (!a_msg || std::string_view(a_msg->sender) != "Infinity UI") 
+	if (!a_msg || std::string_view(a_msg->sender) != "InfinityUI") 
 	{
 		return;
 	}

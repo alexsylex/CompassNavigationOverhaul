@@ -11,15 +11,10 @@ namespace hooks
 {
 	class HUDMarkerManager
 	{
-#if BUILD_SE
-		static constinit inline REL::ID UpdateQuestsId{ 50826 };
-		static constinit inline REL::ID UpdateLocationsId{ 50870 };
-		static constinit inline REL::ID AddMarkerId{ 50851 };
-#else
-		static constinit inline REL::ID UpdateQuestsId{ 0 };
-		static constinit inline REL::ID UpdateLocationsId{ 0 };
-		static constinit inline REL::ID AddMarkerId{ 0 };
-#endif
+		static constexpr REL::RelocationID UpdateQuestsId = RELOCATION_ID(50826, 0);
+		static constexpr REL::RelocationID UpdateLocationsId = RELOCATION_ID(50870, 0);
+		static constexpr REL::RelocationID AddMarkerId = RELOCATION_ID(50851, 0);
+
 	public:
 
 		static inline REL::Relocation<bool (*)(const RE::HUDMarkerManager*, RE::TESQuest**,
@@ -33,11 +28,8 @@ namespace hooks
 
 	class HUDMenu
 	{
-#if BUILD_SE
-		static constinit inline REL::ID ProcessMessageId{ 50718 };
-#else
-		static constinit inline REL::ID ProcessMessageId{ 0 };
-#endif
+		static constexpr REL::RelocationID ProcessMessageId = RELOCATION_ID(50718, 0);
+
 	public:
 
 		static inline REL::Relocation<RE::UI_MESSAGE_RESULTS (*)(const RE::HUDMenu*, RE::UIMessage&)> ProcessMessage{ ProcessMessageId };
@@ -45,11 +37,8 @@ namespace hooks
 
 	class Compass
 	{
-#if BUILD_SE
-		static constinit inline REL::ID SetMarkersId{ 50775 };
-#else
-		static constinit inline REL::ID SetMarkersId{ 0 };
-#endif
+		static constexpr REL::RelocationID SetMarkersId = RELOCATION_ID(50775, 0);
+
 	public:
 
 		static inline REL::Relocation<bool (*)(RE::Compass*)> SetMarkers{ SetMarkersId };

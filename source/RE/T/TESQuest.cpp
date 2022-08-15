@@ -20,7 +20,7 @@ namespace RE
 	BSString TESQuest::GetCurrentDescriptionWithReplacedTags() const
 	{
 		using func_t = void (RE::TESQuest::*)(RE::BSString&, std::uint32_t) const;
-		REL::Relocation<func_t> func{ REL::ID(24549) };
+		REL::Relocation<func_t> func{ RELOCATION_ID(24549, 0) };
 
 		BSString retVal;
 		func(this, retVal, currentInstanceID);

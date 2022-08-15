@@ -12,6 +12,7 @@
         "span-lite",
         "spdlog",
         "xbyak",
-        "tsl-ordered-map"
+        "tsl-ordered-map",
+        "commonlibsse-ng-flatrim"
     ]
 }

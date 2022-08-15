@@ -14,7 +14,7 @@ namespace RE
 		[[nodiscard]] BSString GetDisplayTextWithReplacedTags() const
 		{
 			using func_t = void (BGSInstancedQuestObjective::*)(BSString&) const;
-			REL::Relocation<func_t> func{ REL::ID(23229) };
+			REL::Relocation<func_t> func{ RELOCATION_ID(23229, 0) };
 
 			BSString retVal;
 			func(this, retVal);
