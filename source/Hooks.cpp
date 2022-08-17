@@ -26,16 +26,18 @@ namespace hooks
 	{
 		RE::TESWorldSpace* markerWorldspace = a_marker->GetWorldspace();
 
-		if (g_settings.display.showInteriorMarkers)
+		if (g_settings.display.showInteriorMarkers && markerWorldspace)
 		{
 			RE::TESWorldSpace* playerWorldspace = RE::PlayerCharacter::GetSingleton()->GetWorldspace();
 
-			return markerWorldspace->parentWorld == playerWorldspace ? playerWorldspace : markerWorldspace;
+			if (playerWorldspace && !playerWorldspace->parentWorld && markerWorldspace->parentWorld == playerWorldspace)
+			{
+				return playerWorldspace;
+					
+			}
 		}
-		else
-		{
-			return markerWorldspace;
-		}
+			
+		return markerWorldspace;
 	}
 
 	bool UpdateLocations(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
@@ -52,15 +54,19 @@ namespace hooks
 
 		float sqDistanceToMarker = playerRealPos.GetSquaredDistance(markerRealPos);
 
-		if (sqDistanceToMarker < RE::HUDMarkerManager::GetSingleton()->sqRadiusToAddLocation &&
-			(g_settings.display.showUndiscoveredLocationMarkers || false))
+		if (sqDistanceToMarker < RE::HUDMarkerManager::GetSingleton()->sqRadiusToAddLocation)
 		{
-			if (HUDMarkerManager::AddMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
-			{
-				extended::HUDMarkerManager::GetSingleton()->ProcessLocationMarker(marker->extraList.GetByType<RE::ExtraMapMarker>(),
-																					marker, a_markerGotoFrame);
+			auto mapMarker = marker->extraList.GetByType<RE::ExtraMapMarker>();
 
-				return true;
+			if (g_settings.display.showUnvisitedLocationMarkers || mapMarker->mapData->flags.all(RE::MapMarkerData::Flag::kVisible))
+			{
+				if (HUDMarkerManager::AddMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
+				{
+					extended::HUDMarkerManager::GetSingleton()->ProcessLocationMarker(marker->extraList.GetByType<RE::ExtraMapMarker>(),
+																						marker, a_markerGotoFrame);
+
+					return true;
+				}
 			}
 		}
 
@@ -70,13 +76,16 @@ namespace hooks
 	bool UpdateEnemies(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 							RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame)
 	{
-		if (HUDMarkerManager::AddMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
+		if (g_settings.display.showEnemyMarkers)
 		{
-			RE::TESObjectREFR* marker = RE::TESObjectREFR::LookupByHandle(a_refHandle).get();
+			if (HUDMarkerManager::AddMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
+			{
+				RE::TESObjectREFR* marker = RE::TESObjectREFR::LookupByHandle(a_refHandle).get();
 
-			extended::HUDMarkerManager::GetSingleton()->ProcessEnemyMarker(marker->As<RE::Character>(), a_markerGotoFrame);
+				extended::HUDMarkerManager::GetSingleton()->ProcessEnemyMarker(marker->As<RE::Character>(), a_markerGotoFrame);
 
-			return true;
+				return true;
+			}
 		}
 
 		return false;

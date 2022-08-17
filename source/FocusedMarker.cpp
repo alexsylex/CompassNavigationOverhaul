@@ -1,8 +1,11 @@
 #include "FocusedMarker.h"
 
+#include "RE/H/HUDMarkerManager.h"
+
 FocusedMarker::QuestData::QuestData(std::uint32_t a_gfxIndex, std::uint32_t a_gfxGotoFrame, RE::TESObjectREFR* a_marker,
 									const RE::TESQuest* a_quest) :
-	Data{ a_gfxIndex, a_gfxGotoFrame }, quest{ a_quest }
+	Data{ a_gfxIndex, a_gfxGotoFrame },
+	quest{ a_quest }, isInSameLocation{ gfxGotoFrame == RE::HUDMarker::FrameOffsets::GetSingleton()->quest }
 {
 	// A quest marker can reference to a character or a location
 	switch (a_marker->GetFormType())

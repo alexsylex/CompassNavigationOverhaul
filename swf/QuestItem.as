@@ -11,6 +11,7 @@ class QuestItem extends MovieClip
 	private var TitleTextField:TextField;
 
 	// Variables
+	public var isBeingShown:Boolean;
 	public var ageIndex:Number;
 	public var mainQuestFrame:Number;
 	public var magesGuildQuestFrame:Number;
@@ -69,7 +70,7 @@ class QuestItem extends MovieClip
 		bracketOpenLongestNameFrame = Title.Bracket._currentframe;
 	}
 
-	public function SetQuestInfo(a_type:Number, a_title:String, a_objectives:Array, a_ageIndex:Number):Void
+	public function SetQuestInfo(a_type:Number, a_title:String, a_isInSameLocation:Boolean, a_objectives:Array, a_ageIndex:Number):Void
 	{
 		// Set end piece art
 		Title.EndPiece.gotoAndStop(a_type);
@@ -86,6 +87,10 @@ class QuestItem extends MovieClip
 		{
 			var objectiveItem:MovieClip = attachMovie("ObjectiveItem", "objective" + i, getNextHighestDepth(), { _x:Title._x, _y: yOffset });
 
+			if (a_isInSameLocation)
+			{
+				objectiveItem.Objective.gotoAndStop("NormalSelected");
+			}
 			objectiveItem.Objective.textField.text = a_objectives[i];
 
 			ObjectiveItemList.push(objectiveItem);

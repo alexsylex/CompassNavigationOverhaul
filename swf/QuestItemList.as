@@ -34,13 +34,14 @@ function AddToHudElements():Void
 	_level0.HUDMovieBaseInstance.HudElements.push(this);
 }
 
-function AddQuest(a_type:Number, a_title:String, a_objectives:Array, a_ageIndex:Number):Void
+function AddQuest(a_type:Number, a_title:String, a_isInSameLocation:Boolean, a_objectives:Array, a_ageIndex:Number):Void
 {
 	questItem = attachMovie("QuestItem", "questItem", getNextHighestDepth(), { _xscale:SCALE, _yscale:SCALE });
 
 	entries.push(questItem);
 
-	questItem.SetQuestInfo(a_type, a_title, a_objectives, a_ageIndex);
+	questItem.SetQuestInfo(a_type, a_title, a_isInSameLocation, a_objectives, a_ageIndex);
+	questItem.gotoAndStop("IdleHide");
 }
 
 function SetQuestSide(a_side:String):Void
@@ -87,11 +88,27 @@ function RemoveQuest():Void
 	questItem.Remove();
 }
 
+function ShowAllQuests():Void
+{
+	for (var i:Number = 0; i < entries.length; i++)
+	{
+		questItem = entries[i];
+		if (!questItem.isBeingShown)
+		{
+			questItem.Show();
+		}
+	}
+}
+
 function RemoveAllQuests():Void
 {
 	for (var i:Number = 0; i < entries.length; i++)
 	{
 		questItem = entries[i];
+		if (!questItem.isBeingShown)
+		{
+			questItem._alpha = 0;
+		}
 		questItem.Remove();
 	}
 

@@ -18,7 +18,9 @@ namespace settings
 					.showObjectiveAsTarget = true,
 					.showInteriorMarkers = true,
 					.useMetricUnits = false,
-					.showUndiscoveredLocationMarkers = true
+					.showUnvisitedLocationMarkers = true,
+					.showEnemyMarkers = true,
+					.showQuestListInInteriors = true
 				}
 			}
 		{ }
@@ -44,7 +46,9 @@ namespace settings
 			MakeSetting("bShowObjectiveAsTarget:Display", g_defaultSettings.display.showObjectiveAsTarget),
 			MakeSetting("bShowInteriorMarkers:Display", g_defaultSettings.display.showInteriorMarkers),
 			MakeSetting("bUseMetricUnits:Display", g_defaultSettings.display.useMetricUnits),
-			MakeSetting("bShowUndiscoveredLocationMarkers:Display", g_defaultSettings.display.showUndiscoveredLocationMarkers)
+			MakeSetting("bShowUnvisitedLocationMarkers:Display", g_defaultSettings.display.showUnvisitedLocationMarkers),
+			MakeSetting("bShowEnemyMarkers:Display", g_defaultSettings.display.showEnemyMarkers),
+			MakeSetting("bShowQuestListInInteriors:Display", g_defaultSettings.display.showQuestListInInteriors)
 		);
 
 		if (!iniSettingCollection->ReadFromFile(a_iniFileName))
@@ -59,6 +63,8 @@ namespace settings
 		g_settings.display.showObjectiveAsTarget = iniSettingCollection->GetSetting<bool>("bShowObjectiveAsTarget:Display");
 		g_settings.display.showInteriorMarkers = iniSettingCollection->GetSetting<bool>("bShowInteriorMarkers:Display");
 		g_settings.display.useMetricUnits = iniSettingCollection->GetSetting<bool>("bUseMetricUnits:Display");
-		g_settings.display.showUndiscoveredLocationMarkers = iniSettingCollection->GetSetting<bool>("bShowUndiscoveredLocationMarkers:Display");
+		g_settings.display.showUnvisitedLocationMarkers = iniSettingCollection->GetSetting<bool>("bShowUnvisitedLocationMarkers:Display");
+		g_settings.display.showEnemyMarkers = iniSettingCollection->GetSetting<bool>("bShowEnemyMarkers:Display");
+		g_settings.display.showQuestListInInteriors = iniSettingCollection->GetSetting<bool>("bShowQuestListInInteriors:Display");
 	}
 }

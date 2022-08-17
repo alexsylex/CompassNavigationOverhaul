@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.21)
 
 project(
 	CompassNavigationOverhaul
-	VERSION 0.1.0
+	VERSION 0.9.1
 	LANGUAGES CXX
 )
 

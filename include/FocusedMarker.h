@@ -13,7 +13,7 @@ struct FocusedMarker
 		virtual ~Data() = default;
 
 		std::uint32_t gfxIndex;
-		std::uint32_t gfxGotoFrame;
+		std::uint32_t gfxGotoFrame;		
 	};
 
 	struct QuestData : Data
@@ -26,11 +26,15 @@ struct FocusedMarker
 		// cache
 		RE::QUEST_DATA::Type type = quest->GetType();
 		std::string name = (type == RE::QUEST_DATA::Type::kMiscellaneous) ? "$MISCELLANEOUS" : quest->GetName();
+		bool isInSameLocation;
 		std::string description = quest->GetCurrentDescriptionWithReplacedTags().c_str();
 		std::vector<std::string> objectives;
 		std::string locationName;
 		std::string characterName;
 		int ageIndex = -1;
+
+		// Avoid repeating added objectives for each marker
+		std::vector<const RE::BGSInstancedQuestObjective*> addedInstancedObjectives;
 	};
 
 	struct LocationData : Data

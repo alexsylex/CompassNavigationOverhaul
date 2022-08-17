@@ -100,6 +100,26 @@
                     "value": "Release"
                 }
             }
+        },
+        {
+            "name": "build-release-with-debug-info-msvc",
+            "inherits": [
+                "base",
+                "vcpkg",
+                "win32-unicode",
+                "x64",
+                "msvc"
+            ],
+            "displayName": "RelWithDebInfo",
+            "description": "Optimized release build, but with info for testing.",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/release-with-debug-info-msvc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": {
+                    "type": "STRING",
+                    "value": "RelWithDebInfo"
+                }
+            }
         }
     ],
     "buildPresets": [
@@ -114,6 +134,12 @@
             "displayName": "Debug (MSVC)",
             "configurePreset": "build-debug-msvc",
             "description": "Debug build for testing."
+        },
+        {
+            "name": "release-with-debug-info-msvc",
+            "displayName": "RelWithDebInfo (MSVC)",
+            "configurePreset": "build-release-with-debug-info-msvc",
+            "description": "Optimized release build, but with info for testing."
         }
     ]
 }

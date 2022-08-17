@@ -68,19 +68,8 @@ namespace util
 		const RE::TESWorldSpace* playerWorldspace = a_player->GetWorldspace();
 		const RE::TESWorldSpace* markerWorldspace = a_marker->GetWorldspace();
 
-		RE::NiPoint3 playerPos;
-		RE::NiPoint3 markerPos;
-
-		if (playerWorldspace == markerWorldspace)
-		{
-			playerPos = a_player->GetPosition();
-			markerPos = a_marker->GetPosition();
-		}
-		else
-		{
-			playerPos = GetRealPosition(a_player, playerWorldspace);
-			markerPos = GetRealPosition(a_marker, markerWorldspace);
-		}
+		RE::NiPoint3 playerPos = playerWorldspace ? GetRealPosition(a_player, playerWorldspace) : a_player->GetPosition();
+		RE::NiPoint3 markerPos = markerWorldspace ? GetRealPosition(a_marker, markerWorldspace) : a_marker->GetPosition();
 
 		return playerPos.GetDistance(markerPos);
 	}
@@ -90,19 +79,8 @@ namespace util
 		const RE::TESWorldSpace* playerWorldspace = a_player->GetWorldspace();
 		const RE::TESWorldSpace* markerWorldspace = a_marker->GetWorldspace();
 
-		RE::NiPoint3 playerPos;
-		RE::NiPoint3 markerPos;
-
-		if (playerWorldspace == markerWorldspace)
-		{
-			playerPos = a_player->GetPosition();
-			markerPos = a_marker->GetPosition();
-		}
-		else
-		{
-			playerPos = GetRealPosition(a_player, playerWorldspace);
-			markerPos = GetRealPosition(a_marker, markerWorldspace);
-		}
+		RE::NiPoint3 playerPos = playerWorldspace ? GetRealPosition(a_player, playerWorldspace) : a_player->GetPosition();
+		RE::NiPoint3 markerPos = markerWorldspace ? GetRealPosition(a_marker, markerWorldspace) : a_marker->GetPosition();
 
 		return markerPos.z - playerPos.z;
 	}

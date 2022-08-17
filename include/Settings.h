@@ -20,7 +20,9 @@ namespace settings
 			bool showObjectiveAsTarget;
 			bool showInteriorMarkers;
 			bool useMetricUnits;
-			bool showUndiscoveredLocationMarkers;
+			bool showUnvisitedLocationMarkers;
+			bool showEnemyMarkers;
+			bool showQuestListInInteriors;
 		};
 
 		Debug debug;

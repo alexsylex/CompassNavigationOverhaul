@@ -55,6 +55,7 @@ namespace extended
 		std::unordered_map<const RE::TESObjectREFR*, std::shared_ptr<FocusedMarker>> potentiallyFocusedMarkers;
 
 		std::shared_ptr<FocusedMarker> focusedMarker;
+		float timeFocusingMarker = 0.0F;
 
 		// cached
 		RE::HUDMarkerManager* hudMarkerManager = RE::HUDMarkerManager::GetSingleton();

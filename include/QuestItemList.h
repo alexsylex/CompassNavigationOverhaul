@@ -25,7 +25,7 @@ public:
 		Invoke("AddToHudElements");
 	}
 
-	void AddQuest(RE::QUEST_DATA::Type a_questType, const std::string& a_questName,
+	void AddQuest(RE::QUEST_DATA::Type a_questType, const std::string& a_questName, bool a_isInSameLocation,
 				  const std::vector<std::string>& a_questObjectives, int a_questAgeIndex)
 	{
 		GFxArray gfxQuestObjectives{ GetMovieView() };
@@ -35,7 +35,7 @@ public:
 			gfxQuestObjectives.PushBack(questObjective.c_str());
 		}
 
-		Invoke("AddQuest", a_questType, a_questName.c_str(), gfxQuestObjectives, a_questAgeIndex);
+		Invoke("AddQuest", a_questType, a_questName.c_str(), a_isInSameLocation, gfxQuestObjectives, a_questAgeIndex);
 	}
 
 	void SetQuestSide(const std::string& a_sideName)
@@ -56,6 +56,11 @@ public:
 	void RemoveQuest()
 	{
 		Invoke("RemoveQuest");
+	}
+
+	void ShowAllQuests()
+	{
+		Invoke("ShowAllQuests");
 	}
 
 	void RemoveAllQuests()
