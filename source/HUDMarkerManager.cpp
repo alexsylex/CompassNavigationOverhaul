@@ -14,7 +14,7 @@ namespace extended
 	{
 		float angleToPlayerCamera = GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_marker);
 
-		bool isFocusedMarker = focusedMarker && a_marker == focusedMarker->ref;
+		bool isFocusedMarker = IsFocusedMarker(a_marker);
 
 		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
 		{
@@ -24,7 +24,7 @@ namespace extended
 			if (potentiallyFocusedMarkers.contains(a_marker))
 			{
 				potentiallyFocusedMarker = potentiallyFocusedMarkers.at(a_marker);
-				*potentiallyFocusedMarker = FocusedMarker(a_marker, angleToPlayerCamera);
+				potentiallyFocusedMarker->UpdateGeometry(angleToPlayerCamera);
 			}
 			else
 			{
@@ -32,7 +32,7 @@ namespace extended
 				potentiallyFocusedMarkers.emplace(a_marker, potentiallyFocusedMarker);
 			}
 
-			// For this marker, find data for this quest/quest type
+			// For this marker, find data for this quest
 			auto dataFound = std::ranges::find_if(potentiallyFocusedMarker->data,
 				[a_quest](std::shared_ptr<FocusedMarker::Data> a_data) -> bool
 				{
@@ -67,8 +67,10 @@ namespace extended
 				potentiallyFocusedMarker->data.push_back(questData);
 			}
 
-			// Add objectives to the quest data
 			auto player = RE::PlayerCharacter::GetSingleton();
+
+			// Add objectives to the quest data. The objectives are in oldest-to-newest order,
+			// so we iterate from newest-to-oldest to have it in the same order as in the journal
 			for (int i = player->objectives.size() - 1; i >= 0; i--)
 			{
 				const RE::BGSInstancedQuestObjective& instancedObjective = player->objectives[i];
@@ -76,6 +78,7 @@ namespace extended
 				if (instancedObjective.objective->ownerQuest == a_quest &&
 					instancedObjective.instanceState == RE::QUEST_OBJECTIVE_STATE::kDisplayed)
 				{
+					// Add each objective only once per quest
 					if (std::ranges::find(questData->addedInstancedObjectives, &instancedObjective) == questData->addedInstancedObjectives.end()) 
 					{
 						if (questData->ageIndex == -1)
@@ -98,7 +101,7 @@ namespace extended
 	{
 		float angleToPlayerCamera = GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_marker);
 
-		bool isFocusedMarker = focusedMarker && a_marker == focusedMarker->ref;
+		bool isFocusedMarker = IsFocusedMarker(a_marker);
 
 		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
 		{
@@ -123,7 +126,7 @@ namespace extended
 	{
 		float angleToPlayerCamera = GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_enemy);
 
-		bool isFocusedMarker = focusedMarker && a_enemy == focusedMarker->ref;
+		bool isFocusedMarker = IsFocusedMarker(a_enemy);
 
 		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
 		{
@@ -148,7 +151,7 @@ namespace extended
 	{
 		float angleToPlayerCamera = GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_marker);
 
-		bool isFocusedMarker = focusedMarker && a_marker == focusedMarker->ref;
+		bool isFocusedMarker = IsFocusedMarker(a_marker);
 
 		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
 		{
@@ -172,12 +175,26 @@ namespace extended
 	{
 		Test::GetSingleton()->textField0.SetText(std::to_string(potentiallyFocusedMarkers.size()).c_str());
 
-		RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
+		auto player = RE::PlayerCharacter::GetSingleton();
 
 		float timeSinceLastFrame = RE::BSTimer::GetTimeManager()->realTimeDelta;
 
 		Compass* compass = Compass::GetSingleton();
 		QuestItemList* questItemList = QuestItemList::GetSingleton();
+
+		auto CanDisplayQuestItemListHere = [player]() -> bool
+		{
+			if (RE::TESObjectCELL* playerCell = player->GetParentCell())
+			{
+				if ((playerCell->IsInteriorCell() && settings::questlist::showInInteriors) ||
+					(playerCell->IsExteriorCell() && settings::questlist::showInExteriors))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		};
 
 		std::shared_ptr<FocusedMarker> nextFocusedMarker = GetNextFocusedMarker();
 
@@ -195,7 +212,8 @@ namespace extended
 
 		if (focusChanged || player->IsWeaponDrawn())
 		{
-			questItemList->RemoveAllQuests();
+			if (questItemList)
+				questItemList->RemoveAllQuests();
 		}
 
 		focusedMarker = nextFocusedMarker;
@@ -212,7 +230,7 @@ namespace extended
 
 					const std::string& targetText = [questData]()
 					{
-						if (g_settings.display.showObjectiveAsTarget)
+						if (settings::display::showObjectiveAsTarget)
 						{
 							return questData->objectives.back();
 						}
@@ -225,10 +243,9 @@ namespace extended
 					compass->SetMarkerInfo(targetText, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
 
 					
-					if (focusChanged)
+					if (focusChanged && questItemList && CanDisplayQuestItemListHere())
 					{
 						questItemList->AddQuest(questData->type, questData->name,questData->isInSameLocation, questData->objectives, questData->ageIndex);
-
 						questItemList->SetQuestSide(GetSideInQuest(questData->type));
 					}
 				}
@@ -265,37 +282,31 @@ namespace extended
 		{
 			timeFocusingMarker += timeSinceLastFrame;
 
-			float timeThreshold;
-			if (player->DoGetMovementSpeed() < player->GetWalkSpeed())
+			if (questItemList && CanDisplayQuestItemListHere())
 			{
-				timeThreshold = 0.0F;
-			}
-			else if (player->DoGetMovementSpeed() < player->GetJogSpeed())
-			{
-				timeThreshold = 1.0F;
-			}
-			else
-			{
-				timeThreshold = 1.5F;
-			}
+				float timeThreshold;
+				if (player->DoGetMovementSpeed() < player->GetWalkSpeed())
+				{
+					timeThreshold = settings::questlist::walkingDelayToShow;
+				}
+				else if (player->DoGetMovementSpeed() < player->GetJogSpeed())
+				{
+					timeThreshold = settings::questlist::joggingDelayToShow;
+				}
+				else
+				{
+					timeThreshold = settings::questlist::sprintingDelayToShow;
+				}
 
-			if (timeFocusingMarker > timeThreshold)
-			{
-				questItemList->ShowAllQuests();
+				if (timeFocusingMarker > timeThreshold)
+				{
+					questItemList->ShowAllQuests();
+				}	
 			}
 		}
 
-		questItemList->Update();
-
-		//potentiallyFocusedMarkers.clear();
-
-		//std::erase_if(potentiallyFocusedMarkers, 
-		//	[this](const auto& a_item) -> bool
-		//	{
-		//		const auto& [key, value] = a_item;
-		//
-		//		return focusedMarker->ref != key;
-		//	});
+		if (questItemList && CanDisplayQuestItemListHere())
+			questItemList->Update();
 	}
 
 	void HUDMarkerManager::RemoveFromPotentiallyFocusedIfOutOfAngle(RE::TESObjectREFR* a_marker, float a_angleToPlayerCamera, bool a_isFocusedMarker)
@@ -348,6 +359,7 @@ namespace extended
 			}
 			else
 			{
+				// TODO: return true also if the data of the markers changed
 				//for (focusedMarker->data)
 			}
 		}
@@ -368,7 +380,7 @@ namespace extended
 
 	bool HUDMarkerManager::IsPlayerAllyOfFaction(const RE::TESFaction* a_faction) const
 	{
-		RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
+		auto player = RE::PlayerCharacter::GetSingleton();
 
 		if (player->IsInFaction(a_faction)) 
 		{
@@ -397,7 +409,7 @@ namespace extended
 
 	bool HUDMarkerManager::IsPlayerOpponentOfFaction(const RE::TESFaction* a_faction) const
 	{
-		RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
+		auto player = RE::PlayerCharacter::GetSingleton();
 
 		return player->VisitFactions([a_faction](RE::TESFaction* a_visitedFaction, std::int8_t a_rank) -> bool
 		{

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "utils/GFxArray.h"
 #include "utils/GFxDisplayObject.h"
 
 namespace extended

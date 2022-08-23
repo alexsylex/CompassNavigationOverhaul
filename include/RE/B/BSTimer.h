@@ -8,7 +8,7 @@ namespace RE
 
 		static BSTimer* GetTimeManager()
 		{
-			REL::Relocation<BSTimer*> singleton{ RELOCATION_ID(523657, 0) };
+			REL::Relocation<BSTimer*> singleton{ RELOCATION_ID(523657, 410196) };
 			return &*singleton;
 		}
 

@@ -41,7 +41,6 @@ FocusedMarker::QuestData::QuestData(std::uint32_t a_gfxIndex, std::uint32_t a_gf
 		}
 	default:
 		{
-			//logger::debug("Unknown quest marker type: {}", (int)a_markerRef->GetFormType());
 			break;
 		}
 	}

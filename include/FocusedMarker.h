@@ -74,6 +74,13 @@ struct FocusedMarker
 		ref{ a_markerRef }, angleToPlayerCamera{ a_angleToPlayerCamera }
 	{}
 
+	void UpdateGeometry(float a_angleToPlayerCamera)
+	{
+		angleToPlayerCamera = a_angleToPlayerCamera;
+		distanceToPlayer = util::GetDistanceBetween(RE::PlayerCharacter::GetSingleton(), ref);
+		heightDifference = util::GetHeightDifferenceBetween(RE::PlayerCharacter::GetSingleton(), ref);
+	}
+
 	const RE::TESObjectREFR* ref;
 	float angleToPlayerCamera;
 	float distanceToPlayer = util::GetDistanceBetween(RE::PlayerCharacter::GetSingleton(), ref);

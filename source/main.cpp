@@ -24,7 +24,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 
 	settings::Init(std::string(plugin->GetName()) + ".ini");
 
-	logger::set_level(g_settings.debug.logLevel, g_settings.debug.logLevel);
+	logger::set_level(settings::debug::logLevel, settings::debug::logLevel);
 
 	if (!SKSE::GetMessagingInterface()->RegisterListener("SKSE", SKSEMessageListener))
 	{
@@ -36,7 +36,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 	logger::set_level(logger::level::info, logger::level::info);
 	logger::info("Succesfully loaded!");
 
-	logger::set_level(g_settings.debug.logLevel, g_settings.debug.logLevel);
+	logger::set_level(settings::debug::logLevel, settings::debug::logLevel);
 
 	return true;
 }

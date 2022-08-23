@@ -26,14 +26,18 @@ namespace hooks
 	{
 		RE::TESWorldSpace* markerWorldspace = a_marker->GetWorldspace();
 
-		if (g_settings.display.showInteriorMarkers && markerWorldspace)
+		if (settings::display::showInteriorMarkers)
 		{
-			RE::TESWorldSpace* playerWorldspace = RE::PlayerCharacter::GetSingleton()->GetWorldspace();
+			auto player = RE::PlayerCharacter::GetSingleton();
 
-			if (playerWorldspace && !playerWorldspace->parentWorld && markerWorldspace->parentWorld == playerWorldspace)
+			RE::TESWorldSpace* playerWorldspace = player->GetWorldspace();
+
+			if (playerWorldspace && markerWorldspace && playerWorldspace != markerWorldspace)
 			{
-				return playerWorldspace;
-					
+				if (!playerWorldspace->parentWorld && markerWorldspace->parentWorld == playerWorldspace) 
+				{
+					return playerWorldspace;
+				}
 			}
 		}
 			
@@ -58,12 +62,11 @@ namespace hooks
 		{
 			auto mapMarker = marker->extraList.GetByType<RE::ExtraMapMarker>();
 
-			if (g_settings.display.showUnvisitedLocationMarkers || mapMarker->mapData->flags.all(RE::MapMarkerData::Flag::kVisible))
+			if (settings::display::showUnvisitedLocationMarkers || mapMarker->mapData->flags.all(RE::MapMarkerData::Flag::kVisible))
 			{
 				if (HUDMarkerManager::AddMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
 				{
-					extended::HUDMarkerManager::GetSingleton()->ProcessLocationMarker(marker->extraList.GetByType<RE::ExtraMapMarker>(),
-																						marker, a_markerGotoFrame);
+					extended::HUDMarkerManager::GetSingleton()->ProcessLocationMarker(mapMarker, marker, a_markerGotoFrame);
 
 					return true;
 				}
@@ -76,7 +79,7 @@ namespace hooks
 	bool UpdateEnemies(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 							RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame)
 	{
-		if (g_settings.display.showEnemyMarkers)
+		if (settings::display::showEnemyMarkers)
 		{
 			if (HUDMarkerManager::AddMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
 			{

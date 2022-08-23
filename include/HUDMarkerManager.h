@@ -34,6 +34,8 @@ namespace extended
 
 	private:
 
+		bool IsFocusedMarker(const RE::TESObjectREFR* a_marker) const { return focusedMarker && a_marker == focusedMarker->ref; }
+
 		void RemoveFromPotentiallyFocusedIfOutOfAngle(RE::TESObjectREFR* a_marker, float a_angleToPlayerCamera,
 													  bool a_isFocusedMarker);
 
@@ -58,14 +60,14 @@ namespace extended
 		float timeFocusingMarker = 0.0F;
 
 		// cached
-		RE::HUDMarkerManager* hudMarkerManager = RE::HUDMarkerManager::GetSingleton();
+		RE::HUDMarkerManager* const hudMarkerManager = RE::HUDMarkerManager::GetSingleton();
 
 		// Factions to lookup
 		// Reference: Creation Kit -> Skyrim.esm, Dawnguard.esm
-		const RE::TESFaction* imperialLegionFaction = RE::TESForm::LookupByID(0x0002BF9A)->As<RE::TESFaction>();
-		const RE::TESFaction* stormCloaksFaction = RE::TESForm::LookupByID(0x00028849)->As<RE::TESFaction>();
-		const RE::TESFaction* sonsOfSkyrimFaction = RE::TESForm::LookupByID(0x0002BF9B)->As<RE::TESFaction>();
-		const RE::TESFaction* dawnGuardFaction = RE::TESForm::LookupByID(0x02014217)->As<RE::TESFaction>();
-		const RE::TESFaction* vampireFaction = RE::TESForm::LookupByID(0x02003376)->As<RE::TESFaction>();
+		const RE::TESFaction* const imperialLegionFaction = RE::TESForm::LookupByID(0x0002BF9A)->As<RE::TESFaction>();
+		const RE::TESFaction* const stormCloaksFaction = RE::TESForm::LookupByID(0x00028849)->As<RE::TESFaction>();
+		const RE::TESFaction* const sonsOfSkyrimFaction = RE::TESForm::LookupByID(0x0002BF9B)->As<RE::TESFaction>();
+		const RE::TESFaction* const dawnGuardFaction = RE::TESForm::LookupByID(0x02014217)->As<RE::TESFaction>();
+		const RE::TESFaction* const vampireFaction = RE::TESForm::LookupByID(0x02003376)->As<RE::TESFaction>();
 	};
 }

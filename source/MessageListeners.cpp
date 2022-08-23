@@ -85,7 +85,7 @@ void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg)
 						if (auto compass = extended::Compass::GetSingleton())
 						{
 							compass->SetupMod(postPatchMessage->newDisplayObject);
-							compass->SetUnits(g_settings.display.useMetricUnits);
+							compass->SetUnits(settings::display::useMetricUnits);
 
 							logger::debug("");
 							logger::debug("After patching");
@@ -146,11 +146,14 @@ void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg)
 			{
 				if (auto postInitExtMessage = IUI::API::TranslateAs<IUI::API::PostInitExtensionsMessage>(a_msg))
 				{
-					auto questItemList = QuestItemList::GetSingleton();
+					if (auto questItemList = QuestItemList::GetSingleton())
+					{
+						questItemList->AddToHudElements();
 
-					questItemList->AddToHudElements();
+						logger::debug("QuestItemList added to HUD elements");
+					}
 
-					logger::debug("Extensions initialized");
+					logger::debug("Extensions initialization finished");
 				}
 				break;
 			}
