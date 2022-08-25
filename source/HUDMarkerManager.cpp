@@ -1,11 +1,6 @@
 #include "HUDMarkerManager.h"
 
-#include "Settings.h"
-
 #include "RE/B/BSTimer.h"
-
-//#include "utils/Logger.h"
-//#include "utils/GFxLoggers.h"
 
 namespace extended
 {
@@ -14,25 +9,11 @@ namespace extended
 	{
 		float angleToPlayerCamera = GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_marker);
 
-		bool isFocusedMarker = IsFocusedMarker(a_marker);
-
-		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
+		if (angleToPlayerCamera < potentiallyFocusedAngle)
 		{
-			std::shared_ptr<FocusedMarker> potentiallyFocusedMarker;
+			std::shared_ptr<FocusedMarker> potentiallyFocusedMarker = GetUpdatedPotentiallyFocusedMarker(a_marker, angleToPlayerCamera);
 
-			// Get potentially focused marker mapped to marker reference
-			if (potentiallyFocusedMarkers.contains(a_marker))
-			{
-				potentiallyFocusedMarker = potentiallyFocusedMarkers.at(a_marker);
-				potentiallyFocusedMarker->UpdateGeometry(angleToPlayerCamera);
-			}
-			else
-			{
-				potentiallyFocusedMarker = std::make_shared<FocusedMarker>(a_marker, angleToPlayerCamera);
-				potentiallyFocusedMarkers.emplace(a_marker, potentiallyFocusedMarker);
-			}
-
-			// For this marker, find data for this quest
+			// For this marker, find the data for this quest
 			auto dataFound = std::ranges::find_if(potentiallyFocusedMarker->data,
 				[a_quest](std::shared_ptr<FocusedMarker::Data> a_data) -> bool
 				{
@@ -49,7 +30,7 @@ namespace extended
 					}
 				});
 
-			// Get/add the quest data for this marker
+			// Get if found, create if not
 			std::shared_ptr<FocusedMarker::QuestData> questData;
 			if (dataFound != potentiallyFocusedMarker->data.end())
 			{
@@ -92,8 +73,6 @@ namespace extended
 				}
 			}
 		}
-		
-		RemoveFromPotentiallyFocusedIfOutOfAngle(a_marker, angleToPlayerCamera, isFocusedMarker);
 	}
 
 	void HUDMarkerManager::ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_marker,
@@ -101,13 +80,9 @@ namespace extended
 	{
 		float angleToPlayerCamera = GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_marker);
 
-		bool isFocusedMarker = IsFocusedMarker(a_marker);
-
-		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
+		if (angleToPlayerCamera < potentiallyFocusedAngle)
 		{
-			// Map potentially focused marker to marker reference
-			auto potentiallyFocusedMarker = std::make_shared<FocusedMarker>(a_marker, angleToPlayerCamera);
-			potentiallyFocusedMarkers.insert_or_assign(a_marker, potentiallyFocusedMarker);
+			std::shared_ptr<FocusedMarker> potentiallyFocusedMarker = GetUpdatedPotentiallyFocusedMarker(a_marker, angleToPlayerCamera);
 
 			// Add the location data for this marker
 			auto locationData = std::make_shared<FocusedMarker::LocationData>
@@ -116,23 +91,25 @@ namespace extended
 				a_markerGotoFrame,
 				a_mapMarker->mapData
 			);
-			potentiallyFocusedMarkers.at(a_marker)->data.push_back(locationData);
-		} 
-		
-		RemoveFromPotentiallyFocusedIfOutOfAngle(a_marker, angleToPlayerCamera, isFocusedMarker);
+
+			if (potentiallyFocusedMarker->data.empty())
+			{
+				potentiallyFocusedMarker->data.push_back(locationData);
+			}
+			else
+			{
+				potentiallyFocusedMarker->data.back() = locationData;
+			}
+		}
 	}
 
 	void HUDMarkerManager::ProcessEnemyMarker(RE::Character* a_enemy, std::uint32_t a_markerGotoFrame)
 	{
 		float angleToPlayerCamera = GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_enemy);
 
-		bool isFocusedMarker = IsFocusedMarker(a_enemy);
-
-		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
+		if (angleToPlayerCamera < potentiallyFocusedAngle)
 		{
-			// Map potentially focused marker to marker reference
-			auto potentiallyFocusedMarker = std::make_shared<FocusedMarker>(a_enemy, angleToPlayerCamera);
-			potentiallyFocusedMarkers.insert_or_assign(a_enemy, potentiallyFocusedMarker);
+			std::shared_ptr<FocusedMarker> potentiallyFocusedMarker = GetUpdatedPotentiallyFocusedMarker(a_enemy, angleToPlayerCamera);
 
 			// Add the enemy data for this marker
 			auto enemyData = std::make_shared<FocusedMarker::EnemyData>
@@ -141,23 +118,25 @@ namespace extended
 				a_markerGotoFrame,
 				a_enemy
 			);
-			potentiallyFocusedMarkers.at(a_enemy)->data.push_back(enemyData);
-		}
 
-		RemoveFromPotentiallyFocusedIfOutOfAngle(a_enemy, angleToPlayerCamera, isFocusedMarker);
+			if (potentiallyFocusedMarker->data.empty())
+			{
+				potentiallyFocusedMarker->data.push_back(enemyData);
+			}
+			else
+			{
+				potentiallyFocusedMarker->data.back() = enemyData;
+			}
+		}
 	}
 
 	void HUDMarkerManager::ProcessPlayerSetMarker(RE::TESObjectREFR* a_marker, std::uint32_t a_markerGotoFrame)
 	{
 		float angleToPlayerCamera = GetAngleBetween(RE::PlayerCamera::GetSingleton(), a_marker);
 
-		bool isFocusedMarker = IsFocusedMarker(a_marker);
-
-		if (isFocusedMarker || angleToPlayerCamera < potentiallyFocusedAngle)
+		if (angleToPlayerCamera < potentiallyFocusedAngle)
 		{
-			// Map potentially focused marker to marker reference
-			auto potentiallyFocusedMarker = std::make_shared<FocusedMarker>(a_marker, angleToPlayerCamera);
-			potentiallyFocusedMarkers.insert_or_assign(a_marker, potentiallyFocusedMarker);
+			std::shared_ptr<FocusedMarker> potentiallyFocusedMarker = GetUpdatedPotentiallyFocusedMarker(a_marker, angleToPlayerCamera);
 
 			// Add the player set data for this marker
 			auto playerSetData = std::make_shared<FocusedMarker::PlayerSetData>
@@ -165,16 +144,20 @@ namespace extended
 				hudMarkerManager->currentMarkerIndex - 1,
 				a_markerGotoFrame
 			);
-			potentiallyFocusedMarkers.at(a_marker)->data.push_back(playerSetData);
-		}
 
-		RemoveFromPotentiallyFocusedIfOutOfAngle(a_marker, angleToPlayerCamera, isFocusedMarker);
+			if (potentiallyFocusedMarker->data.empty())
+			{
+				potentiallyFocusedMarker->data.push_back(playerSetData);
+			}
+			else
+			{
+				potentiallyFocusedMarker->data.back() = playerSetData;
+			}
+		}
 	}
 
 	void HUDMarkerManager::SetMarkersExtraInfo()
 	{
-		Test::GetSingleton()->textField0.SetText(std::to_string(potentiallyFocusedMarkers.size()).c_str());
-
 		auto player = RE::PlayerCharacter::GetSingleton();
 
 		float timeSinceLastFrame = RE::BSTimer::GetTimeManager()->realTimeDelta;
@@ -210,7 +193,7 @@ namespace extended
 			}
 		}
 
-		if (focusChanged || player->IsWeaponDrawn())
+		if (focusChanged || (settings::questlist::hideInCombat && player->IsWeaponDrawn()))
 		{
 			if (questItemList)
 				questItemList->RemoveAllQuests();
@@ -218,9 +201,10 @@ namespace extended
 
 		focusedMarker = nextFocusedMarker;
 
-		if (focusedMarker && !focusedMarker->data.empty())
+		if (focusedMarker)
 		{
 			bool canFocusPlayerSetMarker = true;
+			uint32_t gfxIndex = 0;
 
 			for (std::shared_ptr<FocusedMarker::Data> focusedMarkerData : focusedMarker->data)
 			{
@@ -242,7 +226,6 @@ namespace extended
 
 					compass->SetMarkerInfo(targetText, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
 
-					
 					if (focusChanged && questItemList && CanDisplayQuestItemListHere())
 					{
 						questItemList->AddQuest(questData->type, questData->name,questData->isInSameLocation, questData->objectives, questData->ageIndex);
@@ -265,20 +248,24 @@ namespace extended
 					}
 				}
 
-				if (focusChanged)
-				{
-					compass->FocusMarker(focusedMarkerData->gfxIndex);
-				} 
-				else
-				{
-					compass->UpdateMarker(focusedMarkerData->gfxIndex);
-				}
+				gfxIndex = focusedMarkerData->gfxIndex;
+			}
+
+			
+			if (focusChanged)
+			{
+				compass->FocusMarker(gfxIndex);
+			} 
+			else
+			{
+				compass->UpdateMarker(gfxIndex);
 			}
 		}
 
+		// Set smaller so that when there is a focused marker it appears bigger
 		compass->SetMarkersSize();
 
-		if (focusedMarker && !player->IsWeaponDrawn())
+		if (focusedMarker && (!settings::questlist::hideInCombat || !player->IsWeaponDrawn()))
 		{
 			timeFocusingMarker += timeSinceLastFrame;
 
@@ -306,32 +293,50 @@ namespace extended
 		}
 
 		if (questItemList && CanDisplayQuestItemListHere())
+		{
 			questItemList->Update();
+		}
 	}
 
-	void HUDMarkerManager::RemoveFromPotentiallyFocusedIfOutOfAngle(RE::TESObjectREFR* a_marker, float a_angleToPlayerCamera, bool a_isFocusedMarker)
+	void HUDMarkerManager::RemovePotentiallyFocusedMarkersOutOfRange()
 	{
-		if (potentiallyFocusedMarkers.contains(a_marker))
+		std::erase_if(potentiallyFocusedMarkers, [this](const auto& a_item) -> bool
 		{
-			if (a_isFocusedMarker)
+			const auto& [markerRef, marker] = a_item;
+
+			if (IsFocusedMarker(markerRef))
 			{
-				if (a_angleToPlayerCamera > keepFocusedAngle)
+				if (marker->angleToPlayerCamera > keepFocusedAngle)
 				{
-					potentiallyFocusedMarkers.erase(a_marker);
+					return true;
 				}
 			}
-			else if (a_angleToPlayerCamera > potentiallyFocusedAngle)
+			else
 			{
-				potentiallyFocusedMarkers.erase(a_marker);
+				return true;
 			}
-		}
+
+			return false;
+		});
 	}
 
 	std::shared_ptr<FocusedMarker> HUDMarkerManager::GetNextFocusedMarker()
 	{
-		float closestAngleToPlayerCamera = std::numeric_limits<float>::max();
+		float closestAngleToPlayerCamera;
+		std::shared_ptr<FocusedMarker> bestFocusedMarker;
 
-		std::shared_ptr<FocusedMarker> bestFocusedMarker = nullptr;
+		if (focusedMarker)
+		{
+			closestAngleToPlayerCamera = GetAngleBetween(RE::PlayerCamera::GetSingleton(), focusedMarker->ref);
+			focusedMarker->UpdateGeometry(closestAngleToPlayerCamera);
+
+			bestFocusedMarker = (focusedMarker->angleToPlayerCamera <= keepFocusedAngle) ? focusedMarker : nullptr;
+		}
+		else
+		{
+			closestAngleToPlayerCamera = std::numeric_limits<float>::max();
+			bestFocusedMarker = nullptr;
+		}
 
 		for (const auto& [markerRef, potentiallyFocusedMarker] : potentiallyFocusedMarkers)
 		{
@@ -341,6 +346,8 @@ namespace extended
 				closestAngleToPlayerCamera = potentiallyFocusedMarker->angleToPlayerCamera;
 			}
 		}
+
+		potentiallyFocusedMarkers.clear();
 
 		return bestFocusedMarker;
 	}

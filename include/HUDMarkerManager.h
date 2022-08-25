@@ -2,10 +2,11 @@
 
 #include "RE/H/HUDMarkerManager.h"
 
+#include "Settings.h"
+
 #include "FocusedMarker.h"
 #include "Compass.h"
 #include "QuestItemList.h"
-#include "Test.h"
 
 namespace extended
 {
@@ -33,11 +34,27 @@ namespace extended
 		void SetMarkersExtraInfo();
 
 	private:
+		std::shared_ptr<FocusedMarker> GetUpdatedPotentiallyFocusedMarker(const RE::TESObjectREFR* a_marker, float a_angleToPlayerCamera)
+		{
+			std::shared_ptr<FocusedMarker> potentiallyFocusedMarker;
+
+			if (potentiallyFocusedMarkers.contains(a_marker))
+			{
+				potentiallyFocusedMarker = potentiallyFocusedMarkers.at(a_marker);
+				potentiallyFocusedMarker->UpdateGeometry(a_angleToPlayerCamera);
+			}
+			else
+			{
+				potentiallyFocusedMarker = std::make_shared<FocusedMarker>(a_marker, a_angleToPlayerCamera);
+				potentiallyFocusedMarkers.emplace(a_marker, potentiallyFocusedMarker);
+			}
+
+			return potentiallyFocusedMarker;
+		}
 
 		bool IsFocusedMarker(const RE::TESObjectREFR* a_marker) const { return focusedMarker && a_marker == focusedMarker->ref; }
 
-		void RemoveFromPotentiallyFocusedIfOutOfAngle(RE::TESObjectREFR* a_marker, float a_angleToPlayerCamera,
-													  bool a_isFocusedMarker);
+		void RemovePotentiallyFocusedMarkersOutOfRange();
 
 		std::shared_ptr<FocusedMarker> GetNextFocusedMarker();
 
@@ -51,8 +68,8 @@ namespace extended
 
 		std::string GetSideInQuest(RE::QUEST_DATA::Type a_questType) const;
 
-		static constexpr inline float potentiallyFocusedAngle = 10.0F;
-		static constexpr inline float keepFocusedAngle = 35.0F;
+		float potentiallyFocusedAngle = settings::display::angleToShowMarkerDetails;
+		float keepFocusedAngle = settings::display::angleToKeepMarkerDetailsShown;
 
 		std::unordered_map<const RE::TESObjectREFR*, std::shared_ptr<FocusedMarker>> potentiallyFocusedMarkers;
 

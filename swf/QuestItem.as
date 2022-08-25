@@ -5,8 +5,6 @@ class QuestItem extends MovieClip
 	var Title:MovieClip;
 	var ObjectiveItemList:Array;
 
-	//var Test:TextField;
-
 	// References
 	private var TitleTextField:TextField;
 

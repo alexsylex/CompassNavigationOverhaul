@@ -9,16 +9,23 @@ var Swimming:Boolean;
 var HorseMode:Boolean;
 var WarHorseMode:Boolean;
 
+var positionY0:Number;
+var maxHeight:Number;
+
 var SCALE:Number = 65;
 
-function QuestItemList():Void
+function QuestItemList(a_positionY:Number, a_maxHeight:Number):Void
 {
 	entries = new Array();
 
-	var point:Object = { x:10, y:90 };
+	positionY0 = _root._height * a_positionY;
+
+	var point:Object = { x:10, y:positionY0 };
 	globalToLocal(point);
 	_x = point.x;
 	_y = point.y;
+
+	maxHeight = Stage.height * a_maxHeight;
 
 	All = true;
 	Favor = true;
@@ -36,7 +43,7 @@ function AddToHudElements():Void
 
 function AddQuest(a_type:Number, a_title:String, a_isInSameLocation:Boolean, a_objectives:Array, a_ageIndex:Number):Void
 {
-	questItem = attachMovie("QuestItem", "questItem", getNextHighestDepth(), { _xscale:SCALE, _yscale:SCALE });
+	questItem = attachMovie("QuestItem", "questItem", getNextHighestDepth(), { _xscale:SCALE, _yscale:SCALE, positionY0:positionY0, maxHeight:maxHeight });
 
 	entries.push(questItem);
 
@@ -51,8 +58,11 @@ function SetQuestSide(a_side:String):Void
 
 function Update():Void
 {
-	// iHUD show/hide functionality
-	if (_root.HUDMovieBaseInstance.CompassShoutMeterHolder.Compass.DirectionRect._alpha)
+		// iHUD show/hide compatibility
+	if (_root.HUDMovieBaseInstance.CompassShoutMeterHolder.Compass.DirectionRect._alpha &&
+		// Toggle Compass Hotkey show/hide compatibility
+		_root.HUDMovieBaseInstance.CompassShoutMeterHolder._alpha
+		)
 	{
 		if (entries.length > 1)
 		{
@@ -64,7 +74,29 @@ function Update():Void
 				questItem = entries[i];
 
 				questItem._y = yOffset;
-				//questItem.Test.text = "[" + i + "] / " + entries.length;
+
+				var point:Object = { x:0, y:0 };
+				questItem.localToGlobal(point);
+
+				if (point.y >= (positionY0 + maxHeight))
+				{
+					questItem._visible = false;
+				}
+				else if (questItem.ObjectiveItemList.length > 1)
+				{
+					for (var j:Number = 1; j < questItem.ObjectiveItemList.length; j++)
+					{
+						var objectiveItem:MovieClip = questItem.ObjectiveItemList[j];
+
+						var point:Object = { x:0, y:0 };
+						objectiveItem.localToGlobal(point);
+
+						if (point.y >= (positionY0 + maxHeight))
+						{
+							objectiveItem._alpha = 0.0;
+						}
+					}
+				}
 
 				yOffset += questItem._height + 5;
 			}
@@ -93,6 +125,7 @@ function ShowAllQuests():Void
 	for (var i:Number = 0; i < entries.length; i++)
 	{
 		questItem = entries[i];
+
 		if (!questItem.isBeingShown)
 		{
 			questItem.Show();

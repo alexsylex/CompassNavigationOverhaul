@@ -24,16 +24,19 @@ namespace settings
 		inline bool showEnemyMarkers = true;
 		inline bool showObjectiveAsTarget = true;
 		inline bool showInteriorMarkers = true;
+		inline float angleToShowMarkerDetails = 10.0F;
+		inline float angleToKeepMarkerDetailsShown = 35.0F;
 	}
 
 	namespace questlist
 	{
-		inline float positionY = 0.125;
-		inline float maxHeight = 0.5;
+		inline float positionY = 0.125F;
+		inline float maxHeight = 0.5F;
 		inline bool showInExteriors = true;
 		inline bool showInInteriors = true;
 		inline float walkingDelayToShow = 0.0F;
 		inline float joggingDelayToShow = 1.0F;
 		inline float sprintingDelayToShow = 1.5F;
+		inline bool hideInCombat = false;
 	}
 }

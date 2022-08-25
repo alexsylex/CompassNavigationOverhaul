@@ -25,7 +25,9 @@ namespace settings
 				MakeSetting("bShowUnvisitedLocationMarkers:Display", showUnvisitedLocationMarkers),
 				MakeSetting("bShowEnemyMarkers:Display", showEnemyMarkers),
 				MakeSetting("bShowObjectiveAsTarget:Display", showObjectiveAsTarget),
-				MakeSetting("bShowInteriorMarkers:Display", showInteriorMarkers)
+				MakeSetting("bShowInteriorMarkers:Display", showInteriorMarkers),
+				MakeSetting("fAngleToShowMarkerDetails:Display", angleToShowMarkerDetails),
+				MakeSetting("fAngleToKeepMarkerDetailsShown:Display", angleToKeepMarkerDetailsShown)
 			);
 		}
 		{
@@ -38,7 +40,8 @@ namespace settings
 				MakeSetting("bShowInInteriors:QuestList", showInInteriors),
 				MakeSetting("fWalkingDelayToShow:QuestList", walkingDelayToShow),
 				MakeSetting("fJoggingDelayToShow:QuestList", joggingDelayToShow),
-				MakeSetting("fSprintingDelayToShow:QuestList", sprintingDelayToShow)
+				MakeSetting("fSprintingDelayToShow:QuestList", sprintingDelayToShow),
+				MakeSetting("bHideInCombat:QuestList", hideInCombat)
 			);
 		}
 
@@ -58,6 +61,8 @@ namespace settings
 			useMetricUnits = iniSettingCollection->GetSetting<bool>("bUseMetricUnits:Display");
 			showUnvisitedLocationMarkers = iniSettingCollection->GetSetting<bool>("bShowUnvisitedLocationMarkers:Display");
 			showEnemyMarkers = iniSettingCollection->GetSetting<bool>("bShowEnemyMarkers:Display");
+			angleToShowMarkerDetails = iniSettingCollection->GetSetting<float>("fAngleToShowMarkerDetails:Display");
+			angleToKeepMarkerDetailsShown = iniSettingCollection->GetSetting<float>("fAngleToKeepMarkerDetailsShown:Display");
 		}
 		{
 			using namespace questlist;
@@ -68,6 +73,7 @@ namespace settings
 			walkingDelayToShow = iniSettingCollection->GetSetting<float>("fWalkingDelayToShow:QuestList");
 			joggingDelayToShow = iniSettingCollection->GetSetting<float>("fJoggingDelayToShow:QuestList");
 			sprintingDelayToShow = iniSettingCollection->GetSetting<float>("fSprintingDelayToShow:QuestList");
+			hideInCombat = iniSettingCollection->GetSetting<bool>("bHideInCombat:QuestList");
 		}
 	}
 }

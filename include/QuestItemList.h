@@ -3,6 +3,8 @@
 #include "utils/GFxArray.h"
 #include "utils/GFxDisplayObject.h"
 
+#include "Settings.h"
+
 class QuestItemList : public GFxDisplayObject
 {
 public:
@@ -73,7 +75,7 @@ private:
 	QuestItemList(const GFxDisplayObject& a_questItemList) :
 		GFxDisplayObject{ a_questItemList }
 	{
-		Invoke("QuestItemList");
+		Invoke("QuestItemList", settings::questlist::positionY, settings::questlist::maxHeight);
 	}
 
 	static inline QuestItemList* singleton = nullptr;
