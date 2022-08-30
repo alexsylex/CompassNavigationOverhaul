@@ -34,6 +34,7 @@ namespace settings
 			using namespace questlist;
 			iniSettingCollection->AddSettings
 			(
+				MakeSetting("fPositionX:QuestList", positionX),
 				MakeSetting("fPositionY:QuestList", positionY),
 				MakeSetting("fMaxHeight:QuestList", maxHeight),
 				MakeSetting("bShowInExteriors:QuestList", showInExteriors),
@@ -66,6 +67,7 @@ namespace settings
 		}
 		{
 			using namespace questlist;
+			positionX = iniSettingCollection->GetSetting<float>("fPositionX:QuestList");
 			positionY = iniSettingCollection->GetSetting<float>("fPositionY:QuestList");
 			maxHeight = iniSettingCollection->GetSetting<float>("fMaxHeight:QuestList");
 			showInExteriors = iniSettingCollection->GetSetting<bool>("bShowInExteriors:QuestList");

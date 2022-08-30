@@ -5,19 +5,19 @@ class FocusedMarker extends MovieClip
 	var Distance:MovieClip;
 	var Target:MovieClip;
 
+	// References
+	var Movie:MovieClip;
+
 	// Variables
 	var Index:Number;
 	var Objective:String;
 	var Location:String;
 	var UseMetricUnits:Boolean;
 
-	// References
-	var Movie:MovieClip;
-
 	public function FocusedMarker()
 	{
-		Distance.TextFieldInstance.autoSize = "center";
 		Index = -1;
+		Distance.TextFieldInstance.autoSize = "center";
 	}
 
 	public function SetDistanceAndHeightDifference(a_distance:Number, a_heightDifference:Number):Void

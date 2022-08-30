@@ -2,6 +2,8 @@
 
 #include "utils/Geometry.h"
 
+#include "Settings.h"
+
 struct FocusedMarker
 {
 	struct Data
@@ -20,6 +22,18 @@ struct FocusedMarker
 	{
 		QuestData(std::uint32_t a_gfxIndex, std::uint32_t a_gfxGotoFrame, RE::TESObjectREFR* a_markerRef,
 				  const RE::TESQuest* a_quest);
+
+		const std::string& GetTargetText() const
+		{
+			if (settings::display::showObjectiveAsTarget)
+			{
+				return objectives.back();
+			}
+			else
+			{
+				return locationName.empty() ? characterName : locationName;
+			}
+		}
 
 		const RE::TESQuest* quest;
 

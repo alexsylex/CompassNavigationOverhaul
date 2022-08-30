@@ -22,6 +22,20 @@ public:
 
 	static QuestItemList* GetSingleton() { return singleton; }
 
+	bool CanBeDisplayedIn(RE::TESObjectCELL* a_cell) const
+	{
+		if (a_cell)
+		{
+			if ((a_cell->IsInteriorCell() && settings::questlist::showInInteriors) ||
+				(a_cell->IsExteriorCell() && settings::questlist::showInExteriors))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	void AddToHudElements()
 	{
 		Invoke("AddToHudElements");
@@ -75,7 +89,7 @@ private:
 	QuestItemList(const GFxDisplayObject& a_questItemList) :
 		GFxDisplayObject{ a_questItemList }
 	{
-		Invoke("QuestItemList", settings::questlist::positionY, settings::questlist::maxHeight);
+		Invoke("QuestItemList", settings::questlist::positionX, settings::questlist::positionY, settings::questlist::maxHeight);
 	}
 
 	static inline QuestItemList* singleton = nullptr;

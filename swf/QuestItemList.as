@@ -14,13 +14,14 @@ var maxHeight:Number;
 
 var SCALE:Number = 65;
 
-function QuestItemList(a_positionY:Number, a_maxHeight:Number):Void
+function QuestItemList(a_positionX:Number, a_positionY:Number, a_maxHeight:Number):Void
 {
 	entries = new Array();
 
-	positionY0 = _root._height * a_positionY;
+	positionX0 = Stage.width * a_positionX;
+	positionY0 = Stage.height * a_positionY;
 
-	var point:Object = { x:10, y:positionY0 };
+	var point:Object = { x:positionX0, y:positionY0 };
 	globalToLocal(point);
 	_x = point.x;
 	_y = point.y;
@@ -43,7 +44,7 @@ function AddToHudElements():Void
 
 function AddQuest(a_type:Number, a_title:String, a_isInSameLocation:Boolean, a_objectives:Array, a_ageIndex:Number):Void
 {
-	questItem = attachMovie("QuestItem", "questItem", getNextHighestDepth(), { _xscale:SCALE, _yscale:SCALE, positionY0:positionY0, maxHeight:maxHeight });
+	questItem = attachMovie("QuestItem", "questItem", getNextHighestDepth(), { _xscale:SCALE, _yscale:SCALE });
 
 	entries.push(questItem);
 

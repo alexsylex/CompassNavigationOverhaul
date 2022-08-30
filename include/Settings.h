@@ -30,6 +30,7 @@ namespace settings
 
 	namespace questlist
 	{
+		inline float positionX = 0.008F;
 		inline float positionY = 0.125F;
 		inline float maxHeight = 0.5F;
 		inline bool showInExteriors = true;

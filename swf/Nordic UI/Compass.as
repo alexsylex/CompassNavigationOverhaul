@@ -1,4 +1,6 @@
-﻿import FocusedMarker;
+﻿#include "../utils.as"
+
+import FocusedMarker;
 
 // Instances
 var CompassFrame:MovieClip;
@@ -12,23 +14,25 @@ var FocusedMarkerInstance:FocusedMarker;
 // References
 var MarkerList:Array = _root.HUDMovieBaseInstance.CompassMarkerList;
 
-function Compass(a_hadTemperatureMeter:Boolean):Void
+function Compass():Void
 {
-	if (a_hadTemperatureMeter)
+	CompassTemperatureHolderInstance.gotoAndStop("Empty");
+	_root.HUDMovieBaseInstance.TemperatureMeter_mc = CompassTemperatureHolderInstance;
+
+	_root.HUDMovieBaseInstance.CompassRect = DirectionRect;
+
+	if (_root.HUDMovieBaseInstance.CompassFrameAlt == undefined)
 	{
-		_root.HUDMovieBaseInstance.TemperatureMeter_mc = CompassTemperatureHolderInstance;
+		CompassFrameAlt._visible = false;
+		DirectionRect.CompassDirectionTextAlt._visible = false;
 	}
 	else
 	{
-		// We have it, but we will not use it
-		CompassTemperatureHolderInstance.gotoAndStop("Empty");
+		_root.HUDMovieBaseInstance.CompassFrame = CompassFrame;
+		_root.HUDMovieBaseInstance.CompassFrameAlt = CompassFrameAlt;
+		_root.HUDMovieBaseInstance.CompassCard = DirectionRect.CompassDirectionText;
+		_root.HUDMovieBaseInstance.CompassCardAlt = DirectionRect.CompassDirectionTextAlt;
 	}
-
-	_root.HUDMovieBaseInstance.CompassRect = DirectionRect;
-	_root.HUDMovieBaseInstance.CompassFrame = CompassFrame;
-	_root.HUDMovieBaseInstance.CompassFrameAlt = CompassFrameAlt;
-	_root.HUDMovieBaseInstance.CompassCard = DirectionRect.CompassDirectionText;
-	_root.HUDMovieBaseInstance.CompassCardAlt = DirectionRect.CompassDirectionTextAlt;
 }
 
 function SetUnits(a_useMetric:Boolean):Void
@@ -44,22 +48,22 @@ function SetMarkerInfo(a_target:String, a_distance:Number, a_heightDifference:Nu
 
 function FocusMarker(a_markerIndex:Number):Void
 {
-	FocusedMarkerInstance.Index = a_markerIndex;
-
-	FocusedMarkerInstance.Movie = MarkerList[FocusedMarkerInstance.Index].movie;
 	FocusedMarkerInstance.gotoAndPlay("FadeIn");
-	UpdateMarker(FocusedMarkerInstance.Index);
+	UpdateMarker(a_markerIndex);
 }
 
 function UpdateMarker(a_markerIndex:Number):Void
 {
-	if (FocusedMarkerInstance.Index != a_markerIndex)
-	{
-		FocusedMarkerInstance.Index = a_markerIndex;
-		FocusedMarkerInstance.Movie = MarkerList[FocusedMarkerInstance.Index].movie;
-	}
+	FocusedMarkerInstance.Movie = MarkerList[a_markerIndex].movie;
+	FocusedMarkerInstance.Index = a_markerIndex;
 
-	FocusedMarkerInstance._x = localToLocal(FocusedMarkerInstance.Movie, this).x;
+	// Workaround-fix for pop-up out of compass when changing index
+	var focusedMarker_x:Number = localToLocal(FocusedMarkerInstance.Movie, this).x;
+	var compassMask_x:Number = localToLocal(CompassMask_mc, this).x;
+	if (focusedMarker_x >= compassMask_x)
+	{
+		FocusedMarkerInstance._x = focusedMarker_x;
+	}
 	FocusedMarkerInstance._alpha = Math.max(FocusedMarkerInstance.Movie._alpha, 75);
 
 	if (_root.HUDMovieBaseInstance.EnemyHealth_mc.BracketsInstance._alpha)
@@ -85,7 +89,7 @@ function UpdateMarker(a_markerIndex:Number):Void
 function UnfocusMarker(a_markerIndex:Number):Void
 {
 	FocusedMarkerInstance.gotoAndPlay("FadeOut");
-
+	FocusedMarkerInstance.Movie = undefined;
 	FocusedMarkerInstance.Index = -1;
 }
 
@@ -107,12 +111,4 @@ function SetMarkersSize():Void
 			marker._yscale = Math.min(135, marker._yscale);
 		}
 	}
-}
-
-function localToLocal(from:MovieClip, to:MovieClip):Object
-{
-	var point:Object = { x:0, y:0 };
-	from.localToGlobal(point);
-	to.globalToLocal(point);
-	return point;
 }

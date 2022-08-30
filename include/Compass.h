@@ -26,7 +26,7 @@ namespace extended
 			{
 				*static_cast<GFxDisplayObject*>(this) = a_replaceCompass;
 
-				Invoke("Compass", hasTemperatureMeter);
+				Invoke("Compass");
 			}
 		}
 
@@ -45,9 +45,9 @@ namespace extended
 			Invoke("FocusMarker", a_markerIndex);
 		}
 
-		void UnfocusMarker(std::uint32_t a_markerIndex)
+		void UnfocusMarker()
 		{
-			Invoke("UnfocusMarker", a_markerIndex);
+			Invoke("UnfocusMarker");
 		}
 
 		void UpdateMarker(std::uint32_t a_markerIndex)
@@ -62,13 +62,9 @@ namespace extended
 
 	private:
 
-		Compass(const GFxDisplayObject& a_originalCompass) :
-			GFxDisplayObject{ a_originalCompass },
-			hasTemperatureMeter{ HasMember("CompassTemperatureHolderInstance") }
+		Compass(const GFxDisplayObject& a_originalCompass) : GFxDisplayObject{ a_originalCompass }
 		{}
 
 		static inline Compass* singleton = nullptr;
-
-		bool hasTemperatureMeter;
 	};
 }

@@ -34,31 +34,31 @@ namespace extended
 		void SetMarkersExtraInfo();
 
 	private:
-		std::shared_ptr<FocusedMarker> GetUpdatedPotentiallyFocusedMarker(const RE::TESObjectREFR* a_marker, float a_angleToPlayerCamera)
-		{
-			std::shared_ptr<FocusedMarker> potentiallyFocusedMarker;
 
-			if (potentiallyFocusedMarkers.contains(a_marker))
+		std::shared_ptr<FocusedMarker> GetFacedMarkerUpdated(const RE::TESObjectREFR* a_marker, float a_angleToPlayerCamera)
+		{
+			std::shared_ptr<FocusedMarker> facedMarker;
+
+			if (facedMarkers.contains(a_marker))
 			{
-				potentiallyFocusedMarker = potentiallyFocusedMarkers.at(a_marker);
-				potentiallyFocusedMarker->UpdateGeometry(a_angleToPlayerCamera);
+				facedMarker = facedMarkers.at(a_marker);
+				facedMarker->UpdateGeometry(a_angleToPlayerCamera);
 			}
 			else
 			{
-				potentiallyFocusedMarker = std::make_shared<FocusedMarker>(a_marker, a_angleToPlayerCamera);
-				potentiallyFocusedMarkers.emplace(a_marker, potentiallyFocusedMarker);
+				facedMarker = std::make_shared<FocusedMarker>(a_marker, a_angleToPlayerCamera);
+				facedMarkers.emplace(a_marker, facedMarker);
 			}
 
-			return potentiallyFocusedMarker;
+			return facedMarker;
 		}
 
 		bool IsFocusedMarker(const RE::TESObjectREFR* a_marker) const { return focusedMarker && a_marker == focusedMarker->ref; }
 
-		void RemovePotentiallyFocusedMarkersOutOfRange();
+		std::shared_ptr<FocusedMarker>
+		GetMostCenteredMarkerOf(const std::unordered_map<const RE::TESObjectREFR*, std::shared_ptr<FocusedMarker>>& a_facedMarkers);
 
-		std::shared_ptr<FocusedMarker> GetNextFocusedMarker();
-
-		bool DidFocusChange(std::shared_ptr<FocusedMarker> a_nextFocusedMarker) const;
+		bool IsSameFocusedMarker(std::shared_ptr<FocusedMarker> a_nextFocusedMarker) const;
 
 		float GetAngleBetween(const RE::PlayerCamera* a_playerCamera, const RE::TESObjectREFR* a_marker) const;
 
@@ -68,16 +68,20 @@ namespace extended
 
 		std::string GetSideInQuest(RE::QUEST_DATA::Type a_questType) const;
 
-		float potentiallyFocusedAngle = settings::display::angleToShowMarkerDetails;
+		Compass* compass = Compass::GetSingleton();
+		QuestItemList* questItemList = QuestItemList::GetSingleton();
+
+		float facingAngle = settings::display::angleToShowMarkerDetails;
 		float keepFocusedAngle = settings::display::angleToKeepMarkerDetailsShown;
 
-		std::unordered_map<const RE::TESObjectREFR*, std::shared_ptr<FocusedMarker>> potentiallyFocusedMarkers;
-
+		std::unordered_map<const RE::TESObjectREFR*, std::shared_ptr<FocusedMarker>> facedMarkers;
 		std::shared_ptr<FocusedMarker> focusedMarker;
 		float timeFocusingMarker = 0.0F;
 
-		// cached
 		RE::HUDMarkerManager* const hudMarkerManager = RE::HUDMarkerManager::GetSingleton();
+		RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
+		RE::PlayerCamera* playerCamera = RE::PlayerCamera::GetSingleton();
+		RE::BSTimer* timeManager = RE::BSTimer::GetTimeManager();
 
 		// Factions to lookup
 		// Reference: Creation Kit -> Skyrim.esm, Dawnguard.esm
