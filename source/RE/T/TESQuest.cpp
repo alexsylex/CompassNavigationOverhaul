@@ -130,4 +130,12 @@ namespace RE
 			SetEnabled(false);
 		}
 	}
+
+	void ReplaceTagsInQuestText(BSString* a_text, const TESQuest* a_quest, std::uint32_t a_questInstanceId)
+	{
+		using func_t = decltype(ReplaceTagsInQuestText);
+		REL::Relocation<func_t> func{ RELOCATION_ID(23429, 23897) };
+
+		func(a_text, a_quest, a_questInstanceId);
+	}
 }

@@ -283,4 +283,6 @@ namespace RE
 		BSTArray<ObjectRefHandle> promotedRefs;														// 250
 	};
 	static_assert(sizeof(TESQuest) == 0x268);
+
+	void ReplaceTagsInQuestText(BSString* a_text, const TESQuest* a_quest, std::uint32_t a_questInstanceId);
 }

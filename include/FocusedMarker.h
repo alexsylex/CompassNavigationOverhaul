@@ -23,6 +23,15 @@ struct FocusedMarker
 		QuestData(std::uint32_t a_gfxIndex, std::uint32_t a_gfxGotoFrame, RE::TESObjectREFR* a_markerRef,
 				  const RE::TESQuest* a_quest);
 
+		std::string GetQuestName(const RE::TESQuest* a_quest) const
+		{
+			RE::BSString questFullName = a_quest->GetFullName();
+
+			ReplaceTagsInQuestText(&questFullName, a_quest, a_quest->currentInstanceID);
+
+			return questFullName.c_str();
+		}
+
 		const std::string& GetTargetText() const
 		{
 			if (settings::display::showObjectiveAsTarget)
@@ -39,7 +48,7 @@ struct FocusedMarker
 
 		// cache
 		RE::QUEST_DATA::Type type = quest->GetType();
-		std::string name = (type == RE::QUEST_DATA::Type::kMiscellaneous) ? "$MISCELLANEOUS" : quest->GetName();
+		std::string name = (type == RE::QUEST_DATA::Type::kMiscellaneous) ? "$MISCELLANEOUS" : GetQuestName(quest);
 		bool isInSameLocation;
 		std::string description = quest->GetCurrentDescriptionWithReplacedTags().c_str();
 		std::vector<std::string> objectives;

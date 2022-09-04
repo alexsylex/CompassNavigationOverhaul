@@ -14,6 +14,26 @@ namespace extended
 		if ((IsFocusedMarker(a_marker) && angleToPlayerCamera < keepFocusedAngle) || 
 			angleToPlayerCamera < facingAngle)
 		{
+
+			auto markerLinkedRef = a_marker->extraList.GetByType<RE::ExtraLinkedRef>();
+			for (auto& linkedRefs : markerLinkedRef->linkedRefs) 
+			{
+				if (linkedRefs.refr->GetName());
+			}
+
+			auto markerMissingLinkedRefIDs = a_marker->extraList.GetByType<RE::ExtraMissingLinkedRefIDs>();
+			auto markerPromotedRef = a_marker->extraList.GetByType<RE::ExtraPromotedRef>();
+			for (auto& promotedRefOwners : markerPromotedRef->promotedRefOwners)
+			{
+				if (promotedRefOwners->GetName());
+			}
+
+			auto markerAliasInstanceArray = a_marker->extraList.GetByType<RE::ExtraAliasInstanceArray>();
+			for (auto& aliases : markerAliasInstanceArray->aliases)
+			{
+				if (aliases->quest->GetName());
+			}
+			auto markerContainerChanges = a_marker->extraList.GetByType<RE::ExtraContainerChanges>();
 			std::shared_ptr<FocusedMarker> facedMarker = GetFacedMarkerUpdated(a_marker, angleToPlayerCamera);
 
 			// For this marker, find the data for this quest
