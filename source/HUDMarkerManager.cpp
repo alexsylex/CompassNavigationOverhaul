@@ -6,6 +6,14 @@
 
 namespace extended
 {
+	struct QuestTarget : RE::TESQuestTarget
+	{
+		RE::BSTArray<void*> unk00;
+		RE::BSTArray<void*> unk18;
+		RE::NiPoint3 unk30;
+		RE::NiPoint3 targetPosition;
+	};
+
 	void HUDMarkerManager::ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_marker,
 											  std::uint32_t a_markerGotoFrame)
 	{
@@ -14,26 +22,6 @@ namespace extended
 		if ((IsFocusedMarker(a_marker) && angleToPlayerCamera < keepFocusedAngle) || 
 			angleToPlayerCamera < facingAngle)
 		{
-
-			auto markerLinkedRef = a_marker->extraList.GetByType<RE::ExtraLinkedRef>();
-			for (auto& linkedRefs : markerLinkedRef->linkedRefs) 
-			{
-				if (linkedRefs.refr->GetName());
-			}
-
-			auto markerMissingLinkedRefIDs = a_marker->extraList.GetByType<RE::ExtraMissingLinkedRefIDs>();
-			auto markerPromotedRef = a_marker->extraList.GetByType<RE::ExtraPromotedRef>();
-			for (auto& promotedRefOwners : markerPromotedRef->promotedRefOwners)
-			{
-				if (promotedRefOwners->GetName());
-			}
-
-			auto markerAliasInstanceArray = a_marker->extraList.GetByType<RE::ExtraAliasInstanceArray>();
-			for (auto& aliases : markerAliasInstanceArray->aliases)
-			{
-				if (aliases->quest->GetName());
-			}
-			auto markerContainerChanges = a_marker->extraList.GetByType<RE::ExtraContainerChanges>();
 			std::shared_ptr<FocusedMarker> facedMarker = GetFacedMarkerUpdated(a_marker, angleToPlayerCamera);
 
 			// For this marker, find the data for this quest
@@ -83,6 +71,43 @@ namespace extended
 				{
 					// Add each objective only once per quest
 					if (std::ranges::find(questData->addedInstancedObjectives, &instancedObjective) == questData->addedInstancedObjectives.end()) 
+					{
+						if (questData->ageIndex == -1)
+						{
+							questData->ageIndex = i;
+						}
+
+						// If the marker points to a portal
+						if (auto teleportLinkedDoor = a_marker->extraList.GetTeleportLinkedDoor().get()) 
+						{
+							questData->addedInstancedObjectives.push_back(&instancedObjective);
+							questData->objectives.push_back(instancedObjective.GetDisplayTextWithReplacedTags().c_str());
+						}
+						else
+						{
+							for (int j = 0; j < instancedObjective.objective->numTargets; j++)
+							{
+								auto questTargetEx = reinterpret_cast<extended::QuestTarget*>(instancedObjective.objective->targets[j]);
+
+								if (questTargetEx->targetPosition == a_marker->data.location)
+								{
+									questData->addedInstancedObjectives.push_back(&instancedObjective);
+									questData->objectives.push_back(instancedObjective.GetDisplayTextWithReplacedTags().c_str());
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+			if (questData->addedInstancedObjectives.empty())
+			{
+				for (int i = player->objectives.size() - 1; i >= 0; i--)
+				{
+					const RE::BGSInstancedQuestObjective& instancedObjective = player->objectives[i];
+
+					if (instancedObjective.objective->ownerQuest == a_quest &&
+						instancedObjective.instanceState == RE::QUEST_OBJECTIVE_STATE::kDisplayed) 
 					{
 						if (questData->ageIndex == -1)
 						{
@@ -187,6 +212,11 @@ namespace extended
 		{
 			bool canFocusPlayerSetMarker = true;
 			uint32_t gfxIndex = 0;
+
+			if (focusedMarker->data.empty())
+			{
+				logger::trace("");
+			}
 
 			for (std::shared_ptr<FocusedMarker::Data> focusedMarkerData : focusedMarker->data)
 			{
