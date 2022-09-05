@@ -109,13 +109,17 @@ namespace extended
 					if (instancedObjective.objective->ownerQuest == a_quest &&
 						instancedObjective.instanceState == RE::QUEST_OBJECTIVE_STATE::kDisplayed) 
 					{
-						if (questData->ageIndex == -1)
+						// Add each objective only once per quest
+						if (std::ranges::find(questData->addedInstancedObjectives, &instancedObjective) == questData->addedInstancedObjectives.end())
 						{
-							questData->ageIndex = i;
-						}
+							if (questData->ageIndex == -1)
+							{
+								questData->ageIndex = i;
+							}
 
-						questData->addedInstancedObjectives.push_back(&instancedObjective);
-						questData->objectives.push_back(instancedObjective.GetDisplayTextWithReplacedTags().c_str());
+							questData->addedInstancedObjectives.push_back(&instancedObjective);
+							questData->objectives.push_back(instancedObjective.GetDisplayTextWithReplacedTags().c_str());
+						}
 					}
 				}
 			}
