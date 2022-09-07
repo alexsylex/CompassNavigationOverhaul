@@ -62,7 +62,8 @@ namespace hooks
 		{
 			auto mapMarker = marker->extraList.GetByType<RE::ExtraMapMarker>();
 
-			if (settings::display::showUnvisitedLocationMarkers || mapMarker->mapData->flags.all(RE::MapMarkerData::Flag::kVisible))
+			// Unvisited markers keep being shown in any case
+			if (settings::display::showUndiscoveredLocationMarkers || mapMarker->mapData->flags.all(RE::MapMarkerData::Flag::kVisible))
 			{
 				if (HUDMarkerManager::AddMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame)) 
 				{

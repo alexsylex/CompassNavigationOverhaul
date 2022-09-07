@@ -131,20 +131,30 @@ namespace extended
 	{
 		float angleToPlayerCamera = GetAngleBetween(playerCamera, a_marker);
 
-		if ((IsFocusedMarker(a_marker) && angleToPlayerCamera < keepFocusedAngle) ||
-			angleToPlayerCamera < facingAngle)
+		bool isDiscoveredLocation = a_mapMarker->mapData->flags.all(RE::MapMarkerData::Flag::kVisible);
+
+		if (isDiscoveredLocation || !settings::display::undiscoveredMeansUnknownInfo)
 		{
-			std::shared_ptr<FocusedMarker> facedMarker = GetFacedMarkerUpdated(a_marker, angleToPlayerCamera);
+			if ((IsFocusedMarker(a_marker) && angleToPlayerCamera < keepFocusedAngle) ||
+				angleToPlayerCamera < facingAngle)
+			{
+				std::shared_ptr<FocusedMarker> facedMarker = GetFacedMarkerUpdated(a_marker, angleToPlayerCamera);
 
-			// Add the location data for this marker
-			auto locationData = std::make_shared<FocusedMarker::LocationData>
-			(
-				hudMarkerManager->currentMarkerIndex - 1,
-				a_markerGotoFrame,
-				a_mapMarker->mapData
-			);
+				// Add the location data for this marker
+				auto locationData = std::make_shared<FocusedMarker::LocationData>
+				(
+					hudMarkerManager->currentMarkerIndex - 1,
+					a_markerGotoFrame,
+					a_mapMarker->mapData
+				);
 
-			facedMarker->data.push_back(locationData);
+				facedMarker->data.push_back(locationData);
+			}
+		}
+
+		if (!isDiscoveredLocation && settings::display::undiscoveredMeansUnknownMarkers)
+		{
+			hudMarkerManager->scaleformMarkerData[hudMarkerManager->currentMarkerIndex - 1].type.SetNumber(131);
 		}
 	}
 

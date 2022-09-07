@@ -20,7 +20,9 @@ namespace settings
 	namespace display
 	{
 		inline bool useMetricUnits = false;
-		inline bool showUnvisitedLocationMarkers = true;
+		inline bool showUndiscoveredLocationMarkers = true;
+		inline bool undiscoveredMeansUnknownMarkers = true;
+		inline bool undiscoveredMeansUnknownInfo = true;
 		inline bool showEnemyMarkers = true;
 		inline bool showObjectiveAsTarget = true;
 		inline bool showInteriorMarkers = true;

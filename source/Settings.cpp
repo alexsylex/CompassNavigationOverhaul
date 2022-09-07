@@ -22,7 +22,9 @@ namespace settings
 			iniSettingCollection->AddSettings
 			(
 				MakeSetting("bUseMetricUnits:Display", useMetricUnits),
-				MakeSetting("bShowUnvisitedLocationMarkers:Display", showUnvisitedLocationMarkers),
+				MakeSetting("bShowUndiscoveredLocationMarkers:Display", showUndiscoveredLocationMarkers),
+				MakeSetting("bUndiscoveredMeansUnknownMarkers:Display", undiscoveredMeansUnknownMarkers),
+				MakeSetting("bUndiscoveredMeansUnknownInfo:Display", undiscoveredMeansUnknownInfo),
 				MakeSetting("bShowEnemyMarkers:Display", showEnemyMarkers),
 				MakeSetting("bShowObjectiveAsTarget:Display", showObjectiveAsTarget),
 				MakeSetting("bShowInteriorMarkers:Display", showInteriorMarkers),
@@ -60,7 +62,9 @@ namespace settings
 			showObjectiveAsTarget = iniSettingCollection->GetSetting<bool>("bShowObjectiveAsTarget:Display");
 			showInteriorMarkers = iniSettingCollection->GetSetting<bool>("bShowInteriorMarkers:Display");
 			useMetricUnits = iniSettingCollection->GetSetting<bool>("bUseMetricUnits:Display");
-			showUnvisitedLocationMarkers = iniSettingCollection->GetSetting<bool>("bShowUnvisitedLocationMarkers:Display");
+			showUndiscoveredLocationMarkers = iniSettingCollection->GetSetting<bool>("bShowUndiscoveredLocationMarkers:Display");
+			undiscoveredMeansUnknownMarkers = iniSettingCollection->GetSetting<bool>("bUndiscoveredMeansUnknownMarkers:Display");
+			undiscoveredMeansUnknownInfo = iniSettingCollection->GetSetting<bool>("bUndiscoveredMeansUnknownInfo:Display");
 			showEnemyMarkers = iniSettingCollection->GetSetting<bool>("bShowEnemyMarkers:Display");
 			angleToShowMarkerDetails = iniSettingCollection->GetSetting<float>("fAngleToShowMarkerDetails:Display");
 			angleToKeepMarkerDetailsShown = iniSettingCollection->GetSetting<float>("fAngleToKeepMarkerDetailsShown:Display");
