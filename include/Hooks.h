@@ -18,7 +18,7 @@ namespace hooks
 	public:
 
 		static inline REL::Relocation<bool (*)(const RE::HUDMarkerManager*, RE::TESQuest**,
-											   RE::BSTArray<RE::UnkValue>*)> UpdateQuests{ UpdateQuestsId };
+			RE::BSTArray<RE::TESQuestTarget>*)> UpdateQuests{ UpdateQuestsId };
 
 		static inline REL::Relocation<bool (*)(const RE::HUDMarkerManager*)> UpdateLocations{ UpdateLocationsId };
 
@@ -48,7 +48,7 @@ namespace hooks
 
 	bool UpdateQuests(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 							RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame,
-							RE::TESQuest*& a_quest);
+		RE::TESQuestTarget* a_questTargets);
 
 	RE::TESWorldSpace* AllowedToShowMapMarker(const RE::TESObjectREFR* a_marker);
 
@@ -78,7 +78,11 @@ namespace hooks
 					Xbyak::Label hookLabel;
 					Xbyak::Label retnLabel;
 
-					mov(ptr[rsp + 0x28], REL::Module::IsSE() ? r14 : rdi);	// SE: r14, AE: rdi = TESQuest**
+					//There's not enough room for both of these, as rsp+0x30 is in use, but we can deduce the quest
+					// from the quest target
+
+					//mov(ptr[rsp + 0x28], REL::Module::IsSE() ? r14 : rdi);	// SE: r14, AE: rdi = TESQuest**
+					mov(ptr[rsp + 0x28], rbx);	// TESQuestTarget*
 					call(ptr[rip + hookLabel]);
 
 					jmp(ptr[rip + retnLabel]);
