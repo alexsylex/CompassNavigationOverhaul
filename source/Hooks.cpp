@@ -10,24 +10,27 @@ namespace hooks
 							RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame,
 		RE::TESQuestTarget* a_questTarget)
 	{
+		//
 		if (HUDMarkerManager::AddMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame))
 		{
 			RE::TESObjectREFR* marker = RE::TESObjectREFR::LookupByHandle(a_refHandle).get();
 
 			RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
-			RE::TESQuest* a_quest;
-			RE::BGSInstancedQuestObjective a_objective;
+			RE::TESQuest* quest;
+			RE::BGSInstancedQuestObjective objective;
+			RE::TESQuestTarget* target;
 			for (int i = 0; i < player->objectives.size(); i++) {
 				for (int j = 0; j < player->objectives[i].objective->numTargets; j++) {
 					if (a_questTarget->unk00 == (uint64_t)player->objectives[i].objective->targets[j]) {
-						a_quest = player->objectives[i].objective->ownerQuest;
-						a_objective = player->objectives[i];
+						quest = player->objectives[i].objective->ownerQuest;
+						objective = player->objectives[i];
+						target = (RE::TESQuestTarget*)a_questTarget->unk00;
 						break;
 					}
 				}
 			}
 
-			extended::HUDMarkerManager::GetSingleton()->ProcessQuestMarker(a_quest, a_objective, marker, a_markerGotoFrame);
+			extended::HUDMarkerManager::GetSingleton()->ProcessQuestMarker(quest, objective, target, marker, a_markerGotoFrame);
 
 			return true;
 		}

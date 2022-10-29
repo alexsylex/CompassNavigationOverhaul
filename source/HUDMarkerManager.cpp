@@ -14,8 +14,8 @@ namespace extended
 		RE::NiPoint3 targetPosition;
 	};
 
-	void HUDMarkerManager::ProcessQuestMarker(RE::TESQuest* a_quest, RE::BGSInstancedQuestObjective &a_instancedObjective, RE::TESObjectREFR* a_marker,
-											  std::uint32_t a_markerGotoFrame)
+	void HUDMarkerManager::ProcessQuestMarker(RE::TESQuest* a_quest, RE::BGSInstancedQuestObjective& a_instancedObjective, RE::TESQuestTarget* a_target,
+		RE::TESObjectREFR* a_marker, std::uint32_t a_markerGotoFrame)
 	{
 		float angleToPlayerCamera = GetAngleBetween(playerCamera, a_marker);
 
@@ -60,9 +60,34 @@ namespace extended
 				facedMarker->data.push_back(questData);
 			}
 
-			if (std::ranges::find(questData->addedInstancedObjectives, &a_instancedObjective) == questData->addedInstancedObjectives.end()) {
-				questData->addedInstancedObjectives.push_back(&a_instancedObjective);
-				questData->objectives.push_back(a_instancedObjective.GetDisplayTextWithReplacedTags().c_str());
+			// Add objectives to the quest data. The objectives are in oldest-to-newest order,
+			// so we iterate from newest-to-oldest to have it in the same order as in the journal
+			for (int i = player->objectives.size() - 1; i >= 0; i--) {
+				const RE::BGSInstancedQuestObjective& instancedObjective = player->objectives[i];
+
+				bool objectiveHasTarget = false;
+				for (int j = 0; j < instancedObjective.objective->numTargets; j++) {
+					if (a_target == instancedObjective.objective->targets[j]) {
+						objectiveHasTarget = true;
+						break;
+			}
+		}
+
+				if (instancedObjective.objective->ownerQuest == a_quest &&
+					instancedObjective.instanceState == RE::QUEST_OBJECTIVE_STATE::kDisplayed && objectiveHasTarget) {
+					// Add each objective only once per quest
+					if (std::ranges::find(questData->addedInstancedObjectives, &instancedObjective) == questData->addedInstancedObjectives.end()) {
+						//if (questData->ageIndex == -1) {
+						//	questData->ageIndex = i;
+						//}
+
+						questData->addedInstancedObjectives.push_back(&instancedObjective);
+						questData->objectives.push_back(instancedObjective.GetDisplayTextWithReplacedTags().c_str());
+	}
+				}
+			}
+			if (questData->addedInstancedObjectives.empty()) {
+				logger::error("questData->addedInstancedObjectives is empty. This shouldn't happen");
 			}
 		}
 	}
