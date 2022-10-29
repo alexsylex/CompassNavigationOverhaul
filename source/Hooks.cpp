@@ -11,6 +11,13 @@ namespace hooks
 		RE::TESQuestTarget* a_questTarget)
 	{
 		//
+		// The game loops through active quest targets, and calls `AddMarker` for each one.
+		// If multiple targets correspond to the same marker, `AddMarker` returns the 
+		// previously-created marker (via `a_refHandle`), so we can iteratively
+		// build the structure containing all the targets, objectives, etc. corresponding
+		// to the marker.
+		// 
+
 		if (HUDMarkerManager::AddMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame))
 		{
 			RE::TESObjectREFR* marker = RE::TESObjectREFR::LookupByHandle(a_refHandle).get();
