@@ -26,11 +26,11 @@ namespace hooks
 			RE::TESQuest* quest;
 			RE::BGSInstancedQuestObjective objective;
 			RE::TESQuestTarget* target;
-			for (int i = 0; i < player->objectives.size(); i++) {
-				for (int j = 0; j < player->objectives[i].objective->numTargets; j++) {
-					if (a_questTarget->unk00 == (uint64_t)player->objectives[i].objective->targets[j]) {
-						quest = player->objectives[i].objective->ownerQuest;
-						objective = player->objectives[i];
+			for (int i = 0; i < player->GetPlayerRuntimeData().objectives.size(); i++) {
+				for (int j = 0; j < player->GetPlayerRuntimeData().objectives[i].objective->numTargets; j++) {
+					if (a_questTarget->unk00 == (uint64_t)player->GetPlayerRuntimeData().objectives[i].objective->targets[j]) {
+						quest = player->GetPlayerRuntimeData().objectives[i].objective->ownerQuest;
+						objective = player->GetPlayerRuntimeData().objectives[i];
 						target = (RE::TESQuestTarget*)a_questTarget->unk00;
 						break;
 					}
