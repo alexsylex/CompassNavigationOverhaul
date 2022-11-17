@@ -21,8 +21,8 @@ namespace extended
 			return &singleton;
 		}
 
-		void ProcessQuestMarker(RE::TESQuest* a_quest, RE::TESObjectREFR* a_marker,
-								std::uint32_t a_markerGotoFrame);
+		void ProcessQuestMarker(RE::TESQuest* a_quest, RE::BGSInstancedQuestObjective &a_objective, RE::TESQuestTarget* a_target,
+								RE::TESObjectREFR* a_marker, std::uint32_t a_markerGotoFrame);
 
 		void ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_marker,
 								   std::uint32_t a_markerGotoFrame);

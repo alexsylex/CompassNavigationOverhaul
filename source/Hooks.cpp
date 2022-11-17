@@ -8,13 +8,36 @@ namespace hooks
 {
 	bool UpdateQuests(const RE::HUDMarkerManager* a_hudMarkerManager, RE::HUDMarker::ScaleformData* a_markerData,
 							RE::NiPoint3* a_pos, const RE::RefHandle& a_refHandle, std::uint32_t a_markerGotoFrame,
-							RE::TESQuest*& a_quest)
+		RE::TESQuestTarget* a_questTarget)
 	{
+		//
+		// The game loops through active quest targets, and calls `AddMarker` for each one.
+		// If multiple targets correspond to the same marker, `AddMarker` returns the 
+		// previously-created marker (via `a_refHandle`), so we can iteratively
+		// build the structure containing all the targets, objectives, etc. corresponding
+		// to the marker.
+		// 
+
 		if (HUDMarkerManager::AddMarker(a_hudMarkerManager, a_markerData, a_pos, a_refHandle, a_markerGotoFrame))
 		{
 			RE::TESObjectREFR* marker = RE::TESObjectREFR::LookupByHandle(a_refHandle).get();
 
-			extended::HUDMarkerManager::GetSingleton()->ProcessQuestMarker(a_quest, marker, a_markerGotoFrame);
+			RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();
+			RE::TESQuest* quest;
+			RE::BGSInstancedQuestObjective objective;
+			RE::TESQuestTarget* target;
+			for (int i = 0; i < player->GetPlayerRuntimeData().objectives.size(); i++) {
+				for (int j = 0; j < player->GetPlayerRuntimeData().objectives[i].objective->numTargets; j++) {
+					if (a_questTarget->unk00 == (uint64_t)player->GetPlayerRuntimeData().objectives[i].objective->targets[j]) {
+						quest = player->GetPlayerRuntimeData().objectives[i].objective->ownerQuest;
+						objective = player->GetPlayerRuntimeData().objectives[i];
+						target = (RE::TESQuestTarget*)a_questTarget->unk00;
+						break;
+					}
+				}
+			}
+
+			extended::HUDMarkerManager::GetSingleton()->ProcessQuestMarker(quest, objective, target, marker, a_markerGotoFrame);
 
 			return true;
 		}

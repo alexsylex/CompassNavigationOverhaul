@@ -36,7 +36,19 @@ struct FocusedMarker
 		{
 			if (settings::display::showObjectiveAsTarget)
 			{
+				if (objectives.size() == 1) {
 				return objectives.back();
+				} else {
+					static std::string markerText;
+					markerText.clear();
+					for (int i = 0; i < objectives.size(); i++) {
+						if (i > 0) {
+							markerText.append(", ");
+						}
+						markerText.append(objectives[i]);
+					}
+					return markerText;
+				}
 			}
 			else
 			{
