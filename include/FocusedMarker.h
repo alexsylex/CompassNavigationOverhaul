@@ -1,5 +1,6 @@
 #pragma once
 
+#include "NPCNameProvider.h"
 #include "utils/Geometry.h"
 
 #include "Settings.h"
@@ -93,7 +94,7 @@ struct FocusedMarker
 		const RE::Character* enemy;
 
 		// cache
-		std::string enemyName = enemy->GetName();
+		std::string enemyName = NPCNameProvider::GetSingleton()->GetName(enemy);
 	};
 
 	struct PlayerSetData : Data
