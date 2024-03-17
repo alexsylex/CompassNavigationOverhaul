@@ -3,6 +3,7 @@
 #include "IUI/API.h"
 
 #include "Compass.h"
+#include "NPCNameProvider.h"
 #include "QuestItemList.h"
 #include "Test.h"
 
@@ -24,6 +25,8 @@ void SKSEMessageListener(SKSE::MessagingInterface::Message* a_msg)
 		{
 			logger::error("Infinity UI installation not detected. Please, go to ... to get it");
 		}
+
+		NPCNameProvider::GetSingleton()->RequestAPI();
 	}
 }
 

@@ -44,6 +44,8 @@ set(headers
 	include/FocusedMarker.h
 	include/Hooks.h
 	include/HUDMarkerManager.h
+	include/NND_API.h
+	include/NPCNameProvider.h
 	include/pch.h
 	include/QuestItemList.h
 	include/Settings.h
@@ -60,6 +62,7 @@ set(sources
 	source/HUDMarkerManager.cpp
 	source/main.cpp
 	source/MessageListeners.cpp
+	source/NPCNameProvider.cpp
 	source/pch.cpp
 	source/Settings.cpp
 )
