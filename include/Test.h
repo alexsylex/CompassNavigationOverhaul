@@ -1,6 +1,6 @@
 #pragma once
 
-class Test : GFxDisplayObject
+class Test : IUI::GFxDisplayObject
 {
 public:
 	static constexpr inline std::string_view path = "_level0.Test";

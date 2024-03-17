@@ -4,22 +4,16 @@
 
 #include "RE/I/IMenu.h"
 
+RE::BSTArray<RE::BGSInstancedQuestObjective>& GetPlayerObjectives();
+
 namespace extended
 {
-	struct QuestTarget : RE::TESQuestTarget
-	{
-		RE::BSTArray<void*> unk00;
-		RE::BSTArray<void*> unk18;
-		RE::NiPoint3 unk30;
-		RE::NiPoint3 targetPosition;
-	};
-
 	void HUDMarkerManager::ProcessQuestMarker(RE::TESQuest* a_quest, RE::BGSInstancedQuestObjective& a_instancedObjective, RE::TESQuestTarget* a_target,
-		RE::TESObjectREFR* a_marker, std::uint32_t a_markerGotoFrame)
+											  RE::TESObjectREFR* a_marker, std::uint32_t a_markerGotoFrame)
 	{
 		float angleToPlayerCamera = GetAngleBetween(playerCamera, a_marker);
 
-		if ((IsFocusedMarker(a_marker) && angleToPlayerCamera < keepFocusedAngle) || 
+		if ((IsTheFocusedMarker(a_marker) && angleToPlayerCamera < keepFocusedAngle) || 
 			angleToPlayerCamera < facingAngle)
 		{
 			std::shared_ptr<FocusedMarker> facedMarker = GetFacedMarkerUpdated(a_marker, angleToPlayerCamera);
@@ -60,34 +54,47 @@ namespace extended
 				facedMarker->data.push_back(questData);
 			}
 
+			RE::BSTArray<RE::BGSInstancedQuestObjective>& playerObjectives = GetPlayerObjectives();
+
 			// Add objectives to the quest data. The objectives are in oldest-to-newest order,
 			// so we iterate from newest-to-oldest to have it in the same order as in the journal
-			for (int i = player->GetPlayerRuntimeData().objectives.size() - 1; i >= 0; i--) {
-				const RE::BGSInstancedQuestObjective& instancedObjective = player->objectives[i];
+			for (int i = playerObjectives.size() - 1; i >= 0; i--)
+			{
+				const RE::BGSInstancedQuestObjective& instancedObjective = playerObjectives[i];
 
 				bool objectiveHasTarget = false;
-				for (int j = 0; j < instancedObjective.objective->numTargets; j++) {
-					if (a_target == instancedObjective.objective->targets[j]) {
+				for (int j = 0; j < instancedObjective.objective->numTargets; j++)
+				{
+					if (a_target == instancedObjective.objective->targets[j])
+					{
 						objectiveHasTarget = true;
 						break;
-			}
-		}
+					}
+				}
 
 				if (instancedObjective.objective->ownerQuest == a_quest &&
-					instancedObjective.instanceState == RE::QUEST_OBJECTIVE_STATE::kDisplayed && objectiveHasTarget) {
+					instancedObjective.instanceState == RE::QUEST_OBJECTIVE_STATE::kDisplayed && objectiveHasTarget)
+				{
 					// Add each objective only once per quest
-					if (std::ranges::find(questData->addedInstancedObjectives, &instancedObjective) == questData->addedInstancedObjectives.end()) {
-						//if (questData->ageIndex == -1) {
-						//	questData->ageIndex = i;
-						//}
+					if (std::ranges::find(questData->addedInstancedObjectives, &instancedObjective) == questData->addedInstancedObjectives.end())
+					{
+						// We need to assign an age index (only the first time we process this quest data)
+						// to order the quests as in the journal
+						if (questData->ageIndex == -1)
+						{
+							questData->ageIndex = i;
+						}
 
 						questData->addedInstancedObjectives.push_back(&instancedObjective);
 						questData->objectives.push_back(instancedObjective.GetDisplayTextWithReplacedTags().c_str());
-	}
+					}
 				}
 			}
-			if (questData->addedInstancedObjectives.empty()) {
-				logger::error("questData->addedInstancedObjectives is empty. This shouldn't happen");
+
+			if (questData->addedInstancedObjectives.empty())
+			{
+				// Make sure we don't process invalid data, otherwise CTD
+				facedMarker->data.pop_back();
 			}
 		}
 	}
@@ -101,7 +108,7 @@ namespace extended
 
 		if (isDiscoveredLocation || !settings::display::undiscoveredMeansUnknownInfo)
 		{
-			if ((IsFocusedMarker(a_marker) && angleToPlayerCamera < keepFocusedAngle) ||
+			if ((IsTheFocusedMarker(a_marker) && angleToPlayerCamera < keepFocusedAngle) ||
 				angleToPlayerCamera < facingAngle)
 			{
 				std::shared_ptr<FocusedMarker> facedMarker = GetFacedMarkerUpdated(a_marker, angleToPlayerCamera);
@@ -120,7 +127,7 @@ namespace extended
 
 		if (!isDiscoveredLocation && settings::display::undiscoveredMeansUnknownMarkers)
 		{
-			hudMarkerManager->scaleformMarkerData[hudMarkerManager->currentMarkerIndex - 1].type.SetNumber(131);
+			hudMarkerManager->scaleformMarkerData[hudMarkerManager->currentMarkerIndex - 1].type.SetNumber(0);
 		}
 	}
 
@@ -128,7 +135,7 @@ namespace extended
 	{
 		float angleToPlayerCamera = GetAngleBetween(playerCamera, a_enemy);
 
-		if ((IsFocusedMarker(a_enemy) && angleToPlayerCamera < keepFocusedAngle) ||
+		if ((IsTheFocusedMarker(a_enemy) && angleToPlayerCamera < keepFocusedAngle) ||
 			angleToPlayerCamera < facingAngle)
 		{
 			std::shared_ptr<FocusedMarker> facedMarker = GetFacedMarkerUpdated(a_enemy, angleToPlayerCamera);
@@ -149,7 +156,7 @@ namespace extended
 	{
 		float angleToPlayerCamera = GetAngleBetween(playerCamera, a_marker);
 
-		if ((IsFocusedMarker(a_marker) && angleToPlayerCamera < keepFocusedAngle) ||
+		if ((IsTheFocusedMarker(a_marker) && angleToPlayerCamera < keepFocusedAngle) ||
 			angleToPlayerCamera < facingAngle)
 		{
 			std::shared_ptr<FocusedMarker> facedMarker = GetFacedMarkerUpdated(a_marker, angleToPlayerCamera);
@@ -165,120 +172,125 @@ namespace extended
 		}
 	}
 
-	void HUDMarkerManager::SetMarkersExtraInfo()
+	void HUDMarkerManager::SetMarkers()
 	{
-		std::shared_ptr<FocusedMarker> nextFocusedMarker = GetMostCenteredMarkerOf(facedMarkers);
+		RE::ActorState* playerState = player->AsActorState();
 
-		facedMarkers.clear();
+		bool canQuestItemListBeDisplayed = questItemList->CanBeDisplayed(player->GetParentCell(), playerState->IsWeaponDrawn());
 
-		bool focusChanged = !IsSameFocusedMarker(nextFocusedMarker);
+		if (!canQuestItemListBeDisplayed)
+		{
+			questItemList->SetHiddenByForce(true);
+		}
 
-		focusedMarker = nextFocusedMarker;
+		bool focusChanged = UpdateFocusedMarker();
 
 		if (focusChanged)
 		{
-			timeFocusingMarker = 0.0F;
-
 			compass->UnfocusMarker();
+			timeFocusingMarker = 0.0F;
+		}
+		else if (focusedMarker)
+		{
+			timeFocusingMarker += timeManager->realTimeDelta;
 		}
 
-		if (focusChanged || (settings::questlist::hideInCombat && player->IsWeaponDrawn()))
+		if (focusChanged || questItemList->IsHiddenByForce())
 		{
-			if (questItemList)
-				questItemList->RemoveAllQuests();
+			questItemList->RemoveAllQuests();
 		}
+
+		bool isFocusedMarkerQuest = false;
+		std::int32_t focusedMarkerIndex = -1;
 
 		if (focusedMarker)
 		{
-			bool canFocusPlayerSetMarker = true;
-			uint32_t gfxIndex = 0;
+			std::string targetText;
 
-			if (focusedMarker->data.empty())
-			{
-				logger::trace("");
-			}
+			std::uint32_t objectivesCount = 0;
 
 			for (std::shared_ptr<FocusedMarker::Data> focusedMarkerData : focusedMarker->data)
 			{
 				if (auto questData = std::dynamic_pointer_cast<FocusedMarker::QuestData>(focusedMarkerData))
 				{
-					canFocusPlayerSetMarker = false;
+					targetText = questData->GetTargetText();
 
-					compass->SetMarkerInfo(questData->GetTargetText(), focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
+					isFocusedMarkerQuest = true;
 
-					if (focusChanged && questItemList && questItemList->CanBeDisplayedIn(player->GetParentCell()))
+					objectivesCount += questData->objectives.size(); 
+
+					if (canQuestItemListBeDisplayed && (focusChanged || questItemList->IsHiddenByForce()))
 					{
-						questItemList->AddQuest(questData->type, questData->name,questData->isInSameLocation, questData->objectives, questData->ageIndex);
+						questItemList->AddQuest(questData->type, questData->name,questData->isInSameLocation, 
+												questData->objectives, questData->ageIndex);
 						questItemList->SetQuestSide(GetSideInQuest(questData->type));
+
+						// If we call a function more than once per frame (like in this for-loop)
+						// we need to update the stage with `GFxMovieView::Advance`, otherwise graphical
+						// glitches occur to the element when showing up
+						questItemList->GetMovieView()->Advance(0.0F);
 					}
 				}
 				else if (auto locationData = std::dynamic_pointer_cast<FocusedMarker::LocationData>(focusedMarkerData))
 				{
-					compass->SetMarkerInfo(locationData->locationName, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
+					targetText = locationData->locationName;
 				}
 				else if (auto enemyData = std::dynamic_pointer_cast<FocusedMarker::EnemyData>(focusedMarkerData))
 				{
-					compass->SetMarkerInfo(enemyData->enemyName, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
+					targetText = settings::display::showEnemyNameUnderMarker ? enemyData->enemyName : "";
 				}
 				else if (auto playerSetData = std::dynamic_pointer_cast<FocusedMarker::PlayerSetData>(focusedMarkerData))
 				{
-					if (canFocusPlayerSetMarker)
+					if (isFocusedMarkerQuest)
 					{
-						compass->SetMarkerInfo(playerSetData->locationName, focusedMarker->distanceToPlayer, focusedMarker->heightDifference);
+						continue;
 					}
+
+					targetText = playerSetData->locationName;
 				}
 
-				gfxIndex = focusedMarkerData->gfxIndex;
+				focusedMarkerIndex = focusedMarkerData->gfxIndex;
 			}
-			
+
+			if (settings::display::showObjectiveAsTarget && settings::display::showOtherObjectivesCount && objectivesCount > 1)
+			{
+				targetText += " (+" + std::to_string(objectivesCount - 1) + ")";
+			}
+
+			compass->SetFocusedMarkerInfo(targetText, focusedMarker->distanceToPlayer,
+										  focusedMarker->heightDifference, focusedMarkerIndex);
+
 			if (focusChanged)
 			{
-				compass->FocusMarker(gfxIndex);
-			} 
-			else
-			{
-				compass->UpdateMarker(gfxIndex);
+				compass->FocusMarker(focusedMarkerIndex);
 			}
+
+			compass->UpdateFocusedMarker(focusedMarkerIndex);
 		}
 
-		// Set smaller the size of non-focused markers
-		compass->SetMarkersSize();
+		compass->SetMarkers();
 
-		if (focusedMarker && (!settings::questlist::hideInCombat || !player->IsWeaponDrawn()))
+		if (isFocusedMarkerQuest && canQuestItemListBeDisplayed)
 		{
-			timeFocusingMarker += timeManager->realTimeDelta;
+			questItemList->SetHiddenByForce(false);
 
-			if (questItemList && questItemList->CanBeDisplayedIn(player->GetParentCell()))
+			float playerSpeed = playerState->DoGetMovementSpeed();
+
+			float delayToShow = (playerSpeed < player->GetWalkSpeed()) ? settings::questlist::walkingDelayToShow :
+								(playerSpeed < player->GetJogSpeed())  ? settings::questlist::joggingDelayToShow :
+																		 settings::questlist::sprintingDelayToShow;
+
+			if (timeFocusingMarker > delayToShow)
 			{
-				float delayToShow;
-				if (player->DoGetMovementSpeed() < player->GetWalkSpeed())
-				{
-					delayToShow = settings::questlist::walkingDelayToShow;
-				}
-				else if (player->DoGetMovementSpeed() < player->GetJogSpeed())
-				{
-					delayToShow = settings::questlist::joggingDelayToShow;
-				}
-				else
-				{
-					delayToShow = settings::questlist::sprintingDelayToShow;
-				}
-
-				if (timeFocusingMarker > delayToShow)
-				{
-					questItemList->ShowAllQuests();
-				}	
+				questItemList->ShowAllQuests();
+				questItemList->Update();
 			}
-		}
-
-		if (questItemList && questItemList->CanBeDisplayedIn(player->GetParentCell()))
-		{
-			questItemList->Update();
 		}
 	}
 
 	std::shared_ptr<FocusedMarker> 
-	HUDMarkerManager::GetMostCenteredMarkerOf(const std::unordered_map<const RE::TESObjectREFR*, std::shared_ptr<FocusedMarker>>& a_facedMarkers)
+	HUDMarkerManager::GetMostCenteredMarkerOf(const std::unordered_map<const RE::TESObjectREFR*, 
+																	   std::shared_ptr<FocusedMarker>>& a_facedMarkers) const
 	{
 		float closestAngleToPlayerCamera = std::numeric_limits<float>::max();
 		std::shared_ptr<FocusedMarker> mostCenteredMarker = nullptr;
@@ -295,24 +307,71 @@ namespace extended
 		return mostCenteredMarker;
 	}
 
-	bool HUDMarkerManager::IsSameFocusedMarker(std::shared_ptr<FocusedMarker> a_nextFocusedMarker) const
+	bool HUDMarkerManager::UpdateFocusedMarker()
 	{
-		if ((focusedMarker && !a_nextFocusedMarker) || (!focusedMarker && a_nextFocusedMarker))
+		std::shared_ptr<FocusedMarker> mostCenteredMarker = GetMostCenteredMarkerOf(facedMarkers);
+		facedMarkers.clear();
+
+		auto IsSameFacedMarker = [](const std::shared_ptr<FocusedMarker>& a_left, const std::shared_ptr<FocusedMarker>& a_right) -> bool
 		{
-			return false;
+			return a_left && a_right && a_left->ref == a_right->ref;
+		};
+
+		if (IsSameFacedMarker(lastMostCenteredMarker, mostCenteredMarker))
+		{
+			timeFacingMarker += timeManager->realTimeDelta;
 		}
-		else if (focusedMarker && a_nextFocusedMarker)
+		else
 		{
-			if (focusedMarker->ref != a_nextFocusedMarker->ref)
+			timeFacingMarker = 0.0F;
+		}
+
+		lastMostCenteredMarker = mostCenteredMarker;
+
+		if (!mostCenteredMarker && focusedMarker)
+		{
+			focusedMarker = nullptr;
+			return true;
+		}
+		else
+		{
+			if (timeFacingMarker > settings::display::focusingDelayToShow)
 			{
-				return false;
+				if (!IsSameFacedMarker(focusedMarker, mostCenteredMarker))
+				{
+					focusedMarker = mostCenteredMarker;
+					return true;
+				}
+				else if (IsSameFacedMarker(focusedMarker, lastMostCenteredMarker))
+				{
+					focusedMarker = mostCenteredMarker;
+				}
 			}
 		}
 
-		return true;
+		return false;
 	}
 
-	float HUDMarkerManager::GetAngleBetween(const RE::PlayerCamera* a_playerCamera, const RE::TESObjectREFR* a_marker) const
+	std::shared_ptr<FocusedMarker> HUDMarkerManager::GetFacedMarkerUpdated(const RE::TESObjectREFR* a_marker, float a_angleToPlayerCamera)
+	{
+		std::shared_ptr<FocusedMarker> facedMarker;
+
+		if (facedMarkers.contains(a_marker))
+		{
+			facedMarker = facedMarkers.at(a_marker);
+			facedMarker->UpdateGeometry(a_angleToPlayerCamera);
+		}
+		else
+		{
+			facedMarker = std::make_shared<FocusedMarker>(a_marker, a_angleToPlayerCamera);
+			facedMarkers.emplace(a_marker, facedMarker);
+		}
+
+		return facedMarker;
+	}
+
+	float HUDMarkerManager::GetAngleBetween(const RE::PlayerCamera* a_playerCamera,
+											const RE::TESObjectREFR* a_marker) const
 	{
 		float angleToPlayerCameraInRadians = util::GetAngleBetween(a_playerCamera, a_marker);
 		float angleToPlayerCamera = util::RadiansToDegrees(angleToPlayerCameraInRadians);
@@ -377,8 +436,7 @@ namespace extended
 		switch (a_questType)
 		{
 		case RE::QUEST_DATA::Type::kCivilWar:
-			if (IsPlayerAllyOfFaction(sonsOfSkyrimFaction) || 
-				IsPlayerAllyOfFaction(stormCloaksFaction) ||
+			if (IsPlayerAllyOfFaction(sonsOfSkyrimFaction) || IsPlayerAllyOfFaction(stormCloaksFaction) ||
 				IsPlayerOpponentOfFaction(imperialLegionFaction))
 			{
 				return "StormCloaks";
@@ -388,8 +446,7 @@ namespace extended
 				return "ImperialLegion";
 			}
 		case RE::QUEST_DATA::Type::kDLC01_Vampire:
-			if (player->HasKeywordString("Vampire") || 
-				IsPlayerAllyOfFaction(vampireFaction) ||
+			if (player->HasKeywordString("Vampire") || IsPlayerAllyOfFaction(vampireFaction) ||
 				IsPlayerOpponentOfFaction(dawnGuardFaction))
 			{
 				return "Vampires";

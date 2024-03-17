@@ -1,14 +1,19 @@
 #include "Settings.h"
 
 #include "IUI/API.h"
+#include "NPCNameProvider.h"
 
 #include "Compass.h"
-#include "NPCNameProvider.h"
 #include "QuestItemList.h"
 #include "Test.h"
 
-#include "utils/Logger.h"
-#include "utils/GFxLoggers.h"
+#include "IUI/GFxLoggers.h"
+
+#include "Hooks.h"
+
+#undef GetModuleHandle
+
+const SKSE::LoadInterface* skse;
 
 void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg);
 
@@ -23,10 +28,20 @@ void SKSEMessageListener(SKSE::MessagingInterface::Message* a_msg)
 		}
 		else 
 		{
-			logger::error("Infinity UI installation not detected. Please, go to ... to get it");
+			logger::error("Infinity UI installation not detected. Please, download it from https://www.nexusmods.com/skyrimspecialedition/mods/74483");
 		}
 
 		NPCNameProvider::GetSingleton()->RequestAPI();
+
+		const SKSE::PluginInfo* mapMarkerFrameworkPluginInfo = skse->GetPluginInfo("MapMarkerFramework");
+
+		if (mapMarkerFrameworkPluginInfo && mapMarkerFrameworkPluginInfo->version < 0x02020000)
+		{
+			logger::info("CoMAP detected. Loading compatibility patch...");
+			hooks::compat::MapMarkerFramework::Install(SKSE::WinAPI::GetModuleHandle("MapMarkerFramework.dll"));
+			hooks::compat::MapMarkerFramework::pluginInfo = mapMarkerFrameworkPluginInfo;
+			logger::info("Successfully loaded compatibility patch for CoMAP!");
+		}
 	}
 }
 
@@ -39,7 +54,9 @@ void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg)
 
 	if (auto message = IUI::API::TranslateAs<IUI::API::Message>(a_msg)) 
 	{
-		if (message->contextMovieUrl.find("HUDMenu") == std::string::npos)
+		std::string_view movieUrl = message->movie->GetMovieDef()->GetFileURL();
+
+		if (movieUrl.find("HUDMenu") == std::string::npos)
 		{
 			return;
 		}
@@ -48,118 +65,104 @@ void InfinityUIMessageListener(SKSE::MessagingInterface::Message* a_msg)
 
 		switch (a_msg->type)
 		{
-		case IUI::API::Message::Type::kStartLoad:
+		case IUI::API::Message::Type::kStartLoadInstances:
+			logger::info("Started loading HUD patches");
+			break;
+		case IUI::API::Message::Type::kPreReplaceInstance:
+			if (auto preReplaceMessage = IUI::API::TranslateAs<IUI::API::PreReplaceInstanceMessage>(a_msg))
 			{
-				logger::info("Started loading patches");
-				break;
-			}
-		case IUI::API::Message::Type::kPreReplace:
-			{
-				if (auto preReplaceMessage = IUI::API::TranslateAs<IUI::API::PreReplaceMessage>(a_msg))
+				std::string pathToOriginal = preReplaceMessage->originalInstance.ToString().c_str();
+
+				if (pathToOriginal == extended::Compass::path)
 				{
-					std::string pathToOriginal = preReplaceMessage->originalDisplayObject.ToString().c_str();
+					extended::Compass::InitSingleton(preReplaceMessage->originalInstance);
+					auto compass = extended::Compass::GetSingleton();
 
-					if (pathToOriginal == extended::Compass::path)
+					logger::debug("Before replacing:");
+					memberLogger.LogMembersOf(*compass);
+
+					RE::GPointF coord = compass->LocalToGlobal();
+					logger::debug("{} is on ({}, {})", compass->ToString().c_str(), coord.x, coord.y);
+				}
+			}
+			break;
+		case IUI::API::Message::Type::kPostPatchInstance:
+			if (auto postPatchMessage = IUI::API::TranslateAs<IUI::API::PostPatchInstanceMessage>(a_msg))
+			{
+				std::string pathToNew = postPatchMessage->newInstance.ToString().c_str();
+
+				if (pathToNew == extended::Compass::path)
+				{
+					// We initialised the CompassShoutMeterHolder singleton in the pre-replace step,
+					// if not, there has been an error
+					if (auto compass = extended::Compass::GetSingleton())
 					{
-						extended::Compass::InitSingleton(preReplaceMessage->originalDisplayObject);
-						auto compass = extended::Compass::GetSingleton();
-
-						logger::debug("");
-						logger::debug("Before patching");
-
+						compass->SetupMod(postPatchMessage->newInstance);
+						compass->SetUnits(settings::display::useMetricUnits);
+							
+						logger::debug("After replacing:");
 						memberLogger.LogMembersOf(*compass);
 
 						RE::GPointF coord = compass->LocalToGlobal();
-						logger::debug("{} is on ({}, {})", compass->ToString(), coord.x, coord.y);
-					}
-				}
-				break;
-			}
-		case IUI::API::Message::Type::kPostPatch:
-			{
-				if (auto postPatchMessage = IUI::API::TranslateAs<IUI::API::PostPatchMessage>(a_msg))
-				{
-					std::string pathToNew = postPatchMessage->newDisplayObject.ToString().c_str();
+						logger::debug("{} is on ({}, {})", compass->ToString().c_str(), coord.x, coord.y);
 
-					if (pathToNew == extended::Compass::path)
-					{
-						// We initialised the CompassShoutMeterHolder singleton in the pre-replace step,
-						// if not, there has been an error
-						if (auto compass = extended::Compass::GetSingleton())
+						if (hooks::compat::MapMarkerFramework::pluginInfo)
 						{
-							compass->SetupMod(postPatchMessage->newDisplayObject);
-							compass->SetUnits(settings::display::useMetricUnits);
-
-							logger::debug("");
-							logger::debug("After patching");
-
-							memberLogger.LogMembersOf(*compass);
-
-							RE::GPointF coord = compass->LocalToGlobal();
-							logger::debug("{} is on ({}, {})", compass->ToString(), coord.x, coord.y);
-						}
-						else
-						{
-							logger::error("Compass instance counterpart not ready for {}", extended::Compass::path);
+							hooks::compat::MapMarkerFramework::compassMovieDef = postPatchMessage->newInstanceMovieDef;
 						}
 					}
-					else if (pathToNew == QuestItemList::path)
+					else
 					{
-						QuestItemList::InitSingleton(postPatchMessage->newDisplayObject);
-						auto questItemList = QuestItemList::GetSingleton();
-
-						logger::debug("");
-						logger::debug("Post-patch members of");
-
-						memberLogger.LogMembersOf(*questItemList);
-
-						RE::GPointF coord = questItemList->LocalToGlobal();
-						logger::debug("{} is on ({}, {})", questItemList->ToString(), coord.x, coord.y);
+						logger::error("Compass instance counterpart not ready for {}", extended::Compass::path);
 					}
 				}
-				break;
-			}
-		case IUI::API::Message::Type::kAbortPatch:
-			{
-				if (auto abortPatchMessage = IUI::API::TranslateAs<IUI::API::AbortPatchMessage>(a_msg))
+				else if (pathToNew == QuestItemList::path)
 				{
-					std::string pathToOriginal = abortPatchMessage->originalValue.ToString().c_str();
+					QuestItemList::InitSingleton(postPatchMessage->newInstance);
+					auto questItemList = QuestItemList::GetSingleton();
 
-					if (pathToOriginal == extended::Compass::path)
-					{
-						logger::error("Aborted replacement of {}", extended::Compass::path);
-					}
+					memberLogger.LogMembersOf(*questItemList);
+
+					RE::GPointF coord = questItemList->LocalToGlobal();
+					logger::debug("{} is on ({}, {})", questItemList->ToString().c_str(), coord.x, coord.y);
 				}
-				break;
 			}
-		case IUI::API::Message::Type::kFinishLoad:
+			break;
+		case IUI::API::Message::Type::kAbortPatchInstance:
+			if (auto abortPatchMessage = IUI::API::TranslateAs<IUI::API::AbortPatchInstanceMessage>(a_msg))
 			{
-				if (auto finishLoadMessage = IUI::API::TranslateAs<IUI::API::FinishLoadMessage>(a_msg))
+				std::string pathToOriginal = abortPatchMessage->originalValue.ToString().c_str();
+
+				if (pathToOriginal == extended::Compass::path)
 				{
-					RE::GFxValue test;
-					if (finishLoadMessage->contextMovieView->GetVariable(&test, Test::path.data()))
-					{
-						Test::InitSingleton(test);
-					}
+					logger::error("Aborted replacement of {}", extended::Compass::path);
 				}
-				logger::info("Finished loading patches");
-				break;
 			}
+			break;
+		case IUI::API::Message::Type::kFinishLoadInstances:
+			if (auto finishLoadMessage = IUI::API::TranslateAs<IUI::API::FinishLoadInstancesMessage>(a_msg))
+			{
+				RE::GFxValue test;
+				if (finishLoadMessage->movie->GetVariable(&test, Test::path.data()))
+				{
+					Test::InitSingleton(test);
+				}
+			}
+			logger::info("Finished loading HUD patches");
+			break;
 		case IUI::API::Message::Type::kPostInitExtensions:
+			if (auto postInitExtMessage = IUI::API::TranslateAs<IUI::API::PostInitExtensionsMessage>(a_msg))
 			{
-				if (auto postInitExtMessage = IUI::API::TranslateAs<IUI::API::PostInitExtensionsMessage>(a_msg))
+				if (auto questItemList = QuestItemList::GetSingleton())
 				{
-					if (auto questItemList = QuestItemList::GetSingleton())
-					{
-						questItemList->AddToHudElements();
+					questItemList->AddToHudElements();
 
-						logger::debug("QuestItemList added to HUD elements");
-					}
-
-					logger::debug("Extensions initialization finished");
+					logger::debug("QuestItemList added to HUD elements");
 				}
-				break;
+
+				logger::debug("Extensions initialization finished");
 			}
+			break;
 		default:
 			break;
 		}

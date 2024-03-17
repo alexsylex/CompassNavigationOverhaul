@@ -1,6 +1,5 @@
 #include "FocusedMarker.h"
 
-#include "NPCNameProvider.h"
 #include "RE/H/HUDMarkerManager.h"
 
 FocusedMarker::QuestData::QuestData(std::uint32_t a_gfxIndex, std::uint32_t a_gfxGotoFrame, RE::TESObjectREFR* a_marker,
@@ -34,7 +33,7 @@ FocusedMarker::QuestData::QuestData(std::uint32_t a_gfxIndex, std::uint32_t a_gf
 		}
 	case RE::FormType::ActorCharacter:
 		{
-			if (auto character = a_marker->As<RE::Character>(); character)
+			if (auto character = a_marker->As<RE::Character>())
 			{
 				characterName = NPCNameProvider::GetSingleton()->GetName(character);
 			}

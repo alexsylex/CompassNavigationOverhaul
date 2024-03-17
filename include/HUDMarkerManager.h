@@ -21,7 +21,7 @@ namespace extended
 			return &singleton;
 		}
 
-		void ProcessQuestMarker(RE::TESQuest* a_quest, RE::BGSInstancedQuestObjective &a_objective, RE::TESQuestTarget* a_target,
+		void ProcessQuestMarker(RE::TESQuest* a_quest, RE::BGSInstancedQuestObjective& a_objective, RE::TESQuestTarget* a_target,
 								RE::TESObjectREFR* a_marker, std::uint32_t a_markerGotoFrame);
 
 		void ProcessLocationMarker(RE::ExtraMapMarker* a_mapMarker, RE::TESObjectREFR* a_marker,
@@ -31,34 +31,18 @@ namespace extended
 
 		void ProcessPlayerSetMarker(RE::TESObjectREFR* a_marker, std::uint32_t a_markerGotoFrame);
 
-		void SetMarkersExtraInfo();
+		void SetMarkers();
 
 	private:
 
-		std::shared_ptr<FocusedMarker> GetFacedMarkerUpdated(const RE::TESObjectREFR* a_marker, float a_angleToPlayerCamera)
-		{
-			std::shared_ptr<FocusedMarker> facedMarker;
+		bool IsTheFocusedMarker(const RE::TESObjectREFR* a_marker) const { return focusedMarker && a_marker == focusedMarker->ref; }
 
-			if (facedMarkers.contains(a_marker))
-			{
-				facedMarker = facedMarkers.at(a_marker);
-				facedMarker->UpdateGeometry(a_angleToPlayerCamera);
-			}
-			else
-			{
-				facedMarker = std::make_shared<FocusedMarker>(a_marker, a_angleToPlayerCamera);
-				facedMarkers.emplace(a_marker, facedMarker);
-			}
-
-			return facedMarker;
-		}
-
-		bool IsFocusedMarker(const RE::TESObjectREFR* a_marker) const { return focusedMarker && a_marker == focusedMarker->ref; }
+		std::shared_ptr<FocusedMarker> GetFacedMarkerUpdated(const RE::TESObjectREFR* a_marker, float a_angleToPlayerCamera);
 
 		std::shared_ptr<FocusedMarker>
-		GetMostCenteredMarkerOf(const std::unordered_map<const RE::TESObjectREFR*, std::shared_ptr<FocusedMarker>>& a_facedMarkers);
+		GetMostCenteredMarkerOf(const std::unordered_map<const RE::TESObjectREFR*, std::shared_ptr<FocusedMarker>>& a_facedMarkers) const;
 
-		bool IsSameFocusedMarker(std::shared_ptr<FocusedMarker> a_nextFocusedMarker) const;
+		bool UpdateFocusedMarker();
 
 		float GetAngleBetween(const RE::PlayerCamera* a_playerCamera, const RE::TESObjectREFR* a_marker) const;
 
@@ -77,6 +61,9 @@ namespace extended
 		std::unordered_map<const RE::TESObjectREFR*, std::shared_ptr<FocusedMarker>> facedMarkers;
 		std::shared_ptr<FocusedMarker> focusedMarker;
 		float timeFocusingMarker = 0.0F;
+
+		std::shared_ptr<FocusedMarker> lastMostCenteredMarker = nullptr;
+		float timeFacingMarker = 0.0F;
 
 		RE::HUDMarkerManager* const hudMarkerManager = RE::HUDMarkerManager::GetSingleton();
 		RE::PlayerCharacter* player = RE::PlayerCharacter::GetSingleton();

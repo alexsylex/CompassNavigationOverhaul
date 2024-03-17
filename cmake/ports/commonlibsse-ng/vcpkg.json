@@ -1,0 +1,21 @@
+{
+	"name": "commonlibsse-ng",
+	"version-string": "4.0.0",
+	"port-version": 1,
+	"description": "A reverse engineered resource for developing SKSE plugins, supporting portable plugins that work across AE, SE, and VR.",
+	"homepage": "https://github.com/alandtse/CommonlibVR",
+	"license": "MIT",
+	"supports": "windows & x64",
+	"dependencies": [
+		{
+			"name": "vcpkg-cmake-config",
+			"host": true
+		},
+		"directxmath",
+		"directxtk",
+		"fmt",
+		"rapidcsv",
+		"spdlog",
+		"xbyak"
+	]
+}

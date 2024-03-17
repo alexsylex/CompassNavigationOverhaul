@@ -24,10 +24,13 @@ namespace settings
 		inline bool undiscoveredMeansUnknownMarkers = true;
 		inline bool undiscoveredMeansUnknownInfo = true;
 		inline bool showEnemyMarkers = true;
+		inline bool showEnemyNameUnderMarker = true;
 		inline bool showObjectiveAsTarget = true;
+		inline bool showOtherObjectivesCount = true;
 		inline bool showInteriorMarkers = true;
 		inline float angleToShowMarkerDetails = 10.0F;
 		inline float angleToKeepMarkerDetailsShown = 35.0F;
+		inline float focusingDelayToShow = 0.1F;
 	}
 
 	namespace questlist

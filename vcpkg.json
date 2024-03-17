@@ -1,18 +1,11 @@
 {
     "name": "compassnavigationoverhaul",
-    "version-string": "1.0.0",
+    "version-string": "2.2.0",
     "description": "",
     "homepage": "https://github.com/alexsylex/CompassNavigationOverhaul",
     "license": "MIT",
     "dependencies": [
-        "boost-atomic",
-        "boost-stl-interfaces",
-        "fmt",
-        "rsm-binary-io",
-        "span-lite",
-        "spdlog",
-        "xbyak",
-        "tsl-ordered-map",
-        "commonlibsse-ng-flatrim"
-    ]
+        "commonlibsse-ng"
+    ],
+    "builtin-baseline": "8d3649ba34aab36914ddd897958599aa0a91b08e"
 }

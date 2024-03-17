@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.21)
 
 project(
 	CompassNavigationOverhaul
-	VERSION 1.0.0
+	VERSION 2.2.0
 	LANGUAGES CXX
 )
 
@@ -21,51 +21,8 @@ configure_file(
 	@ONLY
 )
 
-set(headers
-	include/IUI/API.h
-	include/RE/B/BGSInstancedQuestObjective.h
-	include/RE/B/BSTimer.h
-	include/RE/C/Compass.h
-	include/RE/G/GFxValue.h
-	include/RE/H/HUDMarkerManager.h
-	include/RE/N/NiPoint3.h
-	include/RE/T/TESQuest.h
-	include/utils/Geometry.h
-	include/utils/GFxArray.h
-	include/utils/GFxDisplayObject.h
-	include/utils/GFxLoggers.h
-	include/utils/GFxObject.h
-	include/utils/INISettingCollection.h
-	include/utils/Logger.h
-	include/utils/Setting.h
-	include/utils/Trampoline.h
-	include/utils/type_name.h
-	include/Compass.h
-	include/FocusedMarker.h
-	include/Hooks.h
-	include/HUDMarkerManager.h
-	include/NND_API.h
-	include/NPCNameProvider.h
-	include/pch.h
-	include/QuestItemList.h
-	include/Settings.h
-	include/Test.h
-)
-
-set(sources
-	source/RE/G/GFxValue.cpp
-	source/RE/N/NiPoint3.cpp
-	source/RE/T/TESQuest.cpp
-	source/utils/INISettingCollection.cpp
-	source/FocusedMarker.cpp
-	source/Hooks.cpp
-	source/HUDMarkerManager.cpp
-	source/main.cpp
-	source/MessageListeners.cpp
-	source/NPCNameProvider.cpp
-	source/pch.cpp
-	source/Settings.cpp
-)
+file(GLOB_RECURSE headers "include/*.h")
+file(GLOB_RECURSE sources "source/*.cpp")
 
 source_group(
 	TREE
@@ -80,8 +37,8 @@ source_group(
 ########################################################################################################################
 
 find_package(CommonLibSSE CONFIG REQUIRED)
-find_package(binary_io REQUIRED CONFIG)
 find_package(spdlog REQUIRED CONFIG)
+find_package(directxtk CONFIG REQUIRED)
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${headers} ${sources})
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
@@ -96,7 +53,8 @@ target_link_libraries(
 	${PROJECT_NAME}
 	PRIVATE
 		CommonLibSSE::CommonLibSSE
-		spdlog::spdlog
+		spdlog::spdlog_header_only
+		Microsoft::DirectXTK
 )
 
 if (MSVC)
@@ -118,12 +76,29 @@ target_precompile_headers(
 ## Automatic plugin deployment
 ########################################################################################################################
 
-set(DEPLOYMENT_DIR "C:/Program Files (x86)/Steam/steamapps/common/Skyrim Special Edition")
-set(DEPLOYMENT_DIR_AE "C:/Program Files (x86)/Steam/steamapps/common/Skyrim Anniversary Edition")
+set(SKYRIM_SE_DIR "C:/Program Files (x86)/Steam/steamapps/common/Skyrim Special Edition")
+set(SKYRIM_VR_DIR "C:/Program Files (x86)/Steam/steamapps/common/Skyrim VR")
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}>
-	"${DEPLOYMENT_DIR}/Data/SKSE/Plugins/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
-	COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}>
-	"${DEPLOYMENT_DIR_AE}/Data/SKSE/Plugins/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
-)
+if ("$ENV{RUNTIME_DISABLE_FLAGS}" STREQUAL "")
+	set(COPY_SE YES)
+	set(COPY_VR YES)
+elseif ("$ENV{RUNTIME_DISABLE_FLAGS}" STREQUAL "-UENABLE_SKYRIM_VR")
+	set(COPY_SE YES)
+	set(COPY_VR NO)
+elseif ("$ENV{RUNTIME_DISABLE_FLAGS}" STREQUAL "-UENABLE_SKYRIM_SE -UENABLE_SKYRIM_AE")
+	set(COPY_SE NO)
+	set(COPY_VR YES)
+endif()
+
+if (COPY_SE)
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}>
+		"${SKYRIM_SE_DIR}/Data/SKSE/Plugins/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
+	)
+endif()
+if (COPY_VR)
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}>
+		"${SKYRIM_VR_DIR}/Data/SKSE/Plugins/$<TARGET_FILE_NAME:${PROJECT_NAME}>"
+	)
+endif()

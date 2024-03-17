@@ -1,6 +1,7 @@
 #pragma once
 
 #include "NPCNameProvider.h"
+
 #include "utils/Geometry.h"
 
 #include "Settings.h"
@@ -33,23 +34,11 @@ struct FocusedMarker
 			return questFullName.c_str();
 		}
 
-		const std::string& GetTargetText() const
+		std::string GetTargetText() const
 		{
 			if (settings::display::showObjectiveAsTarget)
 			{
-				if (objectives.size() == 1) {
-				return objectives.back();
-				} else {
-					static std::string markerText;
-					markerText.clear();
-					for (int i = 0; i < objectives.size(); i++) {
-						if (i > 0) {
-							markerText.append(", ");
-						}
-						markerText.append(objectives[i]);
-					}
-					return markerText;
-				}
+				return objectives.empty() ? std::string("") : objectives.front();
 			}
 			else
 			{

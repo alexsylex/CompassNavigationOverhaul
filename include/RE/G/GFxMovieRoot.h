@@ -1,20 +1,116 @@
 #pragma once
 
+#include "RE/G/GArrayLH.h"
 #include "RE/G/GColor.h"
 #include "RE/G/GFxKeyboardState.h"
+#include "RE/G/GFxMovieDefImpl.h"
 #include "RE/G/GFxMovieView.h"
+#include "RE/G/GFxMouseState.h"
+#include "RE/G/GMatrix2D.h"
+#include "RE/G/GStringHash.h"
 
 namespace RE
 {
+	class GASIntervalTimer;
+	class GFxASCharacter;
+	class GFxFontManagerStates;
+	class GFxIMECandidateListStyle;
+	class GFxLoadQueueEntry;
+	class GFxMouseState;
+	class GFxSprite;
+	class GFxStateBagImpl;
+
+	class GFxIMEImm32Dll
+	{
+	public:
+
+		void(* ImmGetContext)(...);
+		void(* ImmReleaseContext)(...);
+		void(* ImmGetCompositionStringA)(...);
+		void(* ImmGetCompositionStringW)(...);
+		void(* ImmIsUIMessageA)(...);
+		void(* ImmIsUIMessageW)(...);
+		void(* immGetDefaultIMEWnd)(...);
+		std::uint64_t libraryA;
+		std::uint32_t lastError;
+	};
+
 	class GFxMovieRoot : public GFxMovieView
 	{
+	public:
+
+		struct ReturnValueHolder;
+
+		struct InvokeAliasInfo
+		{
+			// Unknown
+		};
+
+		struct StickyVarNode
+		{
+			// Unknown
+		};
+
 		enum class Flag
 		{
 			kNone = 0,
-			kDirty = 1 << 10,
+			kViewportSet = 1 << 0,
+			kCachedLogFlag = 1 << 1,
+			kVerboseAction = 1 << 2,
+			kLogRootFilenames = 1 << 3,
+			kLogChildFilenames = 1 << 4,
+			kLogLongFilenames = 1 << 5,
+			kSuppressActionErrors = 1 << 6,
+			kNeedMouseUpdate = 1 << 7,
+			kLevelClipsChanged = 1 << 8,
+			kAdvanceCalled = 1 << 9,
+			kHasChanges = 1 << 10,
+			kNoInvisibleAdvanceFlag = 1 << 11,
+			kSetCursorTypeFuncOverloaded = 1 << 12,
+			kContinueAnimation = 1 << 13,
+			kStageAutoOrients = 1 << 14,
+			kOnEventLoadProgressCalled = 1 << 15,
+			kDisableFocusAutoRelByClick = 1 << 16,
+			kBackgroundSetByTag = 1 << 17,
 			kMovieFocused = 1 << 18,
-			kPaused = 1 << 20
+			kOptimizedAdvanceListInvalid = 1 << 19,
+			kPaused = 1 << 20,
+
+			kDisableFocusAutoRelease = 0xC00000,
+			kAlwaysEnableFocusArrowKeys = 0x3000000,
+			kAlwaysEnableKeyboardPress = 0xC000000,
+			kDisableFocusRolloverEvent = 0x30000000,
+			kDisableFocusKeys = 0xC0000000
 		};
+
+		struct LevelInfo
+		{
+			int level;			// 00
+			GFxSprite* sprite;	// 08
+		};
+		static_assert(sizeof(LevelInfo) == 0x10);
+
+		struct ActionEntry;
+
+		struct ActionQueueEntry
+		{
+			ActionEntry* actionRoot;
+			ActionEntry* insertEntry;
+			ActionEntry* lastEntry;
+		};
+		static_assert(sizeof(ActionQueueEntry) == 0x18);
+
+		struct ActionQueueType
+		{
+			ActionQueueEntry entries[7];
+			std::int32_t modId;
+			ActionEntry* freeEntry;
+			std::uint32_t currentSessionId;
+			std::uint32_t cfreeEntriesCount;
+			std::uint32_t lastSessionId;
+			GMemoryHeap* heap;
+		};
+		static_assert(sizeof(ActionQueueType) == 0xD0);
 
 		~GFxMovieRoot() override;  // 00
 
@@ -95,48 +191,84 @@ namespace RE
 		virtual void SetActionErrorsSuppress(bool a_suppressActionErrors);	// 48
 
 		// members
-		std::uint64_t unk0018;							// 0018
-		std::uint64_t unk0020;							// 0020
-		void* refCountCollector;						// 0028
-		std::uint64_t unk0030;							// 0030
-		GMemoryHeap* heap;								// 0038
-		std::uint64_t unk0040;							// 0040
-		std::uint64_t unk0048;							// 0048
-		std::uint64_t unk0050;							// 0050
-		void* unk0058;									// 0058
-		GFxMovieDef* movieDef;							// 0060
-		std::uint64_t unk0068;							// 0068
-		std::uint64_t unk0070;							// 0070
-		GViewport viewport;								// 0078
-		std::uint64_t unk00B0;							// 00B0
-		std::uint64_t unk00B8;							// 00B8
-		ScaleModeType viewScaleMode;					// 00C0
-		AlignType viewAlignment;						// 00C4
-		GRectF visibleFrameRect;						// 00C8
-		std::uint64_t unk00D8;							// 00D8
-		GRectF safeRect;								// 00E0
-		std::uint64_t unk00F0;							// 00F0
-		std::uint64_t unk00F8;							// 00F8
-		GMatrix3D* perspective3D;						// 0100
-		std::uint64_t unk0108;							// 0108
-		std::uint64_t unk0110;							// 0110
-		std::uint64_t unk0118[(0x09A0 - 0x0118) >> 3];	// 0118
-		GColor backgroundColor;							// 09A0
-		std::uint32_t unk09A4;							// 09A4
-		std::uint64_t unk09A8[(0x0A68 - 0x09A8) >> 3];	// 09A8
-		std::uint32_t mouseCursorCount;					// 0A68
-		std::uint32_t controllerCount;					// 0A6C
-		void* userData;									// 0A70
-		std::uint64_t unk0A78;							// 0A78
-		GFxKeyboardState keyboardState;					// 0A80
-		std::uint64_t unk1108[(0x25E0 - 0x1108) >> 3];	// 1108
-		stl::enumeration<Flag, std::uint32_t> flags;	// 25E0
-		std::uint32_t unk25E4;							// 25E4
-		std::uint64_t unk25E8[(0x2B48 - 0x25E8) >> 3];	// 25E8
-		std::uint32_t focusGroup;						// 2B48
-		std::uint8_t controllerGroups[16];				// 2B4C
-		std::uint32_t unk2B54;							// 2B54
-		std::uint64_t unk2B58[(0x2BE8 - 0x2B58) >> 3];	// 2B58
+		std::uint64_t unk0018;							  // 0018
+		GFxValue::ObjectInterface* objectInterface;		  // 0020
+		void* refCountCollector;						  // 0028
+		std::uint32_t unk0030;							  // 0030
+		std::uint32_t unk0034;							  // 0034
+		GMemoryHeap* heap;								  // 0038
+		GArrayLH<LevelInfo> movieLevels;				  // 0040
+		GFxSprite* sprite;								  // 0058
+		GFxMovieDefImpl* movieDef;						  // 0060
+		std::uint64_t unk0068;							  // 0068
+		std::uint64_t unk0070;							  // 0070
+		GViewport viewport;								  // 0078
+		//float pixelScale;								  // 00AC
+		float viewScaleX;								  // 00B0
+		float viewScaleY;								  // 00B4
+		float viewOffsetX;								  // 00B8
+		float viewOffsetY;								  // 00BC
+		ScaleModeType viewScaleMode;					  // 00C0
+		AlignType viewAlignment;						  // 00C4
+		GRectF visibleFrameRect;						  // 00C8
+		GRectF safeRect;								  // 00D8
+		GMatrix2D viewportMatrix;						  // 00E8
+		GMatrix3D* perspective3D;						  // 0100
+		GMatrix3D* view3D;								  // 0108
+		std::uint64_t unk0110[(0x0138 - 0x0110) >> 3];	  // 0110
+		float perspFOV;									  // 0138
+		std::uint32_t unk013C;							  // 013C
+		GFxStateBagImpl* stateBag;						  // 0140
+		GFxLog* cachedLog;								  // 0148
+		std::uint64_t unk0150[(0x0170 - 0x0150) >> 3];	  // 0150
+		GFxFontManagerStates* fontManagerStates;		  // 0170
+		std::uint64_t unk0178;							  // 0178
+		std::uint64_t timeElapsedUsec;					  // 0180
+		float timeRemainder;							  // 0188
+		float frameTime;								  // 018C
+		std::uint32_t forceFrameCatchUp;				  // 0190
+		std::uint32_t unk0194;							  // 0194
+		std::uint64_t unk0198[(0x09A0 - 0x0198) >> 3];	  // 0198
+		GColor backgroundColor;							  // 09A0
+		std::uint32_t unk09A4;							  // 09A4
+		std::uint64_t unk09A8[(0x0A68 - 0x09A8) >> 3];	  // 09A8
+		std::uint32_t mouseCursorCount;					  // 0A68
+		std::uint32_t controllerCount;					  // 0A6C
+		void* userData;									  // 0A70
+		void* unk0A78;									  // 0A78
+		GFxKeyboardState keyboardStates[4];				  // 0A80
+		ReturnValueHolder* retValHolder;				  // 24A0
+		std::uint64_t unk24A8[(0x24D0 - 0x24A8) >> 3];	  // 24A8
+		GStringHash<InvokeAliasInfo> invokeAliases;		  // 24D0
+		std::uint64_t unk24D8[(0x2508 - 0x24D8) >> 3];	  // 25D8
+		GStringHash<StickyVarNode*> stickyVariables;	  // 24A8
+		ActionQueueType actionQueue;					  // 2510
+		stl::enumeration<Flag, std::uint32_t> flags;	  // 25E0
+		std::uint32_t unk25E4;							  // 25E4
+		std::uint64_t unk25E8;							  // 25E8
+		std::uint64_t unk25F0;							  // 25F0
+		std::uint64_t unk25F8;							  // 25F8
+		GArrayLH<GFxSprite*> topmostLevelCharacters;	  // 2600
+		std::uint64_t pauseTicksMs;						  // 2618
+		std::uint64_t startTicksMs;						  // 2620
+		GArrayLH<GASIntervalTimer*> intervalTimers;		  // 2628
+		std::int32_t lastIntervalTimerId;				  // 2640
+		std::uint32_t unk2644;							  // 2644
+		std::uint64_t unk2648[(0x2B48 - 0x2648) >> 3];	  // 2648
+		std::uint32_t focusGroup;						  // 2B48
+		std::uint8_t controllerGroups[16];				  // 2B4C
+		std::uint32_t unk2B5C;							  // 2B5C
+		std::uint64_t unk2B60;							  // 2B60
+		std::uint64_t unk2B68;							  // 2B68
+		GFxASCharacter* unloadListHead;					  // 2B70
+		GFxIMECandidateListStyle* imeCandidateListStyle;  // 2B78
+		GFxIMEImm32Dll imm32Dll;						  // 2B80
+		GFxLoadQueueEntry* loadQueueHead;				  // 2BC8
+		std::uint32_t lastLoadQueueEntryCount;			  // 2BD0
+		std::uint32_t unk2BD4;							  // 2BD4
+		std::uint64_t unk2BD8;							  // 2BD8
+		std::uint64_t unk2BE0;							  // 2BE0
+		std::uint64_t unk2BE8;							  // 2BE8
 	};
 	static_assert(sizeof(GFxMovieRoot) == 0x2BF0);
 }

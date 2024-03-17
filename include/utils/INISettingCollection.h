@@ -85,8 +85,8 @@ namespace utils
 		virtual bool OpenHandle(bool) { throw(""); }			 // 05
 		virtual bool CloseHandle() { throw(""); }				 // 06
 		virtual void Unk_07() { throw(""); }					 // 07
-		virtual void Unk_08() { throw(""); }					 // 08
-		virtual void Unk_09() { throw(""); }					 // 09
+		virtual void WriteAllSettings() { throw(""); }			 // 08
+		virtual void ReadAllSettings() { throw(""); }			 // 09
 
 		RE::INISettingCollection* _this() { return reinterpret_cast<RE::INISettingCollection*>(this); }
 		const RE::INISettingCollection* _this() const { return reinterpret_cast<const RE::INISettingCollection*>(this); }

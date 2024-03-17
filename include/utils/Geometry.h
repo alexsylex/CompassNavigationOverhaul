@@ -36,7 +36,7 @@ namespace util
 
 		RE::NiPoint3 markerPos = a_markerRef->GetPosition();
 
-		float playerCameraYawAngle = a_playerCamera->yaw;
+		float playerCameraYawAngle = a_playerCamera->GetRuntimeData2().yaw;
 
 		float compassAngle = playerCameraYawAngle;
 
@@ -58,34 +58,34 @@ namespace util
 		return angle;
 	}
 
-	inline RE::NiPoint3 GetRealPosition(const RE::TESObjectREFR* a_ref, const RE::TESWorldSpace* a_worldspace)
+	inline RE::NiPoint3 GetRealPosition(const RE::TESObjectREFR* a_objRef)
 	{
-		auto worldSpaceOffset = RE::NiPoint3{ a_worldspace->worldMapOffsetData.mapOffsetX,
-			a_worldspace->worldMapOffsetData.mapOffsetY,
-			a_worldspace->worldMapOffsetData.mapOffsetZ } *
-							a_worldspace->worldMapOffsetData.mapScale;
+		RE::NiPoint3 position = a_objRef->GetPosition();
 
-		return a_ref->GetPosition() + worldSpaceOffset;
+		if (const RE::TESWorldSpace* worldSpace = a_objRef->GetWorldspace())
+		{
+			RE::NiPoint3 worldSpaceOffset{ worldSpace->worldMapOffsetData.mapOffsetX,
+												  worldSpace->worldMapOffsetData.mapOffsetY,
+												  worldSpace->worldMapOffsetData.mapOffsetZ };
+
+			position += worldSpaceOffset * worldSpace->worldMapOffsetData.mapScale;
+		}
+
+		return position;
 	}
 
 	inline float GetDistanceBetween(const RE::PlayerCharacter* a_player, const RE::TESObjectREFR* a_marker)
 	{
-		const RE::TESWorldSpace* playerWorldspace = a_player->GetWorldspace();
-		const RE::TESWorldSpace* markerWorldspace = a_marker->GetWorldspace();
-
-		RE::NiPoint3 playerPos = playerWorldspace ? GetRealPosition(a_player, playerWorldspace) : a_player->GetPosition();
-		RE::NiPoint3 markerPos = markerWorldspace ? GetRealPosition(a_marker, markerWorldspace) : a_marker->GetPosition();
+		RE::NiPoint3 playerPos = GetRealPosition(a_player);
+		RE::NiPoint3 markerPos = GetRealPosition(a_marker);
 
 		return playerPos.GetDistance(markerPos);
 	}
 
 	inline float GetHeightDifferenceBetween(const RE::PlayerCharacter* a_player, const RE::TESObjectREFR* a_marker)
 	{
-		const RE::TESWorldSpace* playerWorldspace = a_player->GetWorldspace();
-		const RE::TESWorldSpace* markerWorldspace = a_marker->GetWorldspace();
-
-		RE::NiPoint3 playerPos = playerWorldspace ? GetRealPosition(a_player, playerWorldspace) : a_player->GetPosition();
-		RE::NiPoint3 markerPos = markerWorldspace ? GetRealPosition(a_marker, markerWorldspace) : a_marker->GetPosition();
+		RE::NiPoint3 playerPos = GetRealPosition(a_player);
+		RE::NiPoint3 markerPos = GetRealPosition(a_marker);
 
 		return markerPos.z - playerPos.z;
 	}

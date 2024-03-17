@@ -3,13 +3,16 @@
 
 #include "utils/Logger.h"
 
+extern const SKSE::LoadInterface* skse;
 void SKSEMessageListener(SKSE::MessagingInterface::Message* a_msg);
 
 SKSEPluginLoad(const SKSE::LoadInterface* a_skse)
 {
-	using namespace utils;
-
 	REL::Module::reset();
+	
+	skse = a_skse;
+
+	std::this_thread::sleep_for(6s);
 
 	const SKSE::PluginDeclaration* plugin = SKSE::PluginDeclaration::GetSingleton();
 

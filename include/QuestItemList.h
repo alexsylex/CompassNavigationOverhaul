@@ -1,11 +1,11 @@
 #pragma once
 
-#include "utils/GFxArray.h"
-#include "utils/GFxDisplayObject.h"
+#include "IUI/GFxArray.h"
+#include "IUI/GFxDisplayObject.h"
 
 #include "Settings.h"
 
-class QuestItemList : public GFxDisplayObject
+class QuestItemList : public IUI::GFxDisplayObject
 {
 public:
 
@@ -22,19 +22,26 @@ public:
 
 	static QuestItemList* GetSingleton() { return singleton; }
 
-	bool CanBeDisplayedIn(RE::TESObjectCELL* a_cell) const
+	bool CanBeDisplayed(RE::TESObjectCELL* a_cell, bool a_isPlayerWeaponDrawn) const
 	{
-		if (a_cell)
+		if (!a_isPlayerWeaponDrawn || !settings::questlist::hideInCombat)
 		{
-			if ((a_cell->IsInteriorCell() && settings::questlist::showInInteriors) ||
-				(a_cell->IsExteriorCell() && settings::questlist::showInExteriors))
+			if (a_cell)
 			{
-				return true;
+				if ((a_cell->IsInteriorCell() && settings::questlist::showInInteriors) ||
+					(a_cell->IsExteriorCell() && settings::questlist::showInExteriors))
+				{
+					return true;
+				}
 			}
 		}
 
 		return false;
 	}
+
+	void SetHiddenByForce(bool a_hiddenByForce) { hiddenByForce = a_hiddenByForce; }
+
+	bool IsHiddenByForce() const { return hiddenByForce; }
 
 	void AddToHudElements()
 	{
@@ -93,4 +100,6 @@ private:
 	}
 
 	static inline QuestItemList* singleton = nullptr;
+
+	bool hiddenByForce = false;
 };

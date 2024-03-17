@@ -1,10 +1,11 @@
 #pragma once
 
-#include "utils/GFxDisplayObject.h"
+#include "IUI/GFxArray.h"
+#include "IUI/GFxDisplayObject.h"
 
 namespace extended
 {
-	class Compass : public GFxDisplayObject
+	class Compass : public IUI::GFxDisplayObject
 	{
 	public:
 		static constexpr inline std::string_view path = "_level0.HUDMovieBaseInstance.CompassShoutMeterHolder.Compass";
@@ -35,14 +36,21 @@ namespace extended
 			Invoke("SetUnits", a_useMetric);
 		}
 
-		void SetMarkerInfo(const std::string& a_target, float a_distance, float a_heightDifference)
+		void SetMarkers()
 		{
-			Invoke("SetMarkerInfo", a_target.c_str(), a_distance, a_heightDifference);
+			Invoke("SetMarkers");
 		}
 
-		void FocusMarker(std::uint32_t a_markerIndex)
+		void SetFocusedMarkerInfo(const std::string_view& a_targetText, float a_distance,
+								  float a_heightDifference, std::uint32_t a_markerIndex)
 		{
-			Invoke("FocusMarker", a_markerIndex);
+			Invoke("SetFocusedMarkerInfo", a_targetText.data(), a_distance, a_heightDifference,
+										   a_markerIndex);
+		}
+
+		void FocusMarker(std::uint32_t a_focusedMarkerIndex)
+		{
+			Invoke("FocusMarker", a_focusedMarkerIndex);
 		}
 
 		void UnfocusMarker()
@@ -50,14 +58,21 @@ namespace extended
 			Invoke("UnfocusMarker");
 		}
 
-		void UpdateMarker(std::uint32_t a_markerIndex)
+		void UpdateFocusedMarker(std::uint32_t a_focusedMarkerIndex)
 		{
-			Invoke("UpdateMarker", a_markerIndex);
+			Invoke("UpdateFocusedMarker", a_focusedMarkerIndex);
 		}
 
-		void SetMarkersSize()
+		void PostProcessMarkers(const std::unordered_map<std::uint32_t, bool>& a_unknownLocations, std::uint32_t a_markersCount)
 		{
-			Invoke("SetMarkersSize");
+			GFxArray gfxIsUnknownLocations{ GetMovieView() };
+
+			for (std::uint32_t i = 0; i < a_markersCount; i++)
+			{
+				gfxIsUnknownLocations.PushBack(a_unknownLocations.contains(i));
+			}
+
+			Invoke("PostProcessMarkers", gfxIsUnknownLocations);
 		}
 
 	private:

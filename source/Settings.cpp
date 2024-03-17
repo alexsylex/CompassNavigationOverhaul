@@ -26,10 +26,13 @@ namespace settings
 				MakeSetting("bUndiscoveredMeansUnknownMarkers:Display", undiscoveredMeansUnknownMarkers),
 				MakeSetting("bUndiscoveredMeansUnknownInfo:Display", undiscoveredMeansUnknownInfo),
 				MakeSetting("bShowEnemyMarkers:Display", showEnemyMarkers),
+				MakeSetting("bShowEnemyNameUnderMarker:Display", showEnemyNameUnderMarker),
 				MakeSetting("bShowObjectiveAsTarget:Display", showObjectiveAsTarget),
+				MakeSetting("bShowOtherObjectivesCount:Display", showOtherObjectivesCount),
 				MakeSetting("bShowInteriorMarkers:Display", showInteriorMarkers),
 				MakeSetting("fAngleToShowMarkerDetails:Display", angleToShowMarkerDetails),
-				MakeSetting("fAngleToKeepMarkerDetailsShown:Display", angleToKeepMarkerDetailsShown)
+				MakeSetting("fAngleToKeepMarkerDetailsShown:Display", angleToKeepMarkerDetailsShown),
+				MakeSetting("fFocusingDelayToShow:Display", focusingDelayToShow)
 			);
 		}
 		{
@@ -59,15 +62,18 @@ namespace settings
 		}
 		{
 			using namespace display;
-			showObjectiveAsTarget = iniSettingCollection->GetSetting<bool>("bShowObjectiveAsTarget:Display");
-			showInteriorMarkers = iniSettingCollection->GetSetting<bool>("bShowInteriorMarkers:Display");
 			useMetricUnits = iniSettingCollection->GetSetting<bool>("bUseMetricUnits:Display");
 			showUndiscoveredLocationMarkers = iniSettingCollection->GetSetting<bool>("bShowUndiscoveredLocationMarkers:Display");
 			undiscoveredMeansUnknownMarkers = iniSettingCollection->GetSetting<bool>("bUndiscoveredMeansUnknownMarkers:Display");
 			undiscoveredMeansUnknownInfo = iniSettingCollection->GetSetting<bool>("bUndiscoveredMeansUnknownInfo:Display");
 			showEnemyMarkers = iniSettingCollection->GetSetting<bool>("bShowEnemyMarkers:Display");
+			showEnemyNameUnderMarker = iniSettingCollection->GetSetting<bool>("bShowEnemyNameUnderMarker:Display");
+			showObjectiveAsTarget = iniSettingCollection->GetSetting<bool>("bShowObjectiveAsTarget:Display");
+			showOtherObjectivesCount = iniSettingCollection->GetSetting<bool>("bShowOtherObjectivesCount:Display");
+			showInteriorMarkers = iniSettingCollection->GetSetting<bool>("bShowInteriorMarkers:Display");
 			angleToShowMarkerDetails = iniSettingCollection->GetSetting<float>("fAngleToShowMarkerDetails:Display");
 			angleToKeepMarkerDetailsShown = iniSettingCollection->GetSetting<float>("fAngleToKeepMarkerDetailsShown:Display");
+			focusingDelayToShow = iniSettingCollection->GetSetting<float>("fFocusingDelayToShow:Display");
 		}
 		{
 			using namespace questlist;
