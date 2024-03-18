@@ -76,11 +76,11 @@ struct FocusedMarker
 
 	struct EnemyData : Data
 	{
-		EnemyData(std::uint32_t a_gfxIndex, std::uint32_t a_gfxGotoFrame, const RE::Character* a_enemy) :
+		EnemyData(std::uint32_t a_gfxIndex, std::uint32_t a_gfxGotoFrame, RE::Character* a_enemy) :
 			Data{ a_gfxIndex, a_gfxGotoFrame }, enemy{ a_enemy }
 		{}
 
-		const RE::Character* enemy;
+		RE::Character* enemy;
 
 		// cache
 		std::string enemyName = NPCNameProvider::GetSingleton()->GetName(enemy);
