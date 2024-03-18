@@ -10,7 +10,7 @@ public:
 		return std::addressof(singleton);
 	}
 
-	const char* GetName(const RE::Actor* actor) const;
+	const char* GetName(RE::Actor* actor) const;
 
 	void RequestAPI();
 

@@ -3,7 +3,7 @@
 
 namespace logger = SKSE::log;
 
-const char* NPCNameProvider::GetName(const RE::Actor* actor) const
+const char* NPCNameProvider::GetName(RE::Actor* actor) const
 {
 	if (NND) {
 		if (auto name = NND->GetName(actor, NND_API::NameContext::kEnemyHUD); !name.empty()) {
@@ -11,7 +11,7 @@ const char* NPCNameProvider::GetName(const RE::Actor* actor) const
 		}
 	}
 
-	return actor->GetName();
+	return actor->GetDisplayFullName();
 }
 
 void NPCNameProvider::RequestAPI()
